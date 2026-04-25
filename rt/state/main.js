@@ -1,10 +1,8 @@
-// state main 1.1.2
+// state main 1.1.3
 function readInput(cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     kvsGet(KEY_TEL_ACT, function (telAct) {
-      readVvxEfficiencyHist(function (hist) {
-        cb(telM || {}, telAct || {}, hist || {});
-      });
+      cb(telM || {}, telAct || {});
     });
   });
 }
@@ -22,25 +20,17 @@ function buildRun(telM, telAct) {
 
 function runState() {
   var run;
-  var totalW;
-  var vvxEff;
-  var fanAvg;
 
   log("BOT");
-  readInput(function (telM, telAct, hist) {
+  readInput(function (telM, telAct) {
     run = buildRun(telM, telAct);
-    totalW = calcPower(telM, telAct);
-    vvxEff = calcVvxEfficiency(telM, hist);
-    fanAvg = calcFanAverage(telM, telAct);
 
     writeStateRun(run, function () {
-      writeVvxEfficiencyHist(vvxEff.hist, function () {
-        writeTotalPowerValue(totalW, function () {
-          writeVvxEfficiencyValue(vvxEff.pct, function () {
-            writeFanSpeedAvgValue(fanAvg, function () {
-              writeStateStatus(run, function () {
-                log("DON");
-              });
+      runPowerFeature(telM, telAct, function () {
+        runVvxEfficiencyFeature(telM, function () {
+          runFanAverageFeature(telM, telAct, function () {
+            writeStateStatus(run, function () {
+              log("DON");
             });
           });
         });
