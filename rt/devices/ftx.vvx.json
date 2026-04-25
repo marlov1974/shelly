@@ -11,7 +11,7 @@
       "name": "poll",
       "id": 2,
       "version": "1.0.0",
-      "recipe": "rt/recipes/poll.json",
+      "recipe": "rt/recipes/p.json",
       "start": 1
     }
   ]
