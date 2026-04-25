@@ -1,4 +1,4 @@
-// poll base 3.1.0
+// poll base 3.1.1
 var SCRIPT_NAME = "poll";
 
 var KEY_TEL_M = "ftx.tel.m";
@@ -7,31 +7,6 @@ var POLL_STATUS_TEXT_ID = 202;
 
 function log(s) {
   print(String(SCRIPT_NAME) + " " + s);
-}
-
-function n(v, d) {
-  var x = Number(v);
-  return (x === x) ? x : d;
-}
-
-function i(v) {
-  var x = Number(v);
-  if (x !== x) return 0;
-  return Math.floor(x + 0.5);
-}
-
-function d1(v) {
-  var x = Number(v);
-  if (x !== x) return 0;
-  return Math.round(x * 10) / 10;
-}
-
-function clip(v, lo, hi) {
-  var x = Number(v);
-  if (x !== x) x = 0;
-  if (x < lo) x = lo;
-  if (x > hi) x = hi;
-  return x;
 }
 
 function createPollCtx() {
