@@ -1,6 +1,14 @@
-// weather main 1.0.0
+// weather main 1.0.1
+var STATUS_TEXT_ID = 200;
+
 function createCtx() {
   return { out: {} };
+}
+
+function setStatusText(s, cb) {
+  Shelly.call("Text.Set", { id: STATUS_TEXT_ID, value: String(s || "") }, function () {
+    if (cb) cb();
+  });
 }
 
 function saveWeatherAct(ctx, cb) {
@@ -15,6 +23,11 @@ function saveWeatherAct(ctx, cb) {
   });
 }
 
+function writeStatus(ctx, cb) {
+  var s = "W OK T=" + ctx.out.temp_now + " S=" + ctx.out.solar_kwh_today;
+  setStatusText(s, cb);
+}
+
 function runOnce() {
   var ctx = createCtx();
   log("RUN BOT");
@@ -22,8 +35,10 @@ function runOnce() {
   featureDailySolar(ctx, function () {
     featureHourlyTemp(ctx, function () {
       saveWeatherAct(ctx, function () {
-        log("RUN DON");
-        scheduleNextRun();
+        writeStatus(ctx, function () {
+          log("RUN DON");
+          scheduleNextRun();
+        });
       });
     });
   });
