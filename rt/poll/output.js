@@ -1,4 +1,4 @@
-// poll output 1.0.0
+// poll output 1.0.1
 function buildTelM() {
   return {
     t: {
@@ -53,4 +53,11 @@ function writeVvxEffRawHist(cb) { kvsSet(KEY_VVX_EFF_RAW_HIST, buildVvxEffRawHis
 function writeTotalPower(cb) { numberSet(TOTAL_POWER_ID, totalPowerW, cb); }
 function writeVvxEfficiency(cb) { numberSet(VVX_EFFICIENCY_ID, vvxEfficiencyPct, cb); }
 function writeFanSpeedAvg(cb) { numberSet(FAN_SPEED_AVG_ID, fanSpeedAvgPct, cb); }
+
+function writePollStatus(cb) {
+  var s = "P OK W=" + totalPowerW + " E=" + vvxEfficiencyPct + " F=" + fanSpeedAvgPct;
+  Shelly.call("Text.Set", { id: POLL_STATUS_TEXT_ID, value: s }, function () {
+    if (cb) cb();
+  });
+}
 
