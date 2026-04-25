@@ -2,9 +2,9 @@
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/poll/base.js",
+    "rt/poll/numbers.js",
     "rt/common/kvs.js",
     "rt/common/shelly.js",
-    "rt/poll/norm.js",
     "rt/poll/feature-supply.js",
     "rt/poll/feature-extract.js",
     "rt/poll/feature-process.js",
