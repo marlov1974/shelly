@@ -1,4 +1,4 @@
-// poll output 2.0.0
+// poll output 3.0.0
 function buildTelM(ctx) {
   return {
     t: {
@@ -34,28 +34,20 @@ function buildTelM(ctx) {
 
 function buildTelAct(ctx) {
   return {
-    sup: { on: ctx.supply.fan_on, pct: ctx.supply.fan_pct, w: ctx.supply.fan_w, run: ctx.supply.fan_run },
-    ext: { on: ctx.extract.fan_on, pct: ctx.extract.fan_pct, w: ctx.extract.fan_w, run: ctx.extract.fan_run },
-    vvx: { on: ctx.vvx.on, w: ctx.vvx.w, run: ctx.vvx.run },
-    heat: { on: ctx.heat.on, pct: ctx.heat.pct, w: ctx.heat.w, run: ctx.heat.run },
-    cool: { on: ctx.cool.on, pct: ctx.cool.pct, w: ctx.cool.w, run: ctx.cool.run },
-    dmp: { on: ctx.dmp.on, run: ctx.dmp.run }
+    sup: { on: ctx.supply.fan_on, pct: ctx.supply.fan_pct, w: ctx.supply.fan_w },
+    ext: { on: ctx.extract.fan_on, pct: ctx.extract.fan_pct, w: ctx.extract.fan_w },
+    vvx: { on: ctx.vvx.on, w: ctx.vvx.w },
+    heat: { on: ctx.heat.on, pct: ctx.heat.pct, w: ctx.heat.w },
+    cool: { on: ctx.cool.on, pct: ctx.cool.pct, w: ctx.cool.w },
+    dmp: { on: ctx.dmp.on }
   };
-}
-
-function buildVvxEffRawHist(ctx) {
-  return { r0: d1(ctx.hist.vvx_r0), r1: d1(ctx.hist.vvx_r1), r2: d1(ctx.hist.vvx_r2) };
 }
 
 function writeTelemetryM(ctx, cb) { kvsSet(KEY_TEL_M, buildTelM(ctx), cb); }
 function writeTelemetryAct(ctx, cb) { kvsSet(KEY_TEL_ACT, buildTelAct(ctx), cb); }
-function writeVvxEffRawHist(ctx, cb) { kvsSet(KEY_VVX_EFF_RAW_HIST, buildVvxEffRawHist(ctx), cb); }
-function writeTotalPower(ctx, cb) { numberSet(TOTAL_POWER_ID, ctx.power.total_w, cb); }
-function writeVvxEfficiency(ctx, cb) { numberSet(VVX_EFFICIENCY_ID, ctx.vvx.eff_pct, cb); }
-function writeFanSpeedAvg(ctx, cb) { numberSet(FAN_SPEED_AVG_ID, ctx.fan.avg_pct, cb); }
 
 function writePollStatus(ctx, cb) {
-  var s = "P OK W=" + ctx.power.total_w + " E=" + ctx.vvx.eff_pct + " F=" + ctx.fan.avg_pct;
+  var s = "P OK S=" + ctx.supply.ls + " E=" + ctx.extract.ls + " C=" + ctx.process.co2_ppm;
   Shelly.call("Text.Set", { id: POLL_STATUS_TEXT_ID, value: s }, function () {
     if (cb) cb();
   });
