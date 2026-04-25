@@ -1,4 +1,10 @@
-// poll feature-supply 1.0.1
+// poll feature-supply 1.0.2-debug-seq
+function supplyDbg(s, cb) {
+  Shelly.call("Text.Set", { id: POLL_STATUS_TEXT_ID, value: String(s || "") }, function () {
+    if (cb) cb();
+  });
+}
+
 function parseSupplyUni(js) {
   var vm = comp(js, "voltmeter:" + VM_DP_ID);
   var inRpm = comp(js, "input:" + INPUT_RPM_ID);
@@ -28,30 +34,28 @@ function deriveSupply(ctx) {
 }
 
 function readSupply(ctx, cb) {
-  var left = 2;
-  function done() {
-    left--;
-    if (left <= 0) {
-      deriveSupply(ctx);
-      cb();
-    }
-  }
+  supplyDbg("P S1 UNI", function () {
+    httpGetStatus(IP_SUPPLY_UNI, function (js) {
+      var x = js ? parseSupplyUni(js) : null;
+      ctx.supply.pa = x ? x.pa : 0;
+      ctx.supply.rpm = x ? x.rpm : 0;
+      ctx.supply.temp_post_vvx = x ? x.temp_post_vvx : 0;
+      ctx.supply.temp_outdoor = x ? x.temp_outdoor : 0;
+      ctx.supply.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
 
-  httpGetStatus(IP_SUPPLY_UNI, function (js) {
-    var x = js ? parseSupplyUni(js) : null;
-    ctx.supply.pa = x ? x.pa : 0;
-    ctx.supply.rpm = x ? x.rpm : 0;
-    ctx.supply.temp_post_vvx = x ? x.temp_post_vvx : 0;
-    ctx.supply.temp_outdoor = x ? x.temp_outdoor : 0;
-    ctx.supply.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
-    done();
-  });
+      supplyDbg("P S2 FAN", function () {
+        httpGetStatus(IP_SUPPLY_FAN, function (js2) {
+          var y = js2 ? parseLight0(js2) : null;
+          ctx.supply.fan_on = y ? y.on : 0;
+          ctx.supply.fan_pct = y ? y.pct : 0;
+          ctx.supply.fan_w = y ? y.w : 0;
 
-  httpGetStatus(IP_SUPPLY_FAN, function (js) {
-    var x = js ? parseLight0(js) : null;
-    ctx.supply.fan_on = x ? x.on : 0;
-    ctx.supply.fan_pct = x ? x.pct : 0;
-    ctx.supply.fan_w = x ? x.w : 0;
-    done();
+          supplyDbg("P S3 DER", function () {
+            deriveSupply(ctx);
+            cb();
+          });
+        });
+      });
+    });
   });
 }
