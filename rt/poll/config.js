@@ -1,4 +1,4 @@
-// poll config 1.0.0
+// poll config 1.0.1
 var IP_SUPPLY_UNI = "192.168.77.20";
 var IP_EXTRACT_UNI = "192.168.77.21";
 var IP_PROCESS_UNI = "192.168.77.22";
@@ -32,6 +32,7 @@ var KEY_VVX_EFF_RAW_HIST = "ftx.vvx.eff.raw_hist";
 var TOTAL_POWER_ID = 201;
 var VVX_EFFICIENCY_ID = 202;
 var FAN_SPEED_AVG_ID = 203;
+var POLL_STATUS_TEXT_ID = 202;
 
 var IDLE_POWER_W = 14;
 var DAMPERS_POWER_W = 8;
