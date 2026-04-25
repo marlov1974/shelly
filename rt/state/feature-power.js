@@ -1,4 +1,4 @@
-// state feature-power 1.1.2
+// state feature-power 1.1.3
 var TOTAL_POWER_ID = 201;
 var IDLE_POWER_W = 14;
 var DAMPERS_POWER_W = 8;
@@ -14,6 +14,7 @@ function calcPower(telM, telAct) {
   return i(clip(total, 0, 9999));
 }
 
-function writeTotalPowerValue(v, cb) {
-  numberSet(TOTAL_POWER_ID, v, cb);
+function runPowerFeature(telM, telAct, cb) {
+  var totalW = calcPower(telM, telAct);
+  numberSet(TOTAL_POWER_ID, totalW, cb);
 }
