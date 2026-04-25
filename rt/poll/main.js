@@ -1,18 +1,24 @@
-// poll main 1.0.1
+// poll main 2.0.0
 function runPoll() {
+  var ctx = createPollCtx();
   log("BOT");
-  runGroup1(function () {
-    runGroup2(function () {
-      readVvxEffRawHist(function () {
-        derive(function () {
-          writeTelemetryM(function () {
-            writeTelemetryAct(function () {
-              writeVvxEffRawHist(function () {
-                writeTotalPower(function () {
-                  writeVvxEfficiency(function () {
-                    writeFanSpeedAvg(function () {
-                      writePollStatus(function () {
-                        log("DON");
+
+  readSupply(ctx, function () {
+    readExtract(ctx, function () {
+      readProcess(ctx, function () {
+        readActuators(ctx, function () {
+          readVvxEffHist(ctx, function () {
+            deriveCrossFeatures(ctx, function () {
+              writeTelemetryM(ctx, function () {
+                writeTelemetryAct(ctx, function () {
+                  writeVvxEffRawHist(ctx, function () {
+                    writeTotalPower(ctx, function () {
+                      writeVvxEfficiency(ctx, function () {
+                        writeFanSpeedAvg(ctx, function () {
+                          writePollStatus(ctx, function () {
+                            log("DON");
+                          });
+                        });
                       });
                     });
                   });
@@ -27,4 +33,3 @@ function runPoll() {
 }
 
 runPoll();
-
