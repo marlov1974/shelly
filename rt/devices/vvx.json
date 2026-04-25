@@ -6,7 +6,7 @@
   "s0_recipe": "rt/recipes/weather.json",
   "s1_name": "poll",
   "s1_id": 2,
-  "s1_version": "3.0.0",
+  "s1_version": "3.0.1",
   "s1_recipe": "rt/recipes/p.json",
   "s2_name": "state",
   "s2_id": 3,
