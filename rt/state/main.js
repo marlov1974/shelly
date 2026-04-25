@@ -1,4 +1,4 @@
-// state main 1.0.0
+// state main 1.1.0
 function readInput(cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     kvsGet(KEY_TEL_ACT, function (telAct) {
@@ -9,18 +9,36 @@ function readInput(cb) {
   });
 }
 
+function buildRun(telM, telAct) {
+  return {
+    sup: calcSupplyRun(telM, telAct),
+    ext: calcExtractRun(telM, telAct),
+    vvx: calcVvxRun(telM, telAct),
+    heat: calcHeatRun(telM, telAct),
+    cool: calcCoolRun(telM, telAct),
+    dmp: calcDampersRun(telM, telAct)
+  };
+}
+
 function runState() {
+  var run;
+  var totalW;
+  var vvxEff;
+  var fanAvg;
+
   log("BOT");
   readInput(function (telM, telAct, hist) {
-    var run = calcRun(telM, telAct);
-    var perf = calcPerf(telM, telAct, hist);
+    run = buildRun(telM, telAct);
+    totalW = calcPower(telM, telAct);
+    vvxEff = calcVvxEfficiency(telM, hist);
+    fanAvg = calcFanAverage(telM, telAct);
 
     writeStateRun(run, function () {
-      writeStateHist(perf.hist, function () {
-        writeTotalPowerValue(perf.total_w, function () {
-          writeVvxEfficiencyValue(perf.vvx_eff_pct, function () {
-            writeFanSpeedAvgValue(perf.fan_avg_pct, function () {
-              writeStateStatus(run, perf, function () {
+      writeStateHist(vvxEff.hist, function () {
+        writeTotalPowerValue(totalW, function () {
+          writeVvxEfficiencyValue(vvxEff.pct, function () {
+            writeFanSpeedAvgValue(fanAvg, function () {
+              writeStateStatus(run, function () {
                 log("DON");
               });
             });
