@@ -1,4 +1,4 @@
-// poll main 1.0.0
+// poll main 1.0.1
 function runPoll() {
   log("BOT");
   runGroup1(function () {
@@ -11,7 +11,9 @@ function runPoll() {
                 writeTotalPower(function () {
                   writeVvxEfficiency(function () {
                     writeFanSpeedAvg(function () {
-                      log("DON");
+                      writePollStatus(function () {
+                        log("DON");
+                      });
                     });
                   });
                 });
