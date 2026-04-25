@@ -1,4 +1,5 @@
-// state feature-power 1.1.0
+// state feature-power 1.1.2
+var TOTAL_POWER_ID = 201;
 var IDLE_POWER_W = 14;
 var DAMPERS_POWER_W = 8;
 
@@ -11,4 +12,8 @@ function calcPower(telM, telAct) {
   var dmp = telAct && telAct.dmp ? telAct.dmp : {};
   var total = IDLE_POWER_W + (on(dmp) ? DAMPERS_POWER_W : 0) + w(sup) + w(ext) + w(vvx) + w(heat) + w(cool);
   return i(clip(total, 0, 9999));
+}
+
+function writeTotalPowerValue(v, cb) {
+  numberSet(TOTAL_POWER_ID, v, cb);
 }
