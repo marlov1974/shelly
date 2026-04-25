@@ -1,5 +1,5 @@
-// common runtime 1.0.0
+// common runtime 1.0.1
 function log(s) {
-  print("weather " + s);
+  print(String(SCRIPT_NAME) + " " + s);
 }
 
