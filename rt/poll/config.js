@@ -1,4 +1,4 @@
-// poll config 1.0.1
+// poll config 3.0.0
 var IP_SUPPLY_UNI = "192.168.77.20";
 var IP_EXTRACT_UNI = "192.168.77.21";
 var IP_PROCESS_UNI = "192.168.77.22";
@@ -19,22 +19,7 @@ var RH_ID = 100;
 var K_SUPPLY_FAN = 11.6;
 var K_EXTRACT_FAN = 12.1;
 
-var FAN_RPM_RUN_MIN = 250;
-var FAN_DP_RUN_MIN_PA = 5;
-var VVX_RPM_RUN_MIN = 4;
-var HEAT_DT_MIN_C = 0.5;
-var COOL_DT_MIN_C = 0.5;
-
 var KEY_TEL_M = "ftx.tel.m";
 var KEY_TEL_ACT = "ftx.tel.act";
-var KEY_VVX_EFF_RAW_HIST = "ftx.vvx.eff.raw_hist";
 
-var TOTAL_POWER_ID = 201;
-var VVX_EFFICIENCY_ID = 202;
-var FAN_SPEED_AVG_ID = 203;
 var POLL_STATUS_TEXT_ID = 202;
-
-var IDLE_POWER_W = 14;
-var DAMPERS_POWER_W = 8;
-var VVX_EFF_DEN_MIN_C = 3.0;
-
