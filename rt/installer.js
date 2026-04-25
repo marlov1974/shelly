@@ -1,4 +1,4 @@
-// installer 1.0.6 flat-version
+// installer 1.0.7 chunk-detail
 (function () {
   "use strict";
 
@@ -18,7 +18,6 @@
   function get(path, cb) {
     Shelly.call("HTTP.GET", { url: BASE + path, timeout: 10 }, function (res, err) {
       if (err || !res || !res.body) {
-        txt("I106 GE " + path);
         cb(null);
         return;
       }
@@ -33,22 +32,22 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("I106 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("I107 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
 
   function getDevicePath(cb) {
-    txt("I106 DI");
+    txt("I107 DI");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("I106 DIE"); cb(null); return; }
+      if (err || !info) { txt("I107 DIE"); cb(null); return; }
       fetchJson(INDEX, "I", function (idx) {
         var p = null;
         if (!idx) { cb(null); return; }
         p = idx[String(info.id || "")];
         if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
         if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
-        if (!p) txt("I106 NDF");
+        if (!p) txt("I107 NDF");
         cb(p || null);
       });
     });
@@ -56,7 +55,7 @@
 
   function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("I106 LSE"); cb([]); return; }
+      if (err || !res || !res.scripts) { txt("I107 LSE"); cb([]); return; }
       cb(res.scripts);
     });
   }
@@ -81,9 +80,9 @@
   }
 
   function create(name, cb) {
-    txt("I106 CR " + name);
+    txt("I107 CR " + name);
     Shelly.call("Script.Create", { name: name }, function (res, err) {
-      if (err || !res) { txt("I106 CRE " + name); cb(null); return; }
+      if (err || !res) { txt("I107 CRE " + name); cb(null); return; }
       cb(res.id);
     });
   }
@@ -93,28 +92,35 @@
   }
 
   function start(id, cb) {
-    txt("I106 ST " + id);
+    txt("I107 ST " + id);
     Shelly.call("Script.Start", { id: id }, function (res, err) {
-      if (err) txt("I106 STE " + id); else txt("I106 STO " + id);
+      if (err) txt("I107 STE " + id); else txt("I107 STO " + id);
       cb();
     });
   }
 
   function put(id, code, append, cb) {
     Shelly.call("Script.PutCode", { id: id, code: code, append: append }, function (res, err) {
-      if (err) { txt("I106 PE " + id); cb(0); return; }
+      if (err) { cb(0); return; }
       cb(1);
     });
   }
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { cb(1); return; }
-    txt("I106 C " + pos + "/" + arr.length);
+    txt("I107 CG " + pos + "/" + arr.length);
     get(arr[pos], function (code) {
-      if (code === null) { txt("I106 CE " + pos); cb(0); return; }
-      put(id, code, pos > 0, function (ok) {
-        if (!ok) { cb(0); return; }
-        chunks(id, arr, pos + 1, cb);
+      if (code === null) { txt("I107 CE " + pos); cb(0); return; }
+      txt("I107 CO " + pos + " " + code.length);
+      Timer.set(50, false, function () {
+        txt("I107 PW " + pos);
+        put(id, code, pos > 0, function (ok) {
+          if (!ok) { txt("I107 PE " + pos); cb(0); return; }
+          txt("I107 PO " + pos);
+          Timer.set(50, false, function () {
+            chunks(id, arr, pos + 1, cb);
+          });
+        });
       });
     });
   }
@@ -128,14 +134,14 @@
   }
 
   function installWrite(desc, cb) {
-    txt("I106 R " + desc.name);
+    txt("I107 R " + desc.name);
     fetchJson(desc.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("I106 RCE " + desc.name); cb(); return; }
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("I107 RCE " + desc.name); cb(); return; }
       ensure(desc.name, function (id) {
-        if (id === null || id === undefined) { txt("I106 NE " + desc.name); cb(); return; }
+        if (id === null || id === undefined) { txt("I107 NE " + desc.name); cb(); return; }
         stop(id, function () {
           chunks(id, recipe.chunks, 0, function (ok) {
-            if (!ok) { txt("I106 WE " + desc.name); cb(); return; }
+            if (!ok) { txt("I107 WE " + desc.name); cb(); return; }
             verSet(desc.name, desc.version, function () {
               if (desc.start) start(id, cb); else cb();
             });
@@ -146,14 +152,14 @@
   }
 
   function installOne(desc, cb) {
-    txt("I106 SC " + desc.name);
+    txt("I107 SC " + desc.name);
     verGet(desc.name, function (old) {
       if (old === String(desc.version || "")) {
-        txt("I106 SK " + desc.name + " " + old);
+        txt("I107 SK " + desc.name + " " + old);
         cb();
         return;
       }
-      txt("I106 UP " + desc.name + " " + old + ">" + desc.version);
+      txt("I107 UP " + desc.name + " " + old + ">" + desc.version);
       installWrite(desc, cb);
     });
   }
@@ -173,9 +179,9 @@
   function installDev(dev, pos, cb) {
     var d;
     if (pos >= dev.n) { cb(); return; }
-    txt("I106 L " + pos);
+    txt("I107 L " + pos);
     d = descAt(dev, pos);
-    if (!d) { txt("I106 BADS " + pos); installDev(dev, pos + 1, cb); return; }
+    if (!d) { txt("I107 BADS " + pos); installDev(dev, pos + 1, cb); return; }
     installOne(d, function () { installDev(dev, pos + 1, cb); });
   }
 
@@ -185,16 +191,16 @@
   }
 
   function run() {
-    if (busy) { txt("I106 BZ"); return; }
+    if (busy) { txt("I107 BZ"); return; }
     busy = true;
-    txt("I106 RN");
+    txt("I107 RN");
     getDevicePath(function (path) {
       if (!path) { busy = false; next(); return; }
       fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.n) { txt("I106 DE"); busy = false; next(); return; }
-        txt("I106 DN " + dev.n);
+        if (!dev || !dev.n) { txt("I107 DE"); busy = false; next(); return; }
+        txt("I107 DN " + dev.n);
         installDev(dev, 0, function () {
-          txt("I106 OK");
+          txt("I107 OK");
           busy = false;
           next();
         });
