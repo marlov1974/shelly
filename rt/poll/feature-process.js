@@ -1,4 +1,4 @@
-// poll feature-process 3.0.2
+// poll feature-process 3.1.0
 var IP_PROCESS_UNI = "192.168.77.22";
 
 var CO2_VM_ID = 100;
@@ -24,10 +24,10 @@ function parseProcessUni(js) {
 }
 
 function deriveProcess(ctx) {
-  ctx.process.rpm_vvx = clipVvxRpm(ctx.process.rpm_vvx);
-  ctx.process.co2_ppm = clipPpm(ctx.process.co2_ppm);
-  ctx.process.temp_house = clipTemp(ctx.process.temp_house);
-  ctx.process.rh_house = clipRh(ctx.process.rh_house);
+  ctx.process.rpm_vvx = normVvxRpm(ctx.process.rpm_vvx);
+  ctx.process.co2_ppm = normPpm(ctx.process.co2_ppm);
+  ctx.process.temp_house = normTemp(ctx.process.temp_house);
+  ctx.process.rh_house = normRh(ctx.process.rh_house);
 }
 
 function readProcess(ctx, cb) {
