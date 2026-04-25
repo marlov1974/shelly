@@ -10,6 +10,6 @@
   "s1_recipe": "rt/recipes/p.json",
   "s2_name": "state",
   "s2_id": 3,
-  "s2_version": "1.1.1",
+  "s2_version": "1.1.2",
   "s2_recipe": "rt/recipes/state.json"
 }
