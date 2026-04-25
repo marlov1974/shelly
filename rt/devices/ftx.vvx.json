@@ -6,6 +6,13 @@
       "version": "1.0.1",
       "recipe": "rt/recipes/weather.json",
       "start": 1
+    },
+    {
+      "name": "poll",
+      "id": 2,
+      "version": "1.0.0",
+      "recipe": "rt/recipes/poll.json",
+      "start": 1
     }
   ]
 }
