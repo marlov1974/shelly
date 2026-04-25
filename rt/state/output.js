@@ -1,4 +1,4 @@
-// state output 1.0.0
+// state output 1.1.0
 function writeStateRun(run, cb) {
   kvsSet(KEY_STATE_RUN, run, cb);
 }
@@ -19,7 +19,7 @@ function writeFanSpeedAvgValue(v, cb) {
   numberSet(FAN_SPEED_AVG_ID, v, cb);
 }
 
-function writeStateStatus(run, perf, cb) {
+function writeStateStatus(run, cb) {
   var s = "ST OK SR=" + run.sup + " ER=" + run.ext + " VR=" + run.vvx + " H=" + run.heat + " C=" + run.cool;
   Shelly.call("Text.Set", { id: STATE_STATUS_TEXT_ID, value: s }, function () {
     if (cb) cb();
