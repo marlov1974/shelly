@@ -3,7 +3,7 @@
     {
       "name": "weather",
       "id": 1,
-      "version": "1.0.0",
+      "version": "1.0.1",
       "recipe": "rt/recipes/weather.json",
       "start": 1
     }
