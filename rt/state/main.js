@@ -1,36 +1,37 @@
-// state main 1.1.3
-function readInput(cb) {
+// state main 1.2.0
+function readInput(ctx, cb) {
   kvsGet(KEY_TEL_M, function (telM) {
+    ctx.telM = telM || {};
     kvsGet(KEY_TEL_ACT, function (telAct) {
-      cb(telM || {}, telAct || {});
+      ctx.telAct = telAct || {};
+      cb();
     });
   });
 }
 
-function buildRun(telM, telAct) {
-  return {
-    sup: calcSupplyRun(telM, telAct),
-    ext: calcExtractRun(telM, telAct),
-    vvx: calcVvxRun(telM, telAct),
-    heat: calcHeatRun(telM, telAct),
-    cool: calcCoolRun(telM, telAct),
-    dmp: calcDampersRun(telM, telAct)
-  };
-}
-
 function runState() {
-  var run;
+  var ctx = createStateCtx();
 
   log("BOT");
-  readInput(function (telM, telAct) {
-    run = buildRun(telM, telAct);
-
-    writeStateRun(run, function () {
-      runPowerFeature(telM, telAct, function () {
-        runVvxEfficiencyFeature(telM, function () {
-          runFanAverageFeature(telM, telAct, function () {
-            writeStateStatus(run, function () {
-              log("DON");
+  readInput(ctx, function () {
+    applySupplyRun(ctx, function () {
+      applyExtractRun(ctx, function () {
+        applyVvxRun(ctx, function () {
+          applyHeatRun(ctx, function () {
+            applyCoolRun(ctx, function () {
+              applyDampersRun(ctx, function () {
+                writeStateOutput(ctx, function () {
+                  applyPowerFeature(ctx, function () {
+                    applyVvxEfficiencyFeature(ctx, function () {
+                      applyFanAverageFeature(ctx, function () {
+                        writeStateStatus(ctx, function () {
+                          log("DON");
+                        });
+                      });
+                    });
+                  });
+                });
+              });
             });
           });
         });
