@@ -1,4 +1,10 @@
-// poll feature-actuators 1.0.0
+// poll feature-actuators 1.0.1-debug-seq
+function actDbg(s, cb) {
+  Shelly.call("Text.Set", { id: POLL_STATUS_TEXT_ID, value: String(s || "") }, function () {
+    if (cb) cb();
+  });
+}
+
 function deriveHeat(ctx) {
   ctx.heat.w = clipW(ctx.heat.w, 50);
   ctx.heat.run = b(
@@ -46,20 +52,27 @@ function readSwitchActuator(ip, target, cb) {
 }
 
 function readActuators(ctx, cb) {
-  var left = 4;
-  function done() {
-    left--;
-    if (left <= 0) {
-      deriveHeat(ctx);
-      deriveCool(ctx);
-      deriveVvx(ctx);
-      deriveDampers(ctx);
-      cb();
-    }
-  }
-
-  readLightActuator(IP_HEAT, ctx.heat, done);
-  readLightActuator(IP_COOL, ctx.cool, done);
-  readSwitchActuator(IP_VVX, ctx.vvx, done);
-  readSwitchActuator(IP_DAMPERS, ctx.dmp, done);
+  actDbg("P A1 HEAT", function () {
+    readLightActuator(IP_HEAT, ctx.heat, function () {
+      actDbg("P A2 COOL", function () {
+        readLightActuator(IP_COOL, ctx.cool, function () {
+          actDbg("P A3 VVX", function () {
+            readSwitchActuator(IP_VVX, ctx.vvx, function () {
+              actDbg("P A4 DMP", function () {
+                readSwitchActuator(IP_DAMPERS, ctx.dmp, function () {
+                  actDbg("P A5 DER", function () {
+                    deriveHeat(ctx);
+                    deriveCool(ctx);
+                    deriveVvx(ctx);
+                    deriveDampers(ctx);
+                    cb();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 }
