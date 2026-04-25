@@ -1,4 +1,4 @@
-// poll feature-extract 3.0.2
+// poll feature-extract 3.1.0
 var IP_EXTRACT_UNI = "192.168.77.21";
 var IP_EXTRACT_FAN = "192.168.77.11";
 
@@ -9,7 +9,11 @@ var TEMP_BRINE_ID = 101;
 var TEMP_HOTWATER_ID = 102;
 
 var K_EXTRACT_FAN = 12.1;
-var EXTRACT_FAN_MAX_W = 180;
+
+function extractPaToLs(pa) {
+  if (pa <= 0) return 0;
+  return Math.round(K_EXTRACT_FAN * Math.sqrt(pa));
+}
 
 function parseExtractUni(js) {
   var vm = comp(js, "voltmeter:" + EXTRACT_DP_ID);
@@ -24,14 +28,14 @@ function parseExtractUni(js) {
 }
 
 function deriveExtractTelemetry(ctx) {
-  ctx.extract.pa = clipPa(ctx.extract.pa);
-  ctx.extract.rpm = clipFanRpm(ctx.extract.rpm);
-  ctx.extract.ls = clipLs(paToLsExtract(ctx.extract.pa));
-  ctx.extract.temp_to_house = clipTemp(ctx.extract.temp_to_house);
-  ctx.extract.temp_brine = clipTemp(ctx.extract.temp_brine);
-  ctx.extract.temp_hotwater = clipTemp(ctx.extract.temp_hotwater);
-  ctx.extract.fan_pct = clipPct(ctx.extract.fan_pct);
-  ctx.extract.fan_w = clipW(ctx.extract.fan_w, EXTRACT_FAN_MAX_W);
+  ctx.extract.pa = normPa(ctx.extract.pa);
+  ctx.extract.rpm = normFanRpm(ctx.extract.rpm);
+  ctx.extract.ls = normLs(extractPaToLs(ctx.extract.pa));
+  ctx.extract.temp_to_house = normTemp(ctx.extract.temp_to_house);
+  ctx.extract.temp_brine = normTemp(ctx.extract.temp_brine);
+  ctx.extract.temp_hotwater = normTemp(ctx.extract.temp_hotwater);
+  ctx.extract.fan_pct = normPct(ctx.extract.fan_pct);
+  ctx.extract.fan_w = normW(ctx.extract.fan_w);
 }
 
 function readExtract(ctx, cb) {
