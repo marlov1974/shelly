@@ -1,4 +1,4 @@
-// poll main 3.0.0
+// poll main 3.0.1
 function runPoll() {
   var ctx = createPollCtx();
   log("BOT");
@@ -6,11 +6,17 @@ function runPoll() {
   readSupply(ctx, function () {
     readExtract(ctx, function () {
       readProcess(ctx, function () {
-        readActuators(ctx, function () {
-          writeTelemetryM(ctx, function () {
-            writeTelemetryAct(ctx, function () {
-              writePollStatus(ctx, function () {
-                log("DON");
+        readHeat(ctx, function () {
+          readCool(ctx, function () {
+            readVvx(ctx, function () {
+              readDampers(ctx, function () {
+                writeTelemetryM(ctx, function () {
+                  writeTelemetryAct(ctx, function () {
+                    writePollStatus(ctx, function () {
+                      log("DON");
+                    });
+                  });
+                });
               });
             });
           });
