@@ -1,4 +1,14 @@
-// common kvs 1.0.0
+// common kvs 1.0.1
+function kvsGet(key, cb) {
+  Shelly.call("KVS.Get", { key: String(key || "") }, function (res, err) {
+    if (err || !res) {
+      cb(null);
+      return;
+    }
+    cb(res.value);
+  });
+}
+
 function kvsSet(key, value, cb) {
   Shelly.call("KVS.Set", { key: String(key || ""), value: value }, function (res, err) {
     if (err) {
