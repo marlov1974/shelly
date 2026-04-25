@@ -1,8 +1,8 @@
-// state main 1.1.0
+// state main 1.1.2
 function readInput(cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     kvsGet(KEY_TEL_ACT, function (telAct) {
-      kvsGet(KEY_STATE_HIST, function (hist) {
+      readVvxEfficiencyHist(function (hist) {
         cb(telM || {}, telAct || {}, hist || {});
       });
     });
@@ -34,7 +34,7 @@ function runState() {
     fanAvg = calcFanAverage(telM, telAct);
 
     writeStateRun(run, function () {
-      writeStateHist(vvxEff.hist, function () {
+      writeVvxEfficiencyHist(vvxEff.hist, function () {
         writeTotalPowerValue(totalW, function () {
           writeVvxEfficiencyValue(vvxEff.pct, function () {
             writeFanSpeedAvgValue(fanAvg, function () {
