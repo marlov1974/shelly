@@ -1,4 +1,6 @@
-// state feature-vvx-efficiency 1.1.0
+// state feature-vvx-efficiency 1.1.2
+var VVX_EFFICIENCY_ID = 202;
+var KEY_STATE_HIST = "ftx.state.hist";
 var VVX_EFF_DEN_MIN_C = 3.0;
 
 function calcVvxEfficiencyRaw(telM) {
@@ -20,6 +22,12 @@ function calcVvxEfficiencyRaw(telM) {
   return d1(clip(100 * effAvg, 0, 100));
 }
 
+function readVvxEfficiencyHist(cb) {
+  kvsGet(KEY_STATE_HIST, function (hist) {
+    cb(hist || {});
+  });
+}
+
 function calcVvxEfficiency(telM, hist) {
   var raw = calcVvxEfficiencyRaw(telM);
   var r0 = hist && typeof hist.r0 === "number" ? hist.r0 : 0;
@@ -29,4 +37,12 @@ function calcVvxEfficiency(telM, hist) {
     pct: clipPct((raw + r0 + r1) / 3),
     hist: { r0: raw, r1: r0, r2: r1 }
   };
+}
+
+function writeVvxEfficiencyHist(hist, cb) {
+  kvsSet(KEY_STATE_HIST, hist, cb);
+}
+
+function writeVvxEfficiencyValue(v, cb) {
+  numberSet(VVX_EFFICIENCY_ID, v, cb);
 }
