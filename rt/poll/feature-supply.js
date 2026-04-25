@@ -1,4 +1,4 @@
-// poll feature-supply 1.0.0
+// poll feature-supply 1.0.1
 function parseSupplyUni(js) {
   var vm = comp(js, "voltmeter:" + VM_DP_ID);
   var inRpm = comp(js, "input:" + INPUT_RPM_ID);
@@ -8,15 +8,6 @@ function parseSupplyUni(js) {
     temp_post_vvx: tempValue(comp(js, "temperature:" + TEMP_A_ID)),
     temp_outdoor: tempValue(comp(js, "temperature:" + TEMP_B_ID)),
     temp_to_outdoor: tempValue(comp(js, "temperature:" + TEMP_C_ID))
-  };
-}
-
-function parseLight0(js) {
-  var light = comp(js, "light:0");
-  return {
-    on: b(bool2(light, "output", "ison")),
-    pct: clipPct(num2(light, "brightness", "brightness_set")),
-    w: i(n(num1(light, "apower"), 0))
   };
 }
 
