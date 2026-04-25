@@ -1,0 +1,11 @@
+{
+  "scripts": [
+    {
+      "name": "weather",
+      "id": 1,
+      "version": "1.0.0",
+      "recipe": "rt/recipes/weather.json",
+      "start": 1
+    }
+  ]
+}
