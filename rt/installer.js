@@ -1,4 +1,4 @@
-// installer 1.0.1
+// installer 1.0.2
 (function () {
   "use strict";
 
@@ -11,12 +11,27 @@
   var timer = null;
   var busy = false;
   var trace = "";
+  var textBusy = false;
+  var textPending = false;
+
+  function flushText() {
+    if (textBusy) {
+      textPending = true;
+      return;
+    }
+    textBusy = true;
+    textPending = false;
+    Shelly.call("Text.Set", { id: TEXT_ID, value: trace }, function () {
+      textBusy = false;
+      if (textPending) flushText();
+    });
+  }
 
   function t(s) {
     trace = trace + String(s || "") + " ";
     if (trace.length > 220) trace = trace.slice(trace.length - 220);
     print("inst " + trace);
-    Shelly.call("Text.Set", { id: TEXT_ID, value: trace }, function () {});
+    flushText();
   }
 
   function get(path, cb) {
@@ -40,17 +55,23 @@
     Shelly.call("KVS.Get", { key: STATE }, function (res, err) {
       var v;
       if (err || !res || !res.value || typeof res.value !== "object") {
+        t("KN");
         cb({ scripts: {} });
         return;
       }
       v = res.value;
       if (!v.scripts || typeof v.scripts !== "object") v.scripts = {};
+      t("KO");
       cb(v);
     });
   }
 
   function stateSet(st, cb) {
-    Shelly.call("KVS.Set", { key: STATE, value: st }, function () { cb(); });
+    t("KW");
+    Shelly.call("KVS.Set", { key: STATE, value: st }, function (res, err) {
+      if (err) t("KWE"); else t("KWO");
+      cb();
+    });
   }
 
   function deviceInfo(cb) {
@@ -116,10 +137,15 @@
   }
 
   function setCfg(id, name, cb) {
-    Shelly.call("Script.SetConfig", { id: id, config: { name: name, enable: true } }, function () { cb(); });
+    t("CFG" + id);
+    Shelly.call("Script.SetConfig", { id: id, config: { name: name, enable: true } }, function (res, err) {
+      if (err) t("CFGE"); else t("CFGO");
+      cb();
+    });
   }
 
   function ensure(desc, cb) {
+    if (!desc || !desc.name) { t("BADD"); cb(null); return; }
     list(function (arr) {
       var id = findScript(arr, desc.name, desc.id);
       if (id !== null && id !== undefined) { t("FD" + id); cb(id); return; }
@@ -150,6 +176,7 @@
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { t("WC"); cb(1); return; }
+    t("C" + pos);
     get(arr[pos], function (code) {
       if (code === null) { t("CE" + pos); cb(0); return; }
       put(id, code, pos > 0, function (ok) {
@@ -160,7 +187,9 @@
   }
 
   function installOne(desc, st, cb) {
-    var old = st.scripts[desc.name];
+    var old;
+    if (!desc || !desc.name) { t("BADS"); cb(); return; }
+    old = st.scripts[desc.name];
     t("SC" + desc.name + ":" + String(old || "-") + ">" + desc.version);
     if (old === desc.version) { t("SK"); cb(); return; }
     fetchJson(desc.recipe, "R", function (recipe) {
@@ -195,7 +224,7 @@
   function run() {
     if (busy) { t("BZ"); return; }
     busy = true;
-    trace = "I101 ";
+    trace = "I102 ";
     t("RN");
     deviceInfo(function (info) {
       if (!info) { busy = false; next(); return; }
