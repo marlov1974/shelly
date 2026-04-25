@@ -1,0 +1,15 @@
+{
+  "chunks": [
+    "rt/common/wrapper.start.js",
+    "rt/weather/meta.js",
+    "rt/weather/config.js",
+    "rt/common/runtime.js",
+    "rt/common/numbers.js",
+    "rt/common/http.js",
+    "rt/common/kvs.js",
+    "rt/weather/solar.js",
+    "rt/weather/temp.js",
+    "rt/weather/main.js",
+    "rt/common/wrapper.end.js"
+  ]
+}
