@@ -1,4 +1,4 @@
-// installer 1.0.8 no-start
+// installer 1.0.9 missing-script-reinstall
 (function () {
   "use strict";
 
@@ -32,22 +32,22 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("I108 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("I109 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
 
   function getDevicePath(cb) {
-    txt("I108 DI");
+    txt("I109 DI");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("I108 DIE"); cb(null); return; }
+      if (err || !info) { txt("I109 DIE"); cb(null); return; }
       fetchJson(INDEX, "I", function (idx) {
         var p = null;
         if (!idx) { cb(null); return; }
         p = idx[String(info.id || "")];
         if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
         if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
-        if (!p) txt("I108 NDF");
+        if (!p) txt("I109 NDF");
         cb(p || null);
       });
     });
@@ -55,7 +55,7 @@
 
   function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("I108 LSE"); cb([]); return; }
+      if (err || !res || !res.scripts) { txt("I109 LSE"); cb([]); return; }
       cb(res.scripts);
     });
   }
@@ -80,9 +80,9 @@
   }
 
   function create(name, cb) {
-    txt("I108 CR " + name);
+    txt("I109 CR " + name);
     Shelly.call("Script.Create", { name: name }, function (res, err) {
-      if (err || !res) { txt("I108 CRE " + name); cb(null); return; }
+      if (err || !res) { txt("I109 CRE " + name); cb(null); return; }
       cb(res.id);
     });
   }
@@ -100,15 +100,15 @@
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { cb(1); return; }
-    txt("I108 CG " + pos + "/" + arr.length);
+    txt("I109 CG " + pos + "/" + arr.length);
     get(arr[pos], function (code) {
-      if (code === null) { txt("I108 CE " + pos); cb(0); return; }
-      txt("I108 CO " + pos + " " + code.length);
+      if (code === null) { txt("I109 CE " + pos); cb(0); return; }
+      txt("I109 CO " + pos + " " + code.length);
       Timer.set(50, false, function () {
-        txt("I108 PW " + pos);
+        txt("I109 PW " + pos);
         put(id, code, pos > 0, function (ok) {
-          if (!ok) { txt("I108 PE " + pos); cb(0); return; }
-          txt("I108 PO " + pos);
+          if (!ok) { txt("I109 PE " + pos); cb(0); return; }
+          txt("I109 PO " + pos);
           Timer.set(50, false, function () {
             chunks(id, arr, pos + 1, cb);
           });
@@ -117,43 +117,51 @@
     });
   }
 
-  function ensure(name, cb) {
-    list(function (arr) {
-      var id = find(arr, name);
-      if (id !== null && id !== undefined) { cb(id); return; }
-      create(name, cb);
-    });
-  }
-
   function installWrite(desc, cb) {
-    txt("I108 R " + desc.name);
+    txt("I109 R " + desc.name);
     fetchJson(desc.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("I108 RCE " + desc.name); cb(); return; }
-      ensure(desc.name, function (id) {
-        if (id === null || id === undefined) { txt("I108 NE " + desc.name); cb(); return; }
-        stop(id, function () {
-          chunks(id, recipe.chunks, 0, function (ok) {
-            if (!ok) { txt("I108 WE " + desc.name); cb(); return; }
-            verSet(desc.name, desc.version, function () {
-              txt("I108 IN " + desc.name + " " + desc.version);
-              cb();
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("I109 RCE " + desc.name); cb(); return; }
+      list(function (arr) {
+        var id = find(arr, desc.name);
+        function writeTo(scriptId) {
+          if (scriptId === null || scriptId === undefined) { txt("I109 NE " + desc.name); cb(); return; }
+          stop(scriptId, function () {
+            chunks(scriptId, recipe.chunks, 0, function (ok) {
+              if (!ok) { txt("I109 WE " + desc.name); cb(); return; }
+              verSet(desc.name, desc.version, function () {
+                txt("I109 IN " + desc.name + " " + desc.version);
+                cb();
+              });
             });
           });
-        });
+        }
+        if (id !== null && id !== undefined) {
+          writeTo(id);
+          return;
+        }
+        create(desc.name, writeTo);
       });
     });
   }
 
   function installOne(desc, cb) {
-    txt("I108 SC " + desc.name);
-    verGet(desc.name, function (old) {
-      if (old === String(desc.version || "")) {
-        txt("I108 SK " + desc.name + " " + old);
-        cb();
+    txt("I109 SC " + desc.name);
+    list(function (arr) {
+      var id = find(arr, desc.name);
+      if (id === null || id === undefined) {
+        txt("I109 MS " + desc.name);
+        installWrite(desc, cb);
         return;
       }
-      txt("I108 UP " + desc.name + " " + old + ">" + desc.version);
-      installWrite(desc, cb);
+      verGet(desc.name, function (old) {
+        if (old === String(desc.version || "")) {
+          txt("I109 SK " + desc.name + " " + old);
+          cb();
+          return;
+        }
+        txt("I109 UP " + desc.name + " " + old + ">" + desc.version);
+        installWrite(desc, cb);
+      });
     });
   }
 
@@ -171,9 +179,9 @@
   function installDev(dev, pos, cb) {
     var d;
     if (pos >= dev.n) { cb(); return; }
-    txt("I108 L " + pos);
+    txt("I109 L " + pos);
     d = descAt(dev, pos);
-    if (!d) { txt("I108 BADS " + pos); installDev(dev, pos + 1, cb); return; }
+    if (!d) { txt("I109 BADS " + pos); installDev(dev, pos + 1, cb); return; }
     installOne(d, function () { installDev(dev, pos + 1, cb); });
   }
 
@@ -183,16 +191,16 @@
   }
 
   function run() {
-    if (busy) { txt("I108 BZ"); return; }
+    if (busy) { txt("I109 BZ"); return; }
     busy = true;
-    txt("I108 RN");
+    txt("I109 RN");
     getDevicePath(function (path) {
       if (!path) { busy = false; next(); return; }
       fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.n) { txt("I108 DE"); busy = false; next(); return; }
-        txt("I108 DN " + dev.n);
+        if (!dev || !dev.n) { txt("I109 DE"); busy = false; next(); return; }
+        txt("I109 DN " + dev.n);
         installDev(dev, 0, function () {
-          txt("I108 OK");
+          txt("I109 OK");
           busy = false;
           next();
         });
