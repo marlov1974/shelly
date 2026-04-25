@@ -1,18 +1,13 @@
 {
-  "scripts": [
-    {
-      "name": "weather",
-      "id": 1,
-      "version": "1.0.1",
-      "recipe": "rt/recipes/weather.json",
-      "start": 1
-    },
-    {
-      "name": "poll",
-      "id": 2,
-      "version": "1.0.0",
-      "recipe": "rt/recipes/p.json",
-      "start": 1
-    }
-  ]
+  "n": 2,
+  "s0_name": "weather",
+  "s0_id": 1,
+  "s0_version": "1.0.1",
+  "s0_recipe": "rt/recipes/weather.json",
+  "s0_start": 1,
+  "s1_name": "poll",
+  "s1_id": 2,
+  "s1_version": "1.0.0",
+  "s1_recipe": "rt/recipes/p.json",
+  "s1_start": 1
 }
