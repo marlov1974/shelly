@@ -1,13 +1,25 @@
-// poll feature-supply 3.0.0
+// poll feature-supply 3.0.2
+var IP_SUPPLY_UNI = "192.168.77.20";
+var IP_SUPPLY_FAN = "192.168.77.10";
+
+var SUPPLY_DP_ID = 100;
+var SUPPLY_RPM_ID = 2;
+var TEMP_POST_VVX_ID = 100;
+var TEMP_OUTDOOR_ID = 101;
+var TEMP_TO_OUTDOOR_ID = 102;
+
+var K_SUPPLY_FAN = 11.6;
+var SUPPLY_FAN_MAX_W = 180;
+
 function parseSupplyUni(js) {
-  var vm = comp(js, "voltmeter:" + VM_DP_ID);
-  var inRpm = comp(js, "input:" + INPUT_RPM_ID);
+  var vm = comp(js, "voltmeter:" + SUPPLY_DP_ID);
+  var inRpm = comp(js, "input:" + SUPPLY_RPM_ID);
   return {
     pa: n(num4(vm, "xvoltage", "value", "pa", "pressure"), 0),
     rpm: n(num4(inRpm, "xfreq", "value", "rpm", "frequency"), 0),
-    temp_post_vvx: tempValue(comp(js, "temperature:" + TEMP_A_ID)),
-    temp_outdoor: tempValue(comp(js, "temperature:" + TEMP_B_ID)),
-    temp_to_outdoor: tempValue(comp(js, "temperature:" + TEMP_C_ID))
+    temp_post_vvx: tempValue(comp(js, "temperature:" + TEMP_POST_VVX_ID)),
+    temp_outdoor: tempValue(comp(js, "temperature:" + TEMP_OUTDOOR_ID)),
+    temp_to_outdoor: tempValue(comp(js, "temperature:" + TEMP_TO_OUTDOOR_ID))
   };
 }
 
@@ -19,7 +31,7 @@ function deriveSupplyTelemetry(ctx) {
   ctx.supply.temp_outdoor = clipTemp(ctx.supply.temp_outdoor);
   ctx.supply.temp_to_outdoor = clipTemp(ctx.supply.temp_to_outdoor);
   ctx.supply.fan_pct = clipPct(ctx.supply.fan_pct);
-  ctx.supply.fan_w = clipW(ctx.supply.fan_w, 180);
+  ctx.supply.fan_w = clipW(ctx.supply.fan_w, SUPPLY_FAN_MAX_W);
 }
 
 function readSupply(ctx, cb) {
