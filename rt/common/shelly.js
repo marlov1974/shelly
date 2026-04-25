@@ -1,4 +1,4 @@
-// common shelly 1.0.0
+// common shelly 1.0.1
 function httpGetStatus(ip, cb) {
   Shelly.call("HTTP.GET", { url: "http://" + ip + "/rpc/Shelly.GetStatus", timeout: 3 }, function (res, err) {
     if (err || !res || !res.body) {
@@ -58,4 +58,21 @@ function abs(x) {
 
 function tempValue(c) {
   return n(num4(c, "tC", "tc", "value", "temp"), 0);
+}
+
+function parseLight0(js) {
+  var light = comp(js, "light:0");
+  return {
+    on: b(bool2(light, "output", "ison")),
+    pct: clipPct(num2(light, "brightness", "brightness_set")),
+    w: i(n(num1(light, "apower"), 0))
+  };
+}
+
+function parseSwitch0(js) {
+  var sw = comp(js, "switch:0");
+  return {
+    on: b(bool2(sw, "output", "state")),
+    w: i(n(num1(sw, "apower"), 0))
+  };
 }
