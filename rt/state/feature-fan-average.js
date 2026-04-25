@@ -1,4 +1,4 @@
-// state feature-fan-average 1.1.2
+// state feature-fan-average 1.1.3
 var FAN_SPEED_AVG_ID = 203;
 
 function calcFanAverage(telM, telAct) {
@@ -7,6 +7,7 @@ function calcFanAverage(telM, telAct) {
   return clipPct((pct(sup) + pct(ext)) / 2);
 }
 
-function writeFanSpeedAvgValue(v, cb) {
-  numberSet(FAN_SPEED_AVG_ID, v, cb);
+function runFanAverageFeature(telM, telAct, cb) {
+  var fanAvg = calcFanAverage(telM, telAct);
+  numberSet(FAN_SPEED_AVG_ID, fanAvg, cb);
 }
