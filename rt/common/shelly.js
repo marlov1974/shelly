@@ -1,14 +1,32 @@
-// common shelly 1.0.1
+// common shelly 1.0.2-watchdog
 function httpGetStatus(ip, cb) {
+  var done = false;
+  var timer = null;
+
+  function finish(js) {
+    if (done) return;
+    done = true;
+    if (timer) {
+      Timer.clear(timer);
+      timer = null;
+    }
+    cb(js);
+  }
+
+  timer = Timer.set(4500, false, function () {
+    timer = null;
+    finish(null);
+  });
+
   Shelly.call("HTTP.GET", { url: "http://" + ip + "/rpc/Shelly.GetStatus", timeout: 3 }, function (res, err) {
     if (err || !res || !res.body) {
-      cb(null);
+      finish(null);
       return;
     }
     try {
-      cb(JSON.parse(res.body));
+      finish(JSON.parse(res.body));
     } catch (e) {
-      cb(null);
+      finish(null);
     }
   });
 }
