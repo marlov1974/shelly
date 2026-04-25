@@ -1,15 +1,10 @@
 {
   "chunks": [
     "rt/common/wrapper.start.js",
-    "rt/poll/meta.js",
-    "rt/poll/config.js",
-    "rt/poll/context.js",
-    "rt/common/runtime.js",
-    "rt/common/numbers.js",
+    "rt/poll/base.js",
     "rt/common/kvs.js",
-    "rt/common/number.js",
     "rt/common/shelly.js",
-    "rt/poll/flow.js",
+    "rt/poll/norm.js",
     "rt/poll/feature-supply.js",
     "rt/poll/feature-extract.js",
     "rt/poll/feature-process.js",
