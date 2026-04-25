@@ -1,261 +1,178 @@
-// installer 1.0.0
+// installer 1.0.1
 (function () {
   "use strict";
 
-  var INSTALLER_ID = 0;
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
-  var INDEX_PATH = "rt/index.json";
-  var STATE_KEY = "ftx.installer.state";
-  var PERIOD_MS = 300000;
+  var INDEX = "rt/index.json";
+  var STATE = "ftx.installer.state";
+  var TEXT_ID = 201;
+  var PERIOD = 300000;
 
   var timer = null;
-  var running = false;
+  var busy = false;
+  var trace = "";
 
-  function log(s) {
-    print("installer " + s);
+  function t(s) {
+    trace = trace + String(s || "") + " ";
+    if (trace.length > 220) trace = trace.slice(trace.length - 220);
+    print("inst " + trace);
+    Shelly.call("Text.Set", { id: TEXT_ID, value: trace }, function () {});
   }
 
-  function httpGet(path, cb) {
+  function get(path, cb) {
+    t("G" + path);
     Shelly.call("HTTP.GET", { url: BASE + path, timeout: 10 }, function (res, err) {
       if (err || !res || !res.body) {
-        log("HTTP ERR " + path);
+        t("GE");
         cb(null);
         return;
       }
+      t("GO" + res.body.length);
       cb(res.body);
     });
   }
 
-  function jsonParse(s) {
-    try {
-      return JSON.parse(s);
-    } catch (e) {
-      return null;
-    }
+  function jp(s) {
+    try { return JSON.parse(s); } catch (e) { return null; }
   }
 
-  function kvsGetObject(key, cb) {
-    Shelly.call("KVS.Get", { key: key }, function (res, err) {
+  function stateGet(cb) {
+    Shelly.call("KVS.Get", { key: STATE }, function (res, err) {
+      var v;
       if (err || !res || !res.value || typeof res.value !== "object") {
         cb({ scripts: {} });
         return;
       }
-      if (!res.value.scripts || typeof res.value.scripts !== "object") {
-        res.value.scripts = {};
-      }
-      cb(res.value);
+      v = res.value;
+      if (!v.scripts || typeof v.scripts !== "object") v.scripts = {};
+      cb(v);
     });
   }
 
-  function kvsSetObject(key, value, cb) {
-    Shelly.call("KVS.Set", { key: key, value: value }, function () {
-      if (cb) cb();
-    });
+  function stateSet(st, cb) {
+    Shelly.call("KVS.Set", { key: STATE, value: st }, function () { cb(); });
   }
 
   function deviceInfo(cb) {
+    t("DI");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (res, err) {
-      if (err || !res) {
-        cb(null);
-        return;
-      }
+      if (err || !res) { t("DIE"); cb(null); return; }
+      t("D" + String(res.id || res.mac || "?"));
       cb(res);
     });
   }
 
-  function getDevicePath(info, cb) {
-    httpGet(INDEX_PATH, function (body) {
-      var idx;
-      var p;
-      if (!body) {
-        cb(null);
-        return;
-      }
-      idx = jsonParse(body);
-      if (!idx) {
-        log("INDEX JSON ERR");
-        cb(null);
-        return;
-      }
+  function devicePath(info, cb) {
+    get(INDEX, function (body) {
+      var idx = body ? jp(body) : null;
+      var p = null;
+      if (!idx) { t("IXE"); cb(null); return; }
       p = idx[String(info.id || "")];
       if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
       if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
-      cb(p || null);
+      if (p) t("P" + p); else t("PN");
+      cb(p);
     });
   }
 
-  function fetchDevice(path, cb) {
-    httpGet(path, function (body) {
-      var dev;
-      if (!body) {
-        cb(null);
-        return;
-      }
-      dev = jsonParse(body);
-      if (!dev || !dev.scripts || !dev.scripts.length) {
-        log("DEVICE JSON ERR");
-        cb(null);
-        return;
-      }
-      cb(dev);
+  function fetchJson(path, code, cb) {
+    get(path, function (body) {
+      var obj = body ? jp(body) : null;
+      if (!obj) { t(code + "E"); cb(null); return; }
+      t(code + "O");
+      cb(obj);
     });
   }
 
-  function fetchRecipe(path, cb) {
-    httpGet(path, function (body) {
-      var recipe;
-      if (!body) {
-        cb(null);
-        return;
-      }
-      recipe = jsonParse(body);
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) {
-        log("RECIPE JSON ERR");
-        cb(null);
-        return;
-      }
-      cb(recipe);
-    });
-  }
-
-  function listScripts(cb) {
+  function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) {
-        cb([]);
-        return;
-      }
+      if (err || !res || !res.scripts) { t("LSE"); cb([]); return; }
+      t("LS" + res.scripts.length);
       cb(res.scripts);
     });
   }
 
-  function findScript(list, name, expectedId) {
+  function findScript(listArr, name, id) {
     var i;
     var s;
-    var byName = null;
-    var byId = null;
-    for (i = 0; i < list.length; i++) {
-      s = list[i];
-      if (s.name === name) byName = s;
-      if (s.id === expectedId) byId = s;
+    for (i = 0; i < listArr.length; i++) {
+      s = listArr[i];
+      if (s.name === name) return s.id;
     }
-    if (byName) return byName;
-    if (byId && (!byId.name || byId.name === name)) return byId;
+    for (i = 0; i < listArr.length; i++) {
+      s = listArr[i];
+      if (s.id === id) return s.id;
+    }
     return null;
   }
 
-  function createScript(name, cb) {
+  function create(name, cb) {
+    t("CR" + name);
     Shelly.call("Script.Create", { name: name }, function (res, err) {
-      if (err || !res) {
-        log("CREATE ERR " + name);
-        cb(null);
-        return;
-      }
+      if (err || !res) { t("CRE"); cb(null); return; }
+      t("CRO" + res.id);
       cb(res.id);
     });
   }
 
-  function setScriptName(id, name, cb) {
-    Shelly.call("Script.SetConfig", { id: id, config: { name: name, enable: true } }, function () {
-      cb();
+  function setCfg(id, name, cb) {
+    Shelly.call("Script.SetConfig", { id: id, config: { name: name, enable: true } }, function () { cb(); });
+  }
+
+  function ensure(desc, cb) {
+    list(function (arr) {
+      var id = findScript(arr, desc.name, desc.id);
+      if (id !== null && id !== undefined) { t("FD" + id); cb(id); return; }
+      create(desc.name, function (newId) {
+        if (newId === null || newId === undefined) { cb(null); return; }
+        setCfg(newId, desc.name, function () { cb(newId); });
+      });
     });
   }
 
-  function stopScript(id, cb) {
-    Shelly.call("Script.Stop", { id: id }, function () {
-      cb();
-    });
+  function stop(id, cb) {
+    t("SP" + id);
+    Shelly.call("Script.Stop", { id: id }, function () { cb(); });
   }
 
-  function startScript(id, cb) {
-    Shelly.call("Script.Start", { id: id }, function () {
-      cb();
-    });
+  function start(id, cb) {
+    t("ST" + id);
+    Shelly.call("Script.Start", { id: id }, function (res, err) { if (err) t("STE"); else t("STO"); cb(); });
   }
 
-  function putCode(id, code, append, cb) {
+  function put(id, code, append, cb) {
+    t((append ? "A" : "W") + id + ":" + code.length);
     Shelly.call("Script.PutCode", { id: id, code: code, append: append }, function (res, err) {
-      if (err) {
-        log("PUT ERR id=" + id);
-        cb(0);
-        return;
-      }
+      if (err) { t("PE"); cb(0); return; }
       cb(1);
     });
   }
 
-  function ensureScript(desc, cb) {
-    listScripts(function (list) {
-      var s = findScript(list, desc.name, desc.id);
-      if (s) {
-        cb(s.id);
-        return;
-      }
-      createScript(desc.name, function (id) {
-        if (id === null || id === undefined) {
-          cb(null);
-          return;
-        }
-        setScriptName(id, desc.name, function () {
-          cb(id);
-        });
+  function chunks(id, arr, pos, cb) {
+    if (pos >= arr.length) { t("WC"); cb(1); return; }
+    get(arr[pos], function (code) {
+      if (code === null) { t("CE" + pos); cb(0); return; }
+      put(id, code, pos > 0, function (ok) {
+        if (!ok) { cb(0); return; }
+        chunks(id, arr, pos + 1, cb);
       });
     });
   }
 
-  function writeChunks(id, chunks, pos, cb) {
-    if (pos >= chunks.length) {
-      cb(1);
-      return;
-    }
-    httpGet(chunks[pos], function (code) {
-      if (code === null) {
-        cb(0);
-        return;
-      }
-      putCode(id, code, pos > 0, function (ok) {
-        if (!ok) {
-          cb(0);
-          return;
-        }
-        writeChunks(id, chunks, pos + 1, cb);
-      });
-    });
-  }
-
-  function installOne(desc, state, cb) {
-    var current = state.scripts[desc.name];
-    if (current === desc.version) {
-      log("SKIP " + desc.name + " " + desc.version);
-      cb();
-      return;
-    }
-
-    log("INSTALL " + desc.name + " " + desc.version);
-    fetchRecipe(desc.recipe, function (recipe) {
-      if (!recipe) {
-        cb();
-        return;
-      }
-      ensureScript(desc, function (id) {
-        if (id === null || id === undefined) {
-          cb();
-          return;
-        }
-        stopScript(id, function () {
-          writeChunks(id, recipe.chunks, 0, function (ok) {
-            if (!ok) {
-              cb();
-              return;
-            }
-            state.scripts[desc.name] = desc.version;
-            kvsSetObject(STATE_KEY, state, function () {
-              if (desc.start) {
-                startScript(id, function () {
-                  cb();
-                });
-              } else {
-                cb();
-              }
+  function installOne(desc, st, cb) {
+    var old = st.scripts[desc.name];
+    t("SC" + desc.name + ":" + String(old || "-") + ">" + desc.version);
+    if (old === desc.version) { t("SK"); cb(); return; }
+    fetchJson(desc.recipe, "R", function (recipe) {
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { t("RCE"); cb(); return; }
+      ensure(desc, function (id) {
+        if (id === null || id === undefined) { t("NE"); cb(); return; }
+        stop(id, function () {
+          chunks(id, recipe.chunks, 0, function (ok) {
+            if (!ok) { t("WE"); cb(); return; }
+            st.scripts[desc.name] = desc.version;
+            stateSet(st, function () {
+              if (desc.start) start(id, cb); else cb();
             });
           });
         });
@@ -263,56 +180,35 @@
     });
   }
 
-  function installList(list, pos, state, cb) {
-    if (pos >= list.length) {
-      cb();
-      return;
-    }
-    installOne(list[pos], state, function () {
-      installList(list, pos + 1, state, cb);
-    });
+  function installList(arr, pos, st, cb) {
+    if (pos >= arr.length) { cb(); return; }
+    t("L" + pos);
+    installOne(arr[pos], st, function () { installList(arr, pos + 1, st, cb); });
   }
 
-  function scheduleNext() {
-    if (timer) {
-      Timer.clear(timer);
-      timer = null;
-    }
-    timer = Timer.set(PERIOD_MS, false, function () {
-      timer = null;
-      runInstaller();
-    });
+  function next() {
+    if (timer) Timer.clear(timer);
+    t("NX");
+    timer = Timer.set(PERIOD, false, function () { timer = null; run(); });
   }
 
-  function runInstaller() {
-    if (running) return;
-    running = true;
-    log("RUN");
-
+  function run() {
+    if (busy) { t("BZ"); return; }
+    busy = true;
+    trace = "I101 ";
+    t("RN");
     deviceInfo(function (info) {
-      if (!info) {
-        running = false;
-        scheduleNext();
-        return;
-      }
-      getDevicePath(info, function (path) {
-        if (!path) {
-          log("NO DEVICE FILE");
-          running = false;
-          scheduleNext();
-          return;
-        }
-        fetchDevice(path, function (dev) {
-          if (!dev) {
-            running = false;
-            scheduleNext();
-            return;
-          }
-          kvsGetObject(STATE_KEY, function (state) {
-            installList(dev.scripts, 0, state, function () {
-              log("DONE");
-              running = false;
-              scheduleNext();
+      if (!info) { busy = false; next(); return; }
+      devicePath(info, function (path) {
+        if (!path) { t("NDF"); busy = false; next(); return; }
+        fetchJson(path, "D", function (dev) {
+          if (!dev || !dev.scripts || !dev.scripts.length) { t("DE"); busy = false; next(); return; }
+          t("DN" + dev.scripts.length);
+          stateGet(function (st) {
+            installList(dev.scripts, 0, st, function () {
+              t("OK");
+              busy = false;
+              next();
             });
           });
         });
@@ -320,5 +216,5 @@
     });
   }
 
-  runInstaller();
+  run();
 })();
