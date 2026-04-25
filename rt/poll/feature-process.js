@@ -1,9 +1,16 @@
-// poll feature-process 1.0.0
+// poll feature-process 3.0.2
+var IP_PROCESS_UNI = "192.168.77.22";
+
+var CO2_VM_ID = 100;
+var VVX_RPM_ID = 2;
+var TEMP_HOUSE_ID = 100;
+var RH_HOUSE_ID = 100;
+
 function parseProcessUni(js) {
-  var vm = comp(js, "voltmeter:" + VM_DP_ID);
-  var inRpm = comp(js, "input:" + INPUT_RPM_ID);
-  var rh = comp(js, "humidity:" + RH_ID);
-  var t = comp(js, "temperature:" + TEMP_A_ID);
+  var vm = comp(js, "voltmeter:" + CO2_VM_ID);
+  var inRpm = comp(js, "input:" + VVX_RPM_ID);
+  var rh = comp(js, "humidity:" + RH_HOUSE_ID);
+  var t = comp(js, "temperature:" + TEMP_HOUSE_ID);
   var tempRaw = n(num4(t, "tC", "tc", "value", "temp"), 0);
   var rhRaw = n(num3(rh, "rh", "value", "percent"), -1);
   var tempErr = !!(t && t.errors && t.errors.length);
