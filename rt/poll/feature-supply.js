@@ -1,4 +1,4 @@
-// poll feature-supply 3.0.2
+// poll feature-supply 3.1.0
 var IP_SUPPLY_UNI = "192.168.77.20";
 var IP_SUPPLY_FAN = "192.168.77.10";
 
@@ -9,7 +9,11 @@ var TEMP_OUTDOOR_ID = 101;
 var TEMP_TO_OUTDOOR_ID = 102;
 
 var K_SUPPLY_FAN = 11.6;
-var SUPPLY_FAN_MAX_W = 180;
+
+function supplyPaToLs(pa) {
+  if (pa <= 0) return 0;
+  return Math.round(K_SUPPLY_FAN * Math.sqrt(pa));
+}
 
 function parseSupplyUni(js) {
   var vm = comp(js, "voltmeter:" + SUPPLY_DP_ID);
@@ -24,14 +28,14 @@ function parseSupplyUni(js) {
 }
 
 function deriveSupplyTelemetry(ctx) {
-  ctx.supply.pa = clipPa(ctx.supply.pa);
-  ctx.supply.rpm = clipFanRpm(ctx.supply.rpm);
-  ctx.supply.ls = clipLs(paToLsSupply(ctx.supply.pa));
-  ctx.supply.temp_post_vvx = clipTemp(ctx.supply.temp_post_vvx);
-  ctx.supply.temp_outdoor = clipTemp(ctx.supply.temp_outdoor);
-  ctx.supply.temp_to_outdoor = clipTemp(ctx.supply.temp_to_outdoor);
-  ctx.supply.fan_pct = clipPct(ctx.supply.fan_pct);
-  ctx.supply.fan_w = clipW(ctx.supply.fan_w, SUPPLY_FAN_MAX_W);
+  ctx.supply.pa = normPa(ctx.supply.pa);
+  ctx.supply.rpm = normFanRpm(ctx.supply.rpm);
+  ctx.supply.ls = normLs(supplyPaToLs(ctx.supply.pa));
+  ctx.supply.temp_post_vvx = normTemp(ctx.supply.temp_post_vvx);
+  ctx.supply.temp_outdoor = normTemp(ctx.supply.temp_outdoor);
+  ctx.supply.temp_to_outdoor = normTemp(ctx.supply.temp_to_outdoor);
+  ctx.supply.fan_pct = normPct(ctx.supply.fan_pct);
+  ctx.supply.fan_w = normW(ctx.supply.fan_w);
 }
 
 function readSupply(ctx, cb) {
