@@ -2,6 +2,7 @@
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/state/base.js",
+    "rt/state/numbers.js",
     "rt/common/kvs.js",
     "rt/common/number.js",
     "rt/state/feature-run-supply.js",
