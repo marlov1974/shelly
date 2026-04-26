@@ -1,4 +1,4 @@
-// state perf-vvx 1.2.3
+// state perf-vvx 1.3.0-classic-calc-rpc-history-write
 var VVX_EFFICIENCY_ID = 202;
 var KEY_STATE_HIST = "ftx.state.hist";
 var VVX_EFF_DEN_MIN_C = 3.0;
@@ -27,11 +27,20 @@ function calcVvxEfficiency(telM, hist) {
   return { pct: clipPct((raw + r0 + r1) / 3), hist: { r0: raw, r1: r0, r2: r1 } };
 }
 
-function applyVvxEfficiencyFeature(ctx, cb) {
+function readVvxEfficiencyHist(cb) {
   kvsGet(KEY_STATE_HIST, function (hist) {
-    var eff = calcVvxEfficiency(ctx.telM || {}, hist || {});
-    kvsSet(KEY_STATE_HIST, eff.hist, function () {
-      numberSet(VVX_EFFICIENCY_ID, eff.pct, cb);
-    });
+    cb(hist || {});
+  });
+}
+
+function calcVvxEfficiencyFeature(ctx, hist) {
+  var eff = calcVvxEfficiency(ctx.telM || {}, hist || {});
+  ctx.vvx_eff_pct = eff.pct;
+  ctx.vvx_eff_hist = eff.hist;
+}
+
+function writeVvxEfficiencyFeature(ctx, cb) {
+  kvsSet(KEY_STATE_HIST, ctx.vvx_eff_hist || {}, function () {
+    numberSet(VVX_EFFICIENCY_ID, ctx.vvx_eff_pct || 0, cb);
   });
 }
