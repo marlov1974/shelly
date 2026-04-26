@@ -1,4 +1,4 @@
-// poll main 3.2.0-classic-apply
+// poll main 3.2.1-direct-parse-low-memory
 function readAll(ctx, cb) {
   readSupply(ctx, function () {
     readExtract(ctx, function () {
@@ -15,22 +15,11 @@ function readAll(ctx, cb) {
   });
 }
 
-function applyAll(ctx) {
-  applySupply(ctx);
-  applyExtract(ctx);
-  applyProcess(ctx);
-  applyHeat(ctx);
-  applyCool(ctx);
-  applyVvx(ctx);
-  applyDampers(ctx);
-}
-
 function runPoll() {
   var ctx = createPollCtx();
   log("BOT");
 
   readAll(ctx, function () {
-    applyAll(ctx);
     writeTelemetryM(ctx, function () {
       writeTelemetryAct(ctx, function () {
         writePollStatus(ctx, function () {
