@@ -1,4 +1,4 @@
-// state main 1.2.11-rpc-only-250ms-yield-retest
+// state main 1.2.12-rpc-only-read-1500ms-yield-test
 function readInput(ctx, cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     ctx.telM = telM || {};
@@ -9,15 +9,15 @@ function readInput(ctx, cb) {
   });
 }
 
-function statePause(cb) {
-  Timer.set(250, false, function () {
+function statePauseMs(ms, cb) {
+  Timer.set(ms, false, function () {
     cb();
   });
 }
 
-function stateRpcStep(fn, cb) {
+function stateRpcStep(ms, fn, cb) {
   fn(function () {
-    statePause(cb);
+    statePauseMs(ms, cb);
   });
 }
 
@@ -40,20 +40,20 @@ function runState() {
 
   log("BOT");
 
-  stateRpcStep(function (next) {
+  stateRpcStep(1500, function (next) {
     readInput(ctx, next);
   }, function () {
     applyRunCalculations(ctx, function () {
-      stateRpcStep(function (next) {
+      stateRpcStep(250, function (next) {
         writeStateOutput(ctx, next);
       }, function () {
-        stateRpcStep(function (next) {
+        stateRpcStep(250, function (next) {
           applyPowerFeature(ctx, next);
         }, function () {
-          stateRpcStep(function (next) {
+          stateRpcStep(250, function (next) {
             applyVvxEfficiencyFeature(ctx, next);
           }, function () {
-            stateRpcStep(function (next) {
+            stateRpcStep(250, function (next) {
               applyFanAverageFeature(ctx, next);
             }, function () {
               writeStateStatus(ctx, function () {
