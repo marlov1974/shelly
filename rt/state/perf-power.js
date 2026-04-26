@@ -1,4 +1,4 @@
-// state perf-power 1.2.3
+// state perf-power 1.3.0-classic-calc-rpc-write
 var TOTAL_POWER_ID = 201;
 var IDLE_POWER_W = 14;
 var DAMPERS_POWER_W = 8;
@@ -14,7 +14,10 @@ function calcPower(telM, telAct) {
   return i(clip(total, 0, 9999));
 }
 
-function applyPowerFeature(ctx, cb) {
-  var totalW = calcPower(ctx.telM || {}, ctx.telAct || {});
-  numberSet(TOTAL_POWER_ID, totalW, cb);
+function calcPowerFeature(ctx) {
+  ctx.power_w = calcPower(ctx.telM || {}, ctx.telAct || {});
+}
+
+function writePowerFeature(ctx, cb) {
+  numberSet(TOTAL_POWER_ID, ctx.power_w || 0, cb);
 }
