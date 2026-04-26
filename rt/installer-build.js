@@ -1,4 +1,4 @@
-// installer-build 1.1.0-job-id-recipe-boot
+// installer-build 1.1.1-self-stop-by-name
 (function () {
   "use strict";
 
@@ -6,7 +6,7 @@
   var TEXT_ID = 204;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
-  var SELF_ID = 1;
+  var SELF_NAME = "build";
 
   function txt(s) {
     print("build " + String(s || ""));
@@ -27,9 +27,17 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("B110 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("B111 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
+  }
+
+  function findByName(arr, name) {
+    var i;
+    for (i = 0; i < arr.length; i++) {
+      if (arr[i].name === name) return arr[i];
+    }
+    return null;
   }
 
   function stop(id, cb) {
@@ -58,17 +66,23 @@
   }
 
   function selfStop() {
-    Shelly.call("Script.Stop", { id: SELF_ID }, function () {});
+    Shelly.call("Script.List", {}, function (res, err) {
+      var s;
+      if (err || !res || !res.scripts) return;
+      s = findByName(res.scripts, SELF_NAME);
+      if (!s || s.id === undefined) return;
+      Shelly.call("Script.Stop", { id: s.id }, function () {});
+    });
   }
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { cb(1); return; }
-    txt("B110 W " + pos + "/" + arr.length);
+    txt("B111 W " + pos + "/" + arr.length);
     get(arr[pos], function (code) {
-      if (code === null) { txt("B110 CE " + pos); cb(0); return; }
+      if (code === null) { txt("B111 CE " + pos); cb(0); return; }
       Timer.set(120, false, function () {
         put(id, code, pos > 0, function (ok) {
-          if (!ok) { txt("B110 PE " + pos); cb(0); return; }
+          if (!ok) { txt("B111 PE " + pos); cb(0); return; }
           Timer.set(120, false, function () {
             chunks(id, arr, pos + 1, cb);
           });
@@ -78,17 +92,17 @@
   }
 
   function build(job) {
-    if (!job || !job.name || !job.recipe || job.id === undefined) { txt("B110 BJ"); selfStop(); return; }
-    txt("B110 R " + job.name);
+    if (!job || !job.name || !job.recipe || job.id === undefined) { txt("B111 BJ"); selfStop(); return; }
+    txt("B111 R " + job.name);
     fetchJson(job.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("B110 RCE"); selfStop(); return; }
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("B111 RCE"); selfStop(); return; }
       stop(job.id, function () {
         setBoot(job.id, !!recipe.boot, function () {
           chunks(job.id, recipe.chunks, 0, function (ok) {
-            if (!ok) { txt("B110 WE " + job.name); selfStop(); return; }
+            if (!ok) { txt("B111 WE " + job.name); selfStop(); return; }
             verSet(job.name, job.version, function () {
               jobClear(function () {
-                txt("B110 OK " + job.name + " " + job.version);
+                txt("B111 OK " + job.name + " " + job.version);
                 selfStop();
               });
             });
@@ -99,9 +113,9 @@
   }
 
   function run() {
-    txt("B110 RN");
+    txt("B111 RN");
     Shelly.call("KVS.Get", { key: JOB_KEY }, function (res, err) {
-      if (err || !res || !res.value || !res.value.name) { txt("B110 NJ"); selfStop(); return; }
+      if (err || !res || !res.value || !res.value.name) { txt("B111 NJ"); selfStop(); return; }
       build(res.value);
     });
   }
