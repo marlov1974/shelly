@@ -1,4 +1,21 @@
-// brain feature-target 2.0.0
+// brain feature-target 2.1.0
+var NIGHT_SETBACK_DELTA_C = 1.0;
+var NIGHT_SETBACK_START_HOUR = 19;
+var NIGHT_SETBACK_END_HOUR = 4;
+
+var WEATHER_BIAS_START_HOUR = 4;
+var WEATHER_BIAS_END_HOUR = 19;
+var WEATHER_SOLAR_NEUTRAL_KWH = 15;
+var WEATHER_TEMP_NEUTRAL_C = 5;
+var WEATHER_SOLAR_SLOPE_C_PER_KWH = 0.04;
+var WEATHER_TEMP_WARM_SLOPE_C_PER_C = 0.10;
+var WEATHER_TEMP_COLD_SLOPE_C_PER_C = 0.10;
+var WEATHER_BIAS_MIN_C = -3.0;
+var WEATHER_BIAS_MAX_C = 1.5;
+
+var DP_A = 17.62;
+var DP_B = 243.12;
+
 function isNightSetbackWindow() {
   var hour = getHourNow();
   return (hour >= NIGHT_SETBACK_START_HOUR || hour < NIGHT_SETBACK_END_HOUR) ? 1 : 0;
