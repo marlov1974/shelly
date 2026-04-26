@@ -1,4 +1,4 @@
-// installer 1.1.0-http-watchdog
+// installer-watch 2.0.0-split-builder
 (function () {
   "use strict";
 
@@ -7,11 +7,17 @@
   var TEXT_ID = 201;
   var PERIOD = 300000;
   var VK = "ftx.ver.";
+  var JOB_KEY = "ftx.install.job";
+
+  var BUILD_NAME = "installer-build";
+  var BUILD_VERSION = "1.0.0";
+  var BUILD_PATH = "rt/installer-build.js";
+
   var timer = null;
   var busy = false;
 
   function txt(s) {
-    print("inst " + String(s || ""));
+    print("watch " + String(s || ""));
     Shelly.call("Text.Set", { id: TEXT_ID, value: String(s || "") }, function () {});
   }
 
@@ -31,15 +37,12 @@
 
     watchdog = Timer.set(15000, false, function () {
       watchdog = null;
-      txt("I110 HTO");
+      txt("W200 HTO");
       finish(null);
     });
 
     Shelly.call("HTTP.GET", { url: BASE + path + "?v=" + String(Math.floor(Date.now() / 60000)), timeout: 10 }, function (res, err) {
-      if (err || !res || !res.body) {
-        finish(null);
-        return;
-      }
+      if (err || !res || !res.body) { finish(null); return; }
       finish(res.body);
     });
   }
@@ -51,30 +54,14 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("I110 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W200 " + tag + "E"); cb(null); return; }
       cb(obj);
-    });
-  }
-
-  function getDevicePath(cb) {
-    txt("I110 DI");
-    Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("I110 DIE"); cb(null); return; }
-      fetchJson(INDEX, "I", function (idx) {
-        var p = null;
-        if (!idx) { cb(null); return; }
-        p = idx[String(info.id || "")];
-        if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
-        if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
-        if (!p) txt("I110 NDF");
-        cb(p || null);
-      });
     });
   }
 
   function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("I110 LSE"); cb([]); return; }
+      if (err || !res || !res.scripts) { txt("W200 LSE"); cb([]); return; }
       cb(res.scripts);
     });
   }
@@ -98,10 +85,16 @@
     Shelly.call("KVS.Set", { key: VK + name, value: String(version || "") }, function () { cb(); });
   }
 
+  function put(id, code, cb) {
+    Shelly.call("Script.PutCode", { id: id, code: code, append: false }, function (res, err) {
+      if (err) { cb(0); return; }
+      cb(1);
+    });
+  }
+
   function create(name, cb) {
-    txt("I110 CR " + name);
     Shelly.call("Script.Create", { name: name }, function (res, err) {
-      if (err || !res) { txt("I110 CRE " + name); cb(null); return; }
+      if (err || !res) { cb(null); return; }
       cb(res.id);
     });
   }
@@ -110,76 +103,51 @@
     Shelly.call("Script.Stop", { id: id }, function () { cb(); });
   }
 
-  function put(id, code, append, cb) {
-    Shelly.call("Script.PutCode", { id: id, code: code, append: append }, function (res, err) {
-      if (err) { cb(0); return; }
-      cb(1);
-    });
+  function start(id, cb) {
+    Shelly.call("Script.Start", { id: id }, function () { if (cb) cb(); });
   }
 
-  function chunks(id, arr, pos, cb) {
-    if (pos >= arr.length) { cb(1); return; }
-    txt("I110 CG " + pos + "/" + arr.length);
-    get(arr[pos], function (code) {
-      if (code === null) { txt("I110 CE " + pos); cb(0); return; }
-      txt("I110 CO " + pos + " " + code.length);
-      Timer.set(100, false, function () {
-        txt("I110 PW " + pos);
-        put(id, code, pos > 0, function (ok) {
-          if (!ok) { txt("I110 PE " + pos); cb(0); return; }
-          txt("I110 PO " + pos);
-          Timer.set(100, false, function () {
-            chunks(id, arr, pos + 1, cb);
-          });
-        });
-      });
-    });
-  }
-
-  function installWrite(desc, cb) {
-    txt("I110 R " + desc.name);
-    fetchJson(desc.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("I110 RCE " + desc.name); cb(); return; }
-      list(function (arr) {
-        var id = find(arr, desc.name);
-        function writeTo(scriptId) {
-          if (scriptId === null || scriptId === undefined) { txt("I110 NE " + desc.name); cb(); return; }
+  function ensureBuild(cb) {
+    list(function (arr) {
+      var id = find(arr, BUILD_NAME);
+      function writeBuilder(scriptId) {
+        if (scriptId === null || scriptId === undefined) { txt("W200 BE"); cb(null); return; }
+        get(BUILD_PATH, function (code) {
+          if (code === null) { txt("W200 BGE"); cb(null); return; }
           stop(scriptId, function () {
-            chunks(scriptId, recipe.chunks, 0, function (ok) {
-              if (!ok) { txt("I110 WE " + desc.name); cb(); return; }
-              verSet(desc.name, desc.version, function () {
-                txt("I110 IN " + desc.name + " " + desc.version);
-                cb();
+            put(scriptId, code, function (ok) {
+              if (!ok) { txt("W200 BPE"); cb(null); return; }
+              verSet(BUILD_NAME, BUILD_VERSION, function () {
+                cb(scriptId);
               });
             });
           });
-        }
-        if (id !== null && id !== undefined) {
-          writeTo(id);
+        });
+      }
+
+      verGet(BUILD_NAME, function (old) {
+        if (id !== null && id !== undefined && old === BUILD_VERSION) {
+          cb(id);
           return;
         }
-        create(desc.name, writeTo);
+        txt("W200 BI");
+        if (id !== null && id !== undefined) { writeBuilder(id); return; }
+        create(BUILD_NAME, writeBuilder);
       });
     });
   }
 
-  function installOne(desc, cb) {
-    txt("I110 SC " + desc.name);
-    list(function (arr) {
-      var id = find(arr, desc.name);
-      if (id === null || id === undefined) {
-        txt("I110 MS " + desc.name);
-        installWrite(desc, cb);
-        return;
-      }
-      verGet(desc.name, function (old) {
-        if (old === String(desc.version || "")) {
-          txt("I110 SK " + desc.name + " " + old);
-          cb();
-          return;
-        }
-        txt("I110 UP " + desc.name + " " + old + ">" + desc.version);
-        installWrite(desc, cb);
+  function getDevicePath(cb) {
+    Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
+      if (err || !info) { txt("W200 DIE"); cb(null); return; }
+      fetchJson(INDEX, "I", function (idx) {
+        var p = null;
+        if (!idx) { cb(null); return; }
+        p = idx[String(info.id || "")];
+        if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
+        if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
+        if (!p) txt("W200 NDF");
+        cb(p || null);
       });
     });
   }
@@ -195,13 +163,29 @@
     };
   }
 
-  function installDev(dev, pos, cb) {
+  function needJob(dev, pos, cb) {
     var d;
-    if (pos >= dev.n) { cb(); return; }
-    txt("I110 L " + pos);
+    if (pos >= dev.n) { cb(null); return; }
     d = descAt(dev, pos);
-    if (!d) { txt("I110 BADS " + pos); installDev(dev, pos + 1, cb); return; }
-    installOne(d, function () { installDev(dev, pos + 1, cb); });
+    if (!d) { needJob(dev, pos + 1, cb); return; }
+    verGet(d.name, function (old) {
+      if (old !== String(d.version || "")) {
+        cb(d);
+        return;
+      }
+      list(function (arr) {
+        var id = find(arr, d.name);
+        if (id === null || id === undefined) { cb(d); return; }
+        needJob(dev, pos + 1, cb);
+      });
+    });
+  }
+
+  function writeJob(job, cb) {
+    Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
+      if (err) { txt("W200 JE"); cb(0); return; }
+      cb(1);
+    });
   }
 
   function next() {
@@ -210,18 +194,28 @@
   }
 
   function run() {
-    if (busy) { txt("I110 BZ"); return; }
+    if (busy) { txt("W200 BZ"); return; }
     busy = true;
-    txt("I110 RN");
-    getDevicePath(function (path) {
-      if (!path) { busy = false; next(); return; }
-      fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.n) { txt("I110 DE"); busy = false; next(); return; }
-        txt("I110 DN " + dev.n);
-        installDev(dev, 0, function () {
-          txt("I110 OK");
-          busy = false;
-          next();
+    txt("W200 RN");
+
+    ensureBuild(function (buildId) {
+      if (buildId === null || buildId === undefined) { busy = false; next(); return; }
+      getDevicePath(function (path) {
+        if (!path) { busy = false; next(); return; }
+        fetchJson(path, "D", function (dev) {
+          if (!dev || !dev.n) { txt("W200 DE"); busy = false; next(); return; }
+          needJob(dev, 0, function (job) {
+            if (!job) { txt("W200 OK"); busy = false; next(); return; }
+            txt("W200 JOB " + job.name + " " + job.version);
+            writeJob(job, function (ok) {
+              if (!ok) { busy = false; next(); return; }
+              start(buildId, function () {
+                txt("W200 START " + job.name);
+                busy = false;
+                next();
+              });
+            });
+          });
         });
       });
     });
