@@ -1,4 +1,4 @@
-// installer-watch 2.2.1-oneshot-debug
+// installer-watch 2.2.2-oneshot-debug-manifest-get
 (function () {
   "use strict";
 
@@ -28,7 +28,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("W221 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W222 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -43,11 +43,7 @@
   function descAt(dev, pos) {
     var p = "s" + pos + "_";
     if (!dev[p + "name"]) return null;
-    return {
-      name: dev[p + "name"],
-      version: dev[p + "version"],
-      recipe: dev[p + "recipe"]
-    };
+    return { name: dev[p + "name"], version: dev[p + "version"], recipe: dev[p + "recipe"] };
   }
 
   function needJob(dev, pos, cb) {
@@ -63,36 +59,37 @@
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("W221 JE"); cb(0); return; }
+      if (err) { txt("W222 JE"); cb(0); return; }
       cb(1);
     });
   }
 
   function run() {
-    txt("W221 RN");
-    txt("W221 DI");
+    txt("W222 RN");
+    txt("W222 DI");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("W221 DIE"); return; }
-      txt("W221 DX");
+      if (err || !info) { txt("W222 DIE"); return; }
+      txt("W222 DX");
       fetchJson(INDEX, "I", function (idx) {
         var path = null;
         if (!idx) return;
         path = idx[String(info.id || "")];
         if (!path && info.mac) path = idx[String(info.mac).toLowerCase()];
         if (!path && info.mac) path = idx[String(info.mac).toUpperCase()];
-        if (!path) { txt("W221 NDF"); return; }
-        txt("W221 IX");
+        if (!path) { txt("W222 NDF"); return; }
+        txt("W222 IX");
+        txt("W222 MG");
         fetchJson(path, "D", function (dev) {
-          if (!dev || !dev.n) { txt("W221 DE"); return; }
-          txt("W221 MX");
+          if (!dev || !dev.n) { txt("W222 DE"); return; }
+          txt("W222 MX");
           needJob(dev, 0, function (job) {
-            if (!job) { txt("W221 OK"); return; }
+            if (!job) { txt("W222 OK"); return; }
             writeJob(job, function (ok) {
               if (!ok) return;
-              txt("W221 JOB " + job.name + " " + job.version);
+              txt("W222 JOB " + job.name + " " + job.version);
               Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
-                if (err2) { txt("W221 STE1"); return; }
-                txt("W221 ST " + job.name);
+                if (err2) { txt("W222 STE1"); return; }
+                txt("W222 ST " + job.name);
               });
             });
           });
