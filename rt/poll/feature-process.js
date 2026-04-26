@@ -1,4 +1,4 @@
-// poll feature-process 3.1.0
+// poll feature-process 3.2.0-classic-parse-derive
 var IP_PROCESS_UNI = "192.168.77.22";
 
 var CO2_VM_ID = 100;
@@ -23,21 +23,22 @@ function parseProcessUni(js) {
   };
 }
 
-function deriveProcess(ctx) {
+function readProcess(ctx, cb) {
+  httpGetStatus(IP_PROCESS_UNI, function (js) {
+    ctx.raw.process_uni = js;
+    cb();
+  });
+}
+
+function applyProcess(ctx) {
+  var x = ctx.raw.process_uni ? parseProcessUni(ctx.raw.process_uni) : null;
+  ctx.process.rpm_vvx = x ? x.rpm_vvx : 0;
+  ctx.process.co2_ppm = x ? x.co2_ppm : 0;
+  ctx.process.temp_house = x ? x.temp_house : 20.0;
+  ctx.process.rh_house = x ? x.rh_house : 60;
+
   ctx.process.rpm_vvx = normVvxRpm(ctx.process.rpm_vvx);
   ctx.process.co2_ppm = normPpm(ctx.process.co2_ppm);
   ctx.process.temp_house = normTemp(ctx.process.temp_house);
   ctx.process.rh_house = normRh(ctx.process.rh_house);
-}
-
-function readProcess(ctx, cb) {
-  httpGetStatus(IP_PROCESS_UNI, function (js) {
-    var x = js ? parseProcessUni(js) : null;
-    ctx.process.rpm_vvx = x ? x.rpm_vvx : 0;
-    ctx.process.co2_ppm = x ? x.co2_ppm : 0;
-    ctx.process.temp_house = x ? x.temp_house : 20.0;
-    ctx.process.rh_house = x ? x.rh_house : 60;
-    deriveProcess(ctx);
-    cb();
-  });
 }
