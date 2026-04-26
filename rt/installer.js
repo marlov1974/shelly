@@ -1,9 +1,8 @@
-// installer-watch 2.2.2-oneshot-debug-manifest-get
+// installer-watch 2.3.0-short-id-device-file
 (function () {
   "use strict";
 
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
-  var INDEX = "rt/index.json";
   var TEXT_ID = 201;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
@@ -28,9 +27,16 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("W222 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W230 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
+  }
+
+  function shortId(id) {
+    var s = String(id || "");
+    var p = s.lastIndexOf("-");
+    if (p >= 0) return s.slice(p + 1);
+    return s;
   }
 
   function verGet(name, cb) {
@@ -40,57 +46,47 @@
     });
   }
 
-  function descAt(dev, pos) {
-    var p = "s" + pos + "_";
-    if (!dev[p + "name"]) return null;
-    return { name: dev[p + "name"], version: dev[p + "version"], recipe: dev[p + "recipe"] };
+  function pkgAt(dev, pos) {
+    if (!dev || !dev.packages || !dev.packages[pos]) return null;
+    return dev.packages[pos];
   }
 
   function needJob(dev, pos, cb) {
-    var d;
-    if (pos >= dev.n) { cb(null); return; }
-    d = descAt(dev, pos);
-    if (!d) { needJob(dev, pos + 1, cb); return; }
-    verGet(d.name, function (old) {
-      if (old !== String(d.version || "")) { cb(d); return; }
+    var p = pkgAt(dev, pos);
+    if (!p) { cb(null); return; }
+    verGet(p.name, function (old) {
+      if (old !== String(p.version || "")) { cb(p); return; }
       needJob(dev, pos + 1, cb);
     });
   }
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("W222 JE"); cb(0); return; }
+      if (err) { txt("W230 JE"); cb(0); return; }
       cb(1);
     });
   }
 
   function run() {
-    txt("W222 RN");
-    txt("W222 DI");
+    txt("W230 RN");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("W222 DIE"); return; }
-      txt("W222 DX");
-      fetchJson(INDEX, "I", function (idx) {
-        var path = null;
-        if (!idx) return;
-        path = idx[String(info.id || "")];
-        if (!path && info.mac) path = idx[String(info.mac).toLowerCase()];
-        if (!path && info.mac) path = idx[String(info.mac).toUpperCase()];
-        if (!path) { txt("W222 NDF"); return; }
-        txt("W222 IX");
-        txt("W222 MG");
-        fetchJson(path, "D", function (dev) {
-          if (!dev || !dev.n) { txt("W222 DE"); return; }
-          txt("W222 MX");
-          needJob(dev, 0, function (job) {
-            if (!job) { txt("W222 OK"); return; }
-            writeJob(job, function (ok) {
-              if (!ok) return;
-              txt("W222 JOB " + job.name + " " + job.version);
-              Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
-                if (err2) { txt("W222 STE1"); return; }
-                txt("W222 ST " + job.name);
-              });
+      var sid;
+      var path;
+      if (err || !info) { txt("W230 DIE"); return; }
+      sid = shortId(info.id || info.mac || "");
+      path = "rt/devices/" + sid + ".json";
+      txt("W230 D " + sid);
+      fetchJson(path, "D", function (dev) {
+        if (!dev || !dev.packages) { txt("W230 DE"); return; }
+        txt("W230 MX");
+        needJob(dev, 0, function (job) {
+          if (!job) { txt("W230 OK"); return; }
+          writeJob(job, function (ok) {
+            if (!ok) return;
+            txt("W230 JOB " + job.name + " " + job.version);
+            Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
+              if (err2) { txt("W230 STE1"); return; }
+              txt("W230 ST " + job.name);
             });
           });
         });
