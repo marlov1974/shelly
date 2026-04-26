@@ -1,4 +1,4 @@
-// poll base 3.2.1-direct-parse-low-memory
+// poll base 3.2.2-self-stop
 var SCRIPT_NAME = "poll";
 
 var KEY_TEL_M = "ftx.tel.m";
@@ -7,6 +7,24 @@ var POLL_STATUS_TEXT_ID = 202;
 
 function log(s) {
   print(String(SCRIPT_NAME) + " " + s);
+}
+
+function findScriptByName(arr, name) {
+  var i;
+  for (i = 0; i < arr.length; i++) {
+    if (arr[i].name === name) return arr[i];
+  }
+  return null;
+}
+
+function selfStop() {
+  Shelly.call("Script.List", {}, function (res, err) {
+    var s;
+    if (err || !res || !res.scripts) return;
+    s = findScriptByName(res.scripts, SCRIPT_NAME);
+    if (!s || s.id === undefined) return;
+    Shelly.call("Script.Stop", { id: s.id }, function () {});
+  });
 }
 
 function createPollCtx() {
