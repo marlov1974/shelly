@@ -1,4 +1,4 @@
-// state perf-fan 1.2.3
+// state perf-fan 1.3.0-classic-calc-rpc-write
 var FAN_SPEED_AVG_ID = 203;
 
 function calcFanAverage(telM, telAct) {
@@ -7,7 +7,10 @@ function calcFanAverage(telM, telAct) {
   return clipPct((pct(sup) + pct(ext)) / 2);
 }
 
-function applyFanAverageFeature(ctx, cb) {
-  var fanAvg = calcFanAverage(ctx.telM || {}, ctx.telAct || {});
-  numberSet(FAN_SPEED_AVG_ID, fanAvg, cb);
+function calcFanAverageFeature(ctx) {
+  ctx.fan_avg_pct = calcFanAverage(ctx.telM || {}, ctx.telAct || {});
+}
+
+function writeFanAverageFeature(ctx, cb) {
+  numberSet(FAN_SPEED_AVG_ID, ctx.fan_avg_pct || 0, cb);
 }
