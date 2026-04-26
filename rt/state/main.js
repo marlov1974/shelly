@@ -1,4 +1,4 @@
-// state main 1.2.8-clean-250ms-yield
+// state main 1.2.9-rpc-only-250ms-yield
 function readInput(ctx, cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     ctx.telM = telM || {};
@@ -15,9 +15,23 @@ function statePause(cb) {
   });
 }
 
-function stateStep(fn, cb) {
+function stateRpcStep(fn, cb) {
   fn(function () {
     statePause(cb);
+  });
+}
+
+function applyRunCalculations(ctx, cb) {
+  applySupplyRun(ctx, function () {
+    applyExtractRun(ctx, function () {
+      applyVvxRun(ctx, function () {
+        applyHeatRun(ctx, function () {
+          applyCoolRun(ctx, function () {
+            applyDampersRun(ctx, cb);
+          });
+        });
+      });
+    });
   });
 }
 
@@ -26,46 +40,24 @@ function runState() {
 
   log("BOT");
 
-  stateStep(function (next) {
+  stateRpcStep(function (next) {
     readInput(ctx, next);
   }, function () {
-    stateStep(function (next) {
-      applySupplyRun(ctx, next);
-    }, function () {
-      stateStep(function (next) {
-        applyExtractRun(ctx, next);
+    applyRunCalculations(ctx, function () {
+      stateRpcStep(function (next) {
+        writeStateOutput(ctx, next);
       }, function () {
-        stateStep(function (next) {
-          applyVvxRun(ctx, next);
+        stateRpcStep(function (next) {
+          applyPowerFeature(ctx, next);
         }, function () {
-          stateStep(function (next) {
-            applyHeatRun(ctx, next);
+          stateRpcStep(function (next) {
+            applyVvxEfficiencyFeature(ctx, next);
           }, function () {
-            stateStep(function (next) {
-              applyCoolRun(ctx, next);
+            stateRpcStep(function (next) {
+              applyFanAverageFeature(ctx, next);
             }, function () {
-              stateStep(function (next) {
-                applyDampersRun(ctx, next);
-              }, function () {
-                stateStep(function (next) {
-                  writeStateOutput(ctx, next);
-                }, function () {
-                  stateStep(function (next) {
-                    applyPowerFeature(ctx, next);
-                  }, function () {
-                    stateStep(function (next) {
-                      applyVvxEfficiencyFeature(ctx, next);
-                    }, function () {
-                      stateStep(function (next) {
-                        applyFanAverageFeature(ctx, next);
-                      }, function () {
-                        writeStateStatus(ctx, function () {
-                          log("DON");
-                        });
-                      });
-                    });
-                  });
-                });
+              writeStateStatus(ctx, function () {
+                log("DON");
               });
             });
           });
