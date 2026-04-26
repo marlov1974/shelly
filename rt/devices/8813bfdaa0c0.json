@@ -1,0 +1,10 @@
+{
+  "packages": [
+    {
+      "id": 3,
+      "name": "state",
+      "version": "1.2.3",
+      "recipe": "rt/recipes/state.json"
+    }
+  ]
+}
