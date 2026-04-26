@@ -1,4 +1,4 @@
-// poll feature-supply 3.2.0-classic-parse-derive
+// poll feature-supply 3.2.1-direct-parse-low-memory
 var IP_SUPPLY_UNI = "192.168.77.20";
 var IP_SUPPLY_FAN = "192.168.77.10";
 
@@ -27,30 +27,23 @@ function parseSupplyUni(js) {
   };
 }
 
-function readSupply(ctx, cb) {
-  httpGetStatus(IP_SUPPLY_UNI, function (js) {
-    ctx.raw.supply_uni = js;
-    httpGetStatus(IP_SUPPLY_FAN, function (js2) {
-      ctx.raw.supply_fan = js2;
-      cb();
-    });
-  });
-}
-
-function applySupply(ctx) {
-  var x = ctx.raw.supply_uni ? parseSupplyUni(ctx.raw.supply_uni) : null;
-  var y = ctx.raw.supply_fan ? parseLight0(ctx.raw.supply_fan) : null;
-
+function applySupplyUni(ctx, js) {
+  var x = js ? parseSupplyUni(js) : null;
   ctx.supply.pa = x ? x.pa : 0;
   ctx.supply.rpm = x ? x.rpm : 0;
   ctx.supply.temp_post_vvx = x ? x.temp_post_vvx : 0;
   ctx.supply.temp_outdoor = x ? x.temp_outdoor : 0;
   ctx.supply.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
+}
 
+function applySupplyFan(ctx, js) {
+  var y = js ? parseLight0(js) : null;
   ctx.supply.fan_on = y ? y.on : 0;
   ctx.supply.fan_pct = y ? y.pct : 0;
   ctx.supply.fan_w = y ? y.w : 0;
+}
 
+function deriveSupplyTelemetry(ctx) {
   ctx.supply.pa = normPa(ctx.supply.pa);
   ctx.supply.rpm = normFanRpm(ctx.supply.rpm);
   ctx.supply.ls = normLs(supplyPaToLs(ctx.supply.pa));
@@ -59,4 +52,15 @@ function applySupply(ctx) {
   ctx.supply.temp_to_outdoor = normTemp(ctx.supply.temp_to_outdoor);
   ctx.supply.fan_pct = normPct(ctx.supply.fan_pct);
   ctx.supply.fan_w = normW(ctx.supply.fan_w);
+}
+
+function readSupply(ctx, cb) {
+  httpGetStatus(IP_SUPPLY_UNI, function (js) {
+    applySupplyUni(ctx, js);
+    httpGetStatus(IP_SUPPLY_FAN, function (js2) {
+      applySupplyFan(ctx, js2);
+      deriveSupplyTelemetry(ctx);
+      cb();
+    });
+  });
 }
