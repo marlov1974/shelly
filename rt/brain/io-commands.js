@@ -1,10 +1,15 @@
-// brain io-commands 2.0.0
-function normalizeMode(mode) {
-  if (mode !== MODE_STD && mode !== MODE_BST && mode !== MODE_FIRE && mode !== MODE_MAN) return MODE_STD;
-  return mode;
-}
+// brain io-commands 2.1.0
+var CMD_ENABLE_ID = 200;
+var CMD_NIGHT_SETBACK_ID = 201;
+var CMD_MODE_ID = 200;
+var CMD_HOUSE_TEMP_ID = 200;
 
 function readCommands(ctx, cb) {
+  ctx.cmd.enable = 0;
+  ctx.cmd.night_setback = 0;
+  ctx.cmd.mode = MODE_STD;
+  ctx.cmd.house_temp_c = 21.0;
+
   boolGet(CMD_ENABLE_ID, function (vEnable) {
     ctx.cmd.enable = vEnable;
     boolGet(CMD_NIGHT_SETBACK_ID, function (vNight) {
