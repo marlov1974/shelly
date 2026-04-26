@@ -6,6 +6,6 @@
   "s0_recipe": "rt/recipes/weather.json",
   "s1_name": "state",
   "s1_id": 3,
-  "s1_version": "1.2.2",
+  "s1_version": "1.2.3",
   "s1_recipe": "rt/recipes/state.json"
 }
