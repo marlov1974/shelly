@@ -1,4 +1,14 @@
-// brain feature-ventilation 2.0.0
+// brain feature-ventilation 2.1.0
+var EXT_MIN_PCT = 15;
+var EXT_MAX_PCT = 90;
+var CO2_PPM_AT_25 = 500;
+var CO2_PPM_AT_75 = 750;
+var CO2_EXT_PCT_AT_25 = 25;
+var CO2_EXT_PCT_AT_75 = 75;
+var TEMP_ERR_MAX_C = 3.0;
+var TEMP_EXT_BASE_PCT = 15;
+var TEMP_EXT_SLOPE_PCT_PER_C = 20;
+
 function calcStdExtractPctFromPpm(ppm) {
   var pct;
   pct = CO2_EXT_PCT_AT_25 + (n(ppm, CO2_PPM_AT_25) - CO2_PPM_AT_25) * ((CO2_EXT_PCT_AT_75 - CO2_EXT_PCT_AT_25) / (CO2_PPM_AT_75 - CO2_PPM_AT_25));
@@ -17,7 +27,5 @@ function supplyPctFromExtractPct(extPct) {
 
 function calcVentilation(ctx) {
   ctx.dx.fullAirReady = b(ctx.inp.dmp_run && ctx.inp.sup_run && ctx.inp.ext_run);
-  ctx.dx.fanFrozenGuardActive = b(ctx.inp.t_post_vvx_c < FREEZE_POST_VVX_MIN_C);
   ctx.dx.stdExtPct = max2(calcStdExtractPctFromPpm(ctx.inp.ppm_house), calcStdExtractPctFromTemp(ctx.inp.t_house_c, ctx.cmd.house_temp_c));
-  ctx.dx.failsafeVentReduce = b((ctx.inp.t_house_c < ctx.cmd.house_temp_c && ctx.inp.t_to_house_c < (ctx.inp.t_house_c - FAILSAFE_WRONG_DIR_DB_C)) || (ctx.inp.t_house_c > ctx.cmd.house_temp_c && ctx.inp.t_to_house_c > (ctx.inp.t_house_c + FAILSAFE_WRONG_DIR_DB_C)));
 }
