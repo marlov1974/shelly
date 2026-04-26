@@ -1,4 +1,4 @@
-// poll base 3.2.0-classic-ctx
+// poll base 3.2.1-direct-parse-low-memory
 var SCRIPT_NAME = "poll";
 
 var KEY_TEL_M = "ftx.tel.m";
@@ -11,17 +11,6 @@ function log(s) {
 
 function createPollCtx() {
   return {
-    raw: {
-      supply_uni: null,
-      supply_fan: null,
-      extract_uni: null,
-      extract_fan: null,
-      process_uni: null,
-      heat: null,
-      cool: null,
-      vvx: null,
-      dampers: null
-    },
     supply: { pa: 0, ls: 0, rpm: 0, fan_on: 0, fan_pct: 0, fan_w: 0, temp_post_vvx: 0, temp_outdoor: 0, temp_to_outdoor: 0 },
     extract: { pa: 0, ls: 0, rpm: 0, fan_on: 0, fan_pct: 0, fan_w: 0, temp_to_house: 0, temp_brine: 0, temp_hotwater: 0 },
     process: { rpm_vvx: 0, co2_ppm: 0, temp_house: 20.0, rh_house: 60 },
