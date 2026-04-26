@@ -1,4 +1,5 @@
 {
+  "boot": false,
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/state/base.js",
