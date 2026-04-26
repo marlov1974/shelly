@@ -1,4 +1,4 @@
-// state main 1.3.1
+// state main 1.3.2-self-stop
 function readInput(ctx, cb) {
   kvsGet(KEY_TEL_M, function (telM) {
     ctx.telM = telM || {};
@@ -39,6 +39,7 @@ function runState() {
             writeFanAverageFeature(ctx, function () {
               writeStateStatus(ctx, function () {
                 log("DON");
+                selfStop();
               });
             });
           });
