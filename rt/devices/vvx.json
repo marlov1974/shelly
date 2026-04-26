@@ -1,15 +1,11 @@
 {
-  "n": 3,
+  "n": 2,
   "s0_name": "weather",
   "s0_id": 1,
   "s0_version": "1.0.1",
   "s0_recipe": "rt/recipes/weather.json",
-  "s1_name": "poll",
-  "s1_id": 2,
-  "s1_version": "3.1.1",
-  "s1_recipe": "rt/recipes/p.json",
-  "s2_name": "state",
-  "s2_id": 3,
-  "s2_version": "1.2.1",
-  "s2_recipe": "rt/recipes/state.json"
+  "s1_name": "state",
+  "s1_id": 3,
+  "s1_version": "1.2.1",
+  "s1_recipe": "rt/recipes/state.json"
 }
