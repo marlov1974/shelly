@@ -1,8 +1,8 @@
-// brain main 2.0.0-structured
+// brain main 2.1.0
 function calculateBrain(ctx) {
-  mapInputs(ctx);
   calcTarget(ctx);
   calcVentilation(ctx);
+  calcFailsafe(ctx);
   calcThermal(ctx);
   calcVvx(ctx);
   buildIntent(ctx);
@@ -14,7 +14,7 @@ function runBrain() {
   log("BOT");
 
   readCommands(ctx, function () {
-    readTelemetry(ctx, function () {
+    readInputs(ctx, function () {
       readWeather(ctx, function () {
         readForcedMode(ctx, function () {
           applyForcedModeTimeout(ctx, function () {
