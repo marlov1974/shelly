@@ -1,10 +1,14 @@
-// poll feature-dampers 1.0.1
+// poll feature-dampers 1.2.0-classic-parse
 var IP_DAMPERS = "192.168.77.30";
 
 function readDampers(ctx, cb) {
   httpGetStatus(IP_DAMPERS, function (js) {
-    var x = js ? parseSwitch0(js) : null;
-    ctx.dmp.on = x ? x.on : 0;
+    ctx.raw.dampers = js;
     cb();
   });
+}
+
+function applyDampers(ctx) {
+  var x = ctx.raw.dampers ? parseSwitch0(ctx.raw.dampers) : null;
+  ctx.dmp.on = x ? x.on : 0;
 }
