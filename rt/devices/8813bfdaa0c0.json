@@ -11,6 +11,12 @@
       "name": "state",
       "version": "1.3.2",
       "recipe": "rt/recipes/state.json"
+    },
+    {
+      "id": 5,
+      "name": "brain",
+      "version": "2.0.0",
+      "recipe": "rt/recipes/brain.json"
     }
   ]
 }
