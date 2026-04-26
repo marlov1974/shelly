@@ -1,12 +1,12 @@
-// installer-build 1.0.0-one-script-builder
+// installer-build 1.1.0-job-id-recipe-boot
 (function () {
   "use strict";
 
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
-  var TEXT_ID = 201;
+  var TEXT_ID = 204;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
-  var SELF_NAME = "installer-build";
+  var SELF_ID = 1;
 
   function txt(s) {
     print("build " + String(s || ""));
@@ -14,28 +14,9 @@
   }
 
   function get(path, cb) {
-    var done = false;
-    var watchdog = null;
-
-    function finish(body) {
-      if (done) return;
-      done = true;
-      if (watchdog) {
-        Timer.clear(watchdog);
-        watchdog = null;
-      }
-      cb(body);
-    }
-
-    watchdog = Timer.set(15000, false, function () {
-      watchdog = null;
-      txt("B100 HTO");
-      finish(null);
-    });
-
-    Shelly.call("HTTP.GET", { url: BASE + path + "?v=" + String(Math.floor(Date.now() / 60000)), timeout: 10 }, function (res, err) {
-      if (err || !res || !res.body) { finish(null); return; }
-      finish(res.body);
+    Shelly.call("HTTP.GET", { url: BASE + path, timeout: 10 }, function (res, err) {
+      if (err || !res || !res.body) { cb(null); return; }
+      cb(res.body);
     });
   }
 
@@ -46,31 +27,8 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("B100 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("B110 " + tag + "E"); cb(null); return; }
       cb(obj);
-    });
-  }
-
-  function list(cb) {
-    Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("B100 LSE"); cb([]); return; }
-      cb(res.scripts);
-    });
-  }
-
-  function find(arr, name) {
-    var i;
-    for (i = 0; i < arr.length; i++) {
-      if (arr[i].name === name) return arr[i].id;
-    }
-    return null;
-  }
-
-  function create(name, cb) {
-    txt("B100 CR " + name);
-    Shelly.call("Script.Create", { name: name }, function (res, err) {
-      if (err || !res) { txt("B100 CRE " + name); cb(null); return; }
-      cb(res.id);
     });
   }
 
@@ -85,6 +43,12 @@
     });
   }
 
+  function setBoot(id, boot, cb) {
+    Shelly.call("Script.SetConfig", { id: id, config: { enable: !!boot } }, function () {
+      cb();
+    });
+  }
+
   function verSet(name, version, cb) {
     Shelly.call("KVS.Set", { key: VK + name, value: String(version || "") }, function () { cb(); });
   }
@@ -94,21 +58,17 @@
   }
 
   function selfStop() {
-    list(function (arr) {
-      var id = find(arr, SELF_NAME);
-      if (id === null || id === undefined) return;
-      Shelly.call("Script.Stop", { id: id }, function () {});
-    });
+    Shelly.call("Script.Stop", { id: SELF_ID }, function () {});
   }
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { cb(1); return; }
-    txt("B100 W " + pos + "/" + arr.length);
+    txt("B110 W " + pos + "/" + arr.length);
     get(arr[pos], function (code) {
-      if (code === null) { txt("B100 CE " + pos); cb(0); return; }
+      if (code === null) { txt("B110 CE " + pos); cb(0); return; }
       Timer.set(120, false, function () {
         put(id, code, pos > 0, function (ok) {
-          if (!ok) { txt("B100 PE " + pos); cb(0); return; }
+          if (!ok) { txt("B110 PE " + pos); cb(0); return; }
           Timer.set(120, false, function () {
             chunks(id, arr, pos + 1, cb);
           });
@@ -118,36 +78,30 @@
   }
 
   function build(job) {
-    if (!job || !job.name || !job.recipe) { txt("B100 NJ"); selfStop(); return; }
-    txt("B100 R " + job.name);
+    if (!job || !job.name || !job.recipe || job.id === undefined) { txt("B110 BJ"); selfStop(); return; }
+    txt("B110 R " + job.name);
     fetchJson(job.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("B100 RCE"); selfStop(); return; }
-      list(function (arr) {
-        var id = find(arr, job.name);
-        function writeTo(scriptId) {
-          if (scriptId === null || scriptId === undefined) { txt("B100 NE"); selfStop(); return; }
-          stop(scriptId, function () {
-            chunks(scriptId, recipe.chunks, 0, function (ok) {
-              if (!ok) { txt("B100 WE " + job.name); selfStop(); return; }
-              verSet(job.name, job.version, function () {
-                jobClear(function () {
-                  txt("B100 OK " + job.name + " " + job.version);
-                  selfStop();
-                });
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("B110 RCE"); selfStop(); return; }
+      stop(job.id, function () {
+        setBoot(job.id, !!recipe.boot, function () {
+          chunks(job.id, recipe.chunks, 0, function (ok) {
+            if (!ok) { txt("B110 WE " + job.name); selfStop(); return; }
+            verSet(job.name, job.version, function () {
+              jobClear(function () {
+                txt("B110 OK " + job.name + " " + job.version);
+                selfStop();
               });
             });
           });
-        }
-        if (id !== null && id !== undefined) { writeTo(id); return; }
-        create(job.name, writeTo);
+        });
       });
     });
   }
 
   function run() {
-    txt("B100 RN");
+    txt("B110 RN");
     Shelly.call("KVS.Get", { key: JOB_KEY }, function (res, err) {
-      if (err || !res || !res.value || !res.value.name) { txt("B100 NJ"); selfStop(); return; }
+      if (err || !res || !res.value || !res.value.name) { txt("B110 NJ"); selfStop(); return; }
       build(res.value);
     });
   }
