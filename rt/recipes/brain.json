@@ -1,0 +1,22 @@
+{
+  "boot": false,
+  "chunks": [
+    "rt/common/wrapper.start.js",
+    "rt/brain/base.js",
+    "rt/brain/helpers.js",
+    "rt/common/kvs.js",
+    "rt/brain/io-commands.js",
+    "rt/brain/io-telemetry.js",
+    "rt/brain/io-weather.js",
+    "rt/brain/io-forced-mode.js",
+    "rt/brain/feature-input-map.js",
+    "rt/brain/feature-target.js",
+    "rt/brain/feature-ventilation.js",
+    "rt/brain/feature-thermal.js",
+    "rt/brain/feature-vvx.js",
+    "rt/brain/intent.js",
+    "rt/brain/output.js",
+    "rt/brain/main.js",
+    "rt/common/wrapper.end.js"
+  ]
+}
