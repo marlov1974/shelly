@@ -6,7 +6,9 @@
     "rt/common/kvs.js",
     "rt/state/run-air.js",
     "rt/state/run-process.js",
-    "rt/state/perf.js",
+    "rt/state/perf-power.js",
+    "rt/state/perf-vvx.js",
+    "rt/state/perf-fan.js",
     "rt/state/output.js",
     "rt/state/main.js",
     "rt/common/wrapper.end.js"
