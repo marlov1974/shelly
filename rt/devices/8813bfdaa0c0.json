@@ -1,6 +1,12 @@
 {
   "packages": [
     {
+      "id": 2,
+      "name": "poll",
+      "version": "3.1.1",
+      "recipe": "rt/recipes/p.json"
+    },
+    {
       "id": 3,
       "name": "state",
       "version": "1.2.3",
