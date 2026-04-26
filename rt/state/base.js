@@ -1,4 +1,4 @@
-// state base 1.2.13
+// state base 1.3.0-classic-ctx
 var SCRIPT_NAME = "state";
 
 var KEY_TEL_M = "ftx.tel.m";
@@ -22,6 +22,10 @@ function createStateCtx() {
       heat: 0,
       cool: 0,
       dmp: 0
-    }
+    },
+    power_w: 0,
+    fan_avg_pct: 0,
+    vvx_eff_pct: 0,
+    vvx_eff_hist: { r0: 0, r1: 0, r2: 0 }
   };
 }
