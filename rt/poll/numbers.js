@@ -1,4 +1,4 @@
-// poll numbers 3.1.1
+// poll numbers 3.1.4
 function n(v, d) {
   var x = Number(v);
   return (x === x) ? x : d;
@@ -33,3 +33,5 @@ function normPct(v) { return i(clip(v, 0, 100)); }
 function normFanRpm(v) { return i(clip(v, 0, 9999)); }
 function normVvxRpm(v) { return i(clip(v, 0, 999)); }
 function normW(v) { return i(clip(v, 0, 9999)); }
+
+function clipPct(v) { return normPct(v); }
