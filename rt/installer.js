@@ -1,4 +1,4 @@
-// installer-watch 2.3.0-short-id-device-file
+// installer-watch 2.4.0-create-missing-scripts
 (function () {
   "use strict";
 
@@ -27,7 +27,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("W230 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W240 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -46,47 +46,82 @@
     });
   }
 
+  function list(cb) {
+    Shelly.call("Script.List", {}, function (res, err) {
+      if (err || !res || !res.scripts) { txt("W240 LSE"); cb([]); return; }
+      cb(res.scripts);
+    });
+  }
+
+  function findByName(arr, name) {
+    var i;
+    for (i = 0; i < arr.length; i++) {
+      if (arr[i].name === name) return arr[i];
+    }
+    return null;
+  }
+
+  function createScript(pkg, cb) {
+    txt("W240 CR " + pkg.name);
+    Shelly.call("Script.Create", { name: pkg.name }, function (res, err) {
+      if (err || !res || res.id === undefined) { txt("W240 CRE " + pkg.name); cb(null); return; }
+      pkg.id = res.id;
+      cb(pkg);
+    });
+  }
+
   function pkgAt(dev, pos) {
     if (!dev || !dev.packages || !dev.packages[pos]) return null;
     return dev.packages[pos];
   }
 
-  function needJob(dev, pos, cb) {
+  function needJob(dev, scripts, pos, cb) {
     var p = pkgAt(dev, pos);
+    var existing;
     if (!p) { cb(null); return; }
+
+    existing = findByName(scripts, p.name);
+    if (!existing) {
+      createScript(p, cb);
+      return;
+    }
+
+    p.id = existing.id;
     verGet(p.name, function (old) {
       if (old !== String(p.version || "")) { cb(p); return; }
-      needJob(dev, pos + 1, cb);
+      needJob(dev, scripts, pos + 1, cb);
     });
   }
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("W230 JE"); cb(0); return; }
+      if (err) { txt("W240 JE"); cb(0); return; }
       cb(1);
     });
   }
 
   function run() {
-    txt("W230 RN");
+    txt("W240 RN");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
       var sid;
       var path;
-      if (err || !info) { txt("W230 DIE"); return; }
+      if (err || !info) { txt("W240 DIE"); return; }
       sid = shortId(info.id || info.mac || "");
       path = "rt/devices/" + sid + ".json";
-      txt("W230 D " + sid);
+      txt("W240 D " + sid);
       fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.packages) { txt("W230 DE"); return; }
-        txt("W230 MX");
-        needJob(dev, 0, function (job) {
-          if (!job) { txt("W230 OK"); return; }
-          writeJob(job, function (ok) {
-            if (!ok) return;
-            txt("W230 JOB " + job.name + " " + job.version);
-            Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
-              if (err2) { txt("W230 STE1"); return; }
-              txt("W230 ST " + job.name);
+        if (!dev || !dev.packages) { txt("W240 DE"); return; }
+        txt("W240 MX");
+        list(function (scripts) {
+          needJob(dev, scripts, 0, function (job) {
+            if (!job) { txt("W240 OK"); return; }
+            writeJob(job, function (ok) {
+              if (!ok) return;
+              txt("W240 JOB " + job.name + " " + job.version + " #" + job.id);
+              Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
+                if (err2) { txt("W240 STE1"); return; }
+                txt("W240 ST " + job.name);
+              });
             });
           });
         });
