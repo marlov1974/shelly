@@ -1,4 +1,4 @@
-// poll feature-supply 3.1.5-clean
+// poll feature-supply 3.2.0-classic-parse-derive
 var IP_SUPPLY_UNI = "192.168.77.20";
 var IP_SUPPLY_FAN = "192.168.77.10";
 
@@ -27,7 +27,30 @@ function parseSupplyUni(js) {
   };
 }
 
-function deriveSupplyTelemetry(ctx) {
+function readSupply(ctx, cb) {
+  httpGetStatus(IP_SUPPLY_UNI, function (js) {
+    ctx.raw.supply_uni = js;
+    httpGetStatus(IP_SUPPLY_FAN, function (js2) {
+      ctx.raw.supply_fan = js2;
+      cb();
+    });
+  });
+}
+
+function applySupply(ctx) {
+  var x = ctx.raw.supply_uni ? parseSupplyUni(ctx.raw.supply_uni) : null;
+  var y = ctx.raw.supply_fan ? parseLight0(ctx.raw.supply_fan) : null;
+
+  ctx.supply.pa = x ? x.pa : 0;
+  ctx.supply.rpm = x ? x.rpm : 0;
+  ctx.supply.temp_post_vvx = x ? x.temp_post_vvx : 0;
+  ctx.supply.temp_outdoor = x ? x.temp_outdoor : 0;
+  ctx.supply.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
+
+  ctx.supply.fan_on = y ? y.on : 0;
+  ctx.supply.fan_pct = y ? y.pct : 0;
+  ctx.supply.fan_w = y ? y.w : 0;
+
   ctx.supply.pa = normPa(ctx.supply.pa);
   ctx.supply.rpm = normFanRpm(ctx.supply.rpm);
   ctx.supply.ls = normLs(supplyPaToLs(ctx.supply.pa));
@@ -36,24 +59,4 @@ function deriveSupplyTelemetry(ctx) {
   ctx.supply.temp_to_outdoor = normTemp(ctx.supply.temp_to_outdoor);
   ctx.supply.fan_pct = normPct(ctx.supply.fan_pct);
   ctx.supply.fan_w = normW(ctx.supply.fan_w);
-}
-
-function readSupply(ctx, cb) {
-  httpGetStatus(IP_SUPPLY_UNI, function (js) {
-    var x = js ? parseSupplyUni(js) : null;
-    ctx.supply.pa = x ? x.pa : 0;
-    ctx.supply.rpm = x ? x.rpm : 0;
-    ctx.supply.temp_post_vvx = x ? x.temp_post_vvx : 0;
-    ctx.supply.temp_outdoor = x ? x.temp_outdoor : 0;
-    ctx.supply.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
-
-    httpGetStatus(IP_SUPPLY_FAN, function (js2) {
-      var y = js2 ? parseLight0(js2) : null;
-      ctx.supply.fan_on = y ? y.on : 0;
-      ctx.supply.fan_pct = y ? y.pct : 0;
-      ctx.supply.fan_w = y ? y.w : 0;
-      deriveSupplyTelemetry(ctx);
-      cb();
-    });
-  });
 }
