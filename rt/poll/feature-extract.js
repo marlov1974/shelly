@@ -1,4 +1,4 @@
-// poll feature-extract 3.2.0-classic-parse-derive
+// poll feature-extract 3.2.1-direct-parse-low-memory
 var IP_EXTRACT_UNI = "192.168.77.21";
 var IP_EXTRACT_FAN = "192.168.77.11";
 
@@ -27,30 +27,23 @@ function parseExtractUni(js) {
   };
 }
 
-function readExtract(ctx, cb) {
-  httpGetStatus(IP_EXTRACT_UNI, function (js) {
-    ctx.raw.extract_uni = js;
-    httpGetStatus(IP_EXTRACT_FAN, function (js2) {
-      ctx.raw.extract_fan = js2;
-      cb();
-    });
-  });
-}
-
-function applyExtract(ctx) {
-  var x = ctx.raw.extract_uni ? parseExtractUni(ctx.raw.extract_uni) : null;
-  var y = ctx.raw.extract_fan ? parseLight0(ctx.raw.extract_fan) : null;
-
+function applyExtractUni(ctx, js) {
+  var x = js ? parseExtractUni(js) : null;
   ctx.extract.pa = x ? x.pa : 0;
   ctx.extract.rpm = x ? x.rpm : 0;
   ctx.extract.temp_to_house = x ? x.temp_to_house : 0;
   ctx.extract.temp_brine = x ? x.temp_brine : 0;
   ctx.extract.temp_hotwater = x ? x.temp_hotwater : 0;
+}
 
+function applyExtractFan(ctx, js) {
+  var y = js ? parseLight0(js) : null;
   ctx.extract.fan_on = y ? y.on : 0;
   ctx.extract.fan_pct = y ? y.pct : 0;
   ctx.extract.fan_w = y ? y.w : 0;
+}
 
+function deriveExtractTelemetry(ctx) {
   ctx.extract.pa = normPa(ctx.extract.pa);
   ctx.extract.rpm = normFanRpm(ctx.extract.rpm);
   ctx.extract.ls = normLs(extractPaToLs(ctx.extract.pa));
@@ -59,4 +52,15 @@ function applyExtract(ctx) {
   ctx.extract.temp_hotwater = normTemp(ctx.extract.temp_hotwater);
   ctx.extract.fan_pct = normPct(ctx.extract.fan_pct);
   ctx.extract.fan_w = normW(ctx.extract.fan_w);
+}
+
+function readExtract(ctx, cb) {
+  httpGetStatus(IP_EXTRACT_UNI, function (js) {
+    applyExtractUni(ctx, js);
+    httpGetStatus(IP_EXTRACT_FAN, function (js2) {
+      applyExtractFan(ctx, js2);
+      deriveExtractTelemetry(ctx);
+      cb();
+    });
+  });
 }
