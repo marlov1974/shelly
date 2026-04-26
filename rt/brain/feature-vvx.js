@@ -1,4 +1,8 @@
-// brain feature-vvx 2.0.0
+// brain feature-vvx 2.1.0
+var VVX_EFF_THEORY = 0.80;
+var VVX_COST_BIAS_FACTOR = 2.0;
+var VVX_COST_HOLD_DB_C = 0.2;
+
 function calcVvxCost(candidateC, targetC, houseC) {
   var diff = n(candidateC, targetC) - n(targetC, candidateC);
   var houseVsTarget = n(houseC, targetC) - n(targetC, houseC);
