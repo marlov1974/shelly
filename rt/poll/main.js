@@ -1,4 +1,4 @@
-// poll main 3.2.1-direct-parse-low-memory
+// poll main 3.2.2-self-stop
 function readAll(ctx, cb) {
   readSupply(ctx, function () {
     readExtract(ctx, function () {
@@ -24,6 +24,7 @@ function runPoll() {
       writeTelemetryAct(ctx, function () {
         writePollStatus(ctx, function () {
           log("DON");
+          selfStop();
         });
       });
     });
