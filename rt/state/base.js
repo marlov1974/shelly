@@ -1,4 +1,4 @@
-// state base 1.2.4
+// state base 1.2.13
 var SCRIPT_NAME = "state";
 
 var KEY_TEL_M = "ftx.tel.m";
@@ -15,6 +15,13 @@ function createStateCtx() {
   return {
     telM: {},
     telAct: {},
-    run: {}
+    run: {
+      sup: 0,
+      ext: 0,
+      vvx: 0,
+      heat: 0,
+      cool: 0,
+      dmp: 0
+    }
   };
 }
