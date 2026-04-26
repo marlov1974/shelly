@@ -1,4 +1,17 @@
-// brain feature-thermal 2.0.0
+// brain feature-thermal 2.1.0
+var HEAT_DISABLE_ABOVE_OUT_C = 20;
+var COOL_DISABLE_BELOW_OUT_C = 15;
+var HEAT_ON_DB_C = 0.3;
+var HEAT_OFF_DB_C = 0.1;
+var COOL_ON_DB_C = 0.3;
+var COOL_OFF_DB_C = 0.1;
+var HEAT_KP_STEP = 0.5;
+var HEAT_HOLD_BAND_C = 0.1;
+var HEAT_STEP_MAX_UP_PCT = 8;
+var HEAT_STEP_MAX_DOWN_PCT = 8;
+var COOL_STEP_PCT = 5;
+var COOL_HOLD_BAND_C = 0.1;
+
 function calcHeatDemand(deltaC, isActive) {
   if (isActive) return b(deltaC > HEAT_OFF_DB_C);
   return b(deltaC > HEAT_ON_DB_C);
