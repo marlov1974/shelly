@@ -1,4 +1,4 @@
-// installer-watch 2.4.2-stop-build-before-start
+// installer-watch 2.4.3-build-by-name
 (function () {
   "use strict";
 
@@ -6,7 +6,7 @@
   var TEXT_ID = 201;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
-  var BUILD_ID = 1;
+  var BUILD_NAME = "build";
 
   function txt(s) {
     print("watch " + String(s || ""));
@@ -27,7 +27,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("W242 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W243 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -48,7 +48,7 @@
 
   function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("W242 LSE"); cb([]); return; }
+      if (err || !res || !res.scripts) { txt("W243 LSE"); cb([]); return; }
       cb(res.scripts);
     });
   }
@@ -62,9 +62,9 @@
   }
 
   function createScript(pkg, cb) {
-    txt("W242 CR " + pkg.name);
+    txt("W243 CR " + pkg.name);
     Shelly.call("Script.Create", { name: pkg.name }, function (res, err) {
-      if (err || !res || res.id === undefined) { txt("W242 CRE " + pkg.name); cb(null); return; }
+      if (err || !res || res.id === undefined) { txt("W243 CRE " + pkg.name); cb(null); return; }
       pkg.id = res.id;
       cb(pkg);
     });
@@ -93,12 +93,12 @@
     });
   }
 
-  function startBuild(job) {
-    Shelly.call("Script.Stop", { id: BUILD_ID }, function () {
+  function startBuild(buildId, job) {
+    Shelly.call("Script.Stop", { id: buildId }, function () {
       Timer.set(700, false, function () {
-        Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
-          if (err2) { txt("W242 STE1"); return; }
-          txt("W242 ST " + job.name);
+        Shelly.call("Script.Start", { id: buildId }, function (res, err2) {
+          if (err2) { txt("W243 STE " + buildId); return; }
+          txt("W243 ST " + job.name + " #" + buildId);
         });
       });
     });
@@ -106,30 +106,32 @@
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("W242 JE"); cb(0); return; }
+      if (err) { txt("W243 JE"); cb(0); return; }
       cb(1);
     });
   }
 
   function run() {
-    txt("W242 RN");
+    txt("W243 RN");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
       var sid;
       var path;
-      if (err || !info) { txt("W242 DIE"); return; }
+      if (err || !info) { txt("W243 DIE"); return; }
       sid = shortId(info.id || info.mac || "");
       path = "rt/devices/" + sid + ".json";
-      txt("W242 D " + sid);
+      txt("W243 D " + sid);
       fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.packages) { txt("W242 DE"); return; }
-        txt("W242 MX");
+        if (!dev || !dev.packages) { txt("W243 DE"); return; }
+        txt("W243 MX");
         list(function (scripts) {
+          var build = findByName(scripts, BUILD_NAME);
+          if (!build || build.id === undefined) { txt("W243 NOB"); return; }
           needJob(dev, scripts, 0, function (job) {
-            if (!job) { txt("W242 OK"); return; }
+            if (!job) { txt("W243 OK"); return; }
             writeJob(job, function (ok) {
               if (!ok) return;
-              txt("W242 JOB " + job.name + " " + job.version + " #" + job.id);
-              startBuild(job);
+              txt("W243 JOB " + job.name + " " + job.version + " #" + job.id);
+              startBuild(build.id, job);
             });
           });
         });
