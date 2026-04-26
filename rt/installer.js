@@ -1,17 +1,13 @@
-// installer-watch 2.2.0-minimal-generic
+// installer-watch 2.2.1-oneshot-debug
 (function () {
   "use strict";
 
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
   var INDEX = "rt/index.json";
   var TEXT_ID = 201;
-  var PERIOD = 300000;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
   var BUILD_ID = 1;
-
-  var timer = null;
-  var busy = false;
 
   function txt(s) {
     print("watch " + String(s || ""));
@@ -32,7 +28,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("W220 " + tag + "E"); cb(null); return; }
+      if (!obj) { txt("W221 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -41,21 +37,6 @@
     Shelly.call("KVS.Get", { key: VK + name }, function (res, err) {
       if (err || !res) { cb(""); return; }
       cb(String(res.value || ""));
-    });
-  }
-
-  function getDevicePath(cb) {
-    Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
-      if (err || !info) { txt("W220 DIE"); cb(null); return; }
-      fetchJson(INDEX, "I", function (idx) {
-        var p = null;
-        if (!idx) { cb(null); return; }
-        p = idx[String(info.id || "")];
-        if (!p && info.mac) p = idx[String(info.mac).toLowerCase()];
-        if (!p && info.mac) p = idx[String(info.mac).toUpperCase()];
-        if (!p) txt("W220 NDF");
-        cb(p || null);
-      });
     });
   }
 
@@ -82,41 +63,37 @@
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("W220 JE"); cb(0); return; }
+      if (err) { txt("W221 JE"); cb(0); return; }
       cb(1);
     });
   }
 
-  function startBuilder(cb) {
-    Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err) {
-      if (err) { txt("W220 STE1"); if (cb) cb(0); return; }
-      if (cb) cb(1);
-    });
-  }
-
-  function next() {
-    if (timer) Timer.clear(timer);
-    timer = Timer.set(PERIOD, false, function () { timer = null; run(); });
-  }
-
   function run() {
-    if (busy) { txt("W220 BZ"); return; }
-    busy = true;
-    txt("W220 RN");
-
-    getDevicePath(function (path) {
-      if (!path) { busy = false; next(); return; }
-      fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.n) { txt("W220 DE"); busy = false; next(); return; }
-        needJob(dev, 0, function (job) {
-          if (!job) { txt("W220 OK"); busy = false; next(); return; }
-          writeJob(job, function (ok) {
-            if (!ok) { busy = false; next(); return; }
-            txt("W220 JOB " + job.name + " " + job.version);
-            startBuilder(function () {
-              txt("W220 START " + job.name);
-              busy = false;
-              next();
+    txt("W221 RN");
+    txt("W221 DI");
+    Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
+      if (err || !info) { txt("W221 DIE"); return; }
+      txt("W221 DX");
+      fetchJson(INDEX, "I", function (idx) {
+        var path = null;
+        if (!idx) return;
+        path = idx[String(info.id || "")];
+        if (!path && info.mac) path = idx[String(info.mac).toLowerCase()];
+        if (!path && info.mac) path = idx[String(info.mac).toUpperCase()];
+        if (!path) { txt("W221 NDF"); return; }
+        txt("W221 IX");
+        fetchJson(path, "D", function (dev) {
+          if (!dev || !dev.n) { txt("W221 DE"); return; }
+          txt("W221 MX");
+          needJob(dev, 0, function (job) {
+            if (!job) { txt("W221 OK"); return; }
+            writeJob(job, function (ok) {
+              if (!ok) return;
+              txt("W221 JOB " + job.name + " " + job.version);
+              Shelly.call("Script.Start", { id: BUILD_ID }, function (res, err2) {
+                if (err2) { txt("W221 STE1"); return; }
+                txt("W221 ST " + job.name);
+              });
             });
           });
         });
