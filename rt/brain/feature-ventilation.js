@@ -1,4 +1,4 @@
-// brain feature-ventilation 2.1.0
+// brain feature-ventilation 2.2.0-signal
 var EXT_MIN_PCT = 15;
 var EXT_MAX_PCT = 90;
 var CO2_PPM_AT_25 = 500;
@@ -26,6 +26,9 @@ function supplyPctFromExtractPct(extPct) {
 }
 
 function calcVentilation(ctx) {
-  ctx.dx.fullAirReady = b(ctx.inp.dmp_run && ctx.inp.sup_run && ctx.inp.ext_run);
-  ctx.dx.stdExtPct = max2(calcStdExtractPctFromPpm(ctx.inp.ppm_house), calcStdExtractPctFromTemp(ctx.inp.t_house_c, ctx.cmd.house_temp_c));
+  ctx.sig.full_air_ready = b(ctx.inp.dmp_run && ctx.inp.sup_run && ctx.inp.ext_run);
+  ctx.sig.co2_ext_pct = calcStdExtractPctFromPpm(ctx.inp.ppm_house);
+  ctx.sig.temp_ext_pct = calcStdExtractPctFromTemp(ctx.inp.t_house_c, ctx.cmd.house_temp_c);
+  ctx.sig.std_ext_pct = max2(ctx.sig.co2_ext_pct, ctx.sig.temp_ext_pct);
+  ctx.sig.std_sup_pct = supplyPctFromExtractPct(ctx.sig.std_ext_pct);
 }
