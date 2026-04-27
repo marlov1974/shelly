@@ -1,4 +1,4 @@
-// brain main 2.1.0
+// brain main 2.2.0-signal
 function calculateBrain(ctx) {
   calcTarget(ctx);
   calcVentilation(ctx);
