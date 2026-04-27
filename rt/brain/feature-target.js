@@ -1,4 +1,4 @@
-// brain feature-target 2.1.0
+// brain feature-target 2.2.0-signal
 var NIGHT_SETBACK_DELTA_C = 1.0;
 var NIGHT_SETBACK_START_HOUR = 19;
 var NIGHT_SETBACK_END_HOUR = 4;
@@ -59,17 +59,21 @@ function calcTarget(ctx) {
 
   if (ctx.cmd.night_setback && isNightSetbackWindow()) {
     targetRawC = targetRawC - NIGHT_SETBACK_DELTA_C;
+    ctx.sig.night_setback_active = 1;
+  } else {
+    ctx.sig.night_setback_active = 0;
   }
 
   if (isWeatherBiasWindow()) {
-    ctx.dx.weatherBiasC = calcWeatherBiasC(ctx.weather.solar_kwh_today, ctx.weather.temp_now_c);
-    targetRawC = targetRawC + ctx.dx.weatherBiasC;
+    ctx.sig.weather_bias_c = calcWeatherBiasC(ctx.weather.solar_kwh_today, ctx.weather.temp_now_c);
+    targetRawC = targetRawC + ctx.sig.weather_bias_c;
   } else {
-    ctx.dx.weatherBiasC = 0;
+    ctx.sig.weather_bias_c = 0;
   }
 
   dewPointHouseC = calcDewPointC(ctx.inp.t_house_c, ctx.inp.rh_house_pct);
-  ctx.dx.targetToHouseC = max2(targetRawC, dewPointHouseC);
-  ctx.dx.supplyDeltaPostC = ctx.dx.targetToHouseC - ctx.inp.t_post_vvx_c;
-  ctx.dx.deltaToHouseC = ctx.dx.targetToHouseC - ctx.inp.t_to_house_c;
+  ctx.sig.dewpoint_house_c = d1(dewPointHouseC);
+  ctx.sig.target_to_house_c = max2(targetRawC, dewPointHouseC);
+  ctx.sig.supply_delta_post_c = ctx.sig.target_to_house_c - ctx.inp.t_post_vvx_c;
+  ctx.sig.delta_to_house_c = ctx.sig.target_to_house_c - ctx.inp.t_to_house_c;
 }
