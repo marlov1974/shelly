@@ -1,4 +1,4 @@
-// brain base 2.1.0-minimal
+// brain base 2.2.0-signal-ctx
 var SCRIPT_NAME = "brain";
 
 function createBrainCtx() {
@@ -7,7 +7,7 @@ function createBrainCtx() {
     weather: {},
     forced: {},
     inp: {},
-    dx: {},
+    sig: {},
     intent: null
   };
 }
