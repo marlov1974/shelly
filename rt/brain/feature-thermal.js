@@ -1,4 +1,4 @@
-// brain feature-thermal 2.1.0
+// brain feature-thermal 2.2.0-signal
 var HEAT_DISABLE_ABOVE_OUT_C = 20;
 var COOL_DISABLE_BELOW_OUT_C = 15;
 var HEAT_ON_DB_C = 0.3;
@@ -24,28 +24,28 @@ function calcCoolDemand(deltaC, isActive) {
 
 function nextHeatPct(ctx) {
   var step;
-  if (!ctx.dx.fullAirReady || !ctx.dx.heatAllowed || !ctx.dx.heatDemand) return 0;
-  if (abs(ctx.dx.deltaToHouseC) <= HEAT_HOLD_BAND_C) return clipPct(ctx.inp.heat_pct_actual);
-  step = Math.round(HEAT_KP_STEP * ctx.dx.deltaToHouseC);
+  if (!ctx.sig.full_air_ready || !ctx.sig.heat_allowed || !ctx.sig.heat_demand) return 0;
+  if (abs(ctx.sig.delta_to_house_c) <= HEAT_HOLD_BAND_C) return clipPct(ctx.inp.heat_pct_actual);
+  step = Math.round(HEAT_KP_STEP * ctx.sig.delta_to_house_c);
   if (step > 0) step = min2(step, HEAT_STEP_MAX_UP_PCT);
   else step = max2(step, -HEAT_STEP_MAX_DOWN_PCT);
   return clipPct(ctx.inp.heat_pct_actual + step);
 }
 
 function nextCoolPct(ctx) {
-  if (!ctx.dx.fullAirReady || !ctx.dx.coolAllowed || !ctx.dx.coolDemand) return 0;
-  if (ctx.dx.deltaToHouseC < -COOL_HOLD_BAND_C) return clipPct(ctx.inp.cool_pct_actual + COOL_STEP_PCT);
-  if (ctx.dx.deltaToHouseC > COOL_HOLD_BAND_C) return clipPct(ctx.inp.cool_pct_actual - COOL_STEP_PCT);
+  if (!ctx.sig.full_air_ready || !ctx.sig.cool_allowed || !ctx.sig.cool_demand) return 0;
+  if (ctx.sig.delta_to_house_c < -COOL_HOLD_BAND_C) return clipPct(ctx.inp.cool_pct_actual + COOL_STEP_PCT);
+  if (ctx.sig.delta_to_house_c > COOL_HOLD_BAND_C) return clipPct(ctx.inp.cool_pct_actual - COOL_STEP_PCT);
   return clipPct(ctx.inp.cool_pct_actual);
 }
 
 function calcThermal(ctx) {
   var heatIsActive = b(ctx.inp.heat_pct_actual > 0);
   var coolIsActive = b(ctx.inp.cool_pct_actual > 0);
-  ctx.dx.heatAllowed = b(ctx.inp.t_out_c <= HEAT_DISABLE_ABOVE_OUT_C);
-  ctx.dx.coolAllowed = b(ctx.inp.t_out_c >= COOL_DISABLE_BELOW_OUT_C);
-  ctx.dx.heatDemand = calcHeatDemand(ctx.dx.supplyDeltaPostC, heatIsActive);
-  ctx.dx.coolDemand = calcCoolDemand(ctx.dx.supplyDeltaPostC, coolIsActive);
-  ctx.dx.heatPct = nextHeatPct(ctx);
-  ctx.dx.coolPct = nextCoolPct(ctx);
+  ctx.sig.heat_allowed = b(ctx.inp.t_out_c <= HEAT_DISABLE_ABOVE_OUT_C);
+  ctx.sig.cool_allowed = b(ctx.inp.t_out_c >= COOL_DISABLE_BELOW_OUT_C);
+  ctx.sig.heat_demand = calcHeatDemand(ctx.sig.supply_delta_post_c, heatIsActive);
+  ctx.sig.cool_demand = calcCoolDemand(ctx.sig.supply_delta_post_c, coolIsActive);
+  ctx.sig.heat_candidate_pct = nextHeatPct(ctx);
+  ctx.sig.cool_candidate_pct = nextCoolPct(ctx);
 }
