@@ -1,6 +1,11 @@
-// common script 1.0.0
+// common script 1.1.0-print-only
+function scriptName() {
+  if (typeof SCRIPT_NAME === "string" && SCRIPT_NAME.length > 0) return SCRIPT_NAME;
+  return "script";
+}
+
 function log(s) {
-  print(String(SCRIPT_NAME || "script") + " " + String(s || ""));
+  print(scriptName() + " " + String(s || ""));
 }
 
 function findScriptByName(arr, name) {
@@ -30,5 +35,5 @@ function scriptStopByName(name, cb) {
 }
 
 function selfStop() {
-  scriptStopByName(SCRIPT_NAME, function () {});
+  scriptStopByName(scriptName(), function () {});
 }
