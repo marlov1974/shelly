@@ -5,7 +5,7 @@
     "rt/brain/base.js",
     "rt/common/script.js",
     "rt/brain/modes.js",
-    "rt/brain/helpers.js",
+    "rt/common/helpers.js",
     "rt/common/kvs.js",
     "rt/brain/io-commands.js",
     "rt/brain/io-inputs.js",
