@@ -1,4 +1,4 @@
-// common shelly 1.0.2-watchdog
+// common shelly 1.0.3-no-dup-helpers
 function httpGetStatus(ip, cb) {
   var done = false;
   var timer = null;
@@ -64,14 +64,6 @@ function bool2(obj, a, b2) {
   if (obj && typeof obj[a] === "boolean") return obj[a];
   if (obj && typeof obj[b2] === "boolean") return obj[b2];
   return false;
-}
-
-function b(v) {
-  return v ? 1 : 0;
-}
-
-function abs(x) {
-  return x < 0 ? -x : x;
 }
 
 function tempValue(c) {
