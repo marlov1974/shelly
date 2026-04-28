@@ -3,7 +3,8 @@
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/state/base.js",
-    "rt/state/helpers.js",
+    "rt/common/script.js",
+    "rt/common/helpers.js",
     "rt/common/kvs.js",
     "rt/state/run-air.js",
     "rt/state/run-process.js",
