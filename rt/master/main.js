@@ -1,4 +1,4 @@
-// master main 1.0.0
+// master main 1.0.1-installer-on-n5-plus-1
 function runRuntimeCycle(done) {
   startScriptByRole("poll", TIMEOUT_POLL_MS, function () {
     startScriptByRole("state", TIMEOUT_STATE_MS, function () {
@@ -17,6 +17,10 @@ function runRuntimeCycle(done) {
   });
 }
 
+function installerDue() {
+  return ((tickCount - 1) % INSTALL_EVERY_TICKS) === 0;
+}
+
 function tick() {
   if (cycleRunning) {
     log("SKIP busy");
@@ -28,7 +32,7 @@ function tick() {
   log("TICK " + tickCount);
 
   runRuntimeCycle(function () {
-    if ((tickCount % INSTALL_EVERY_TICKS) === 0) {
+    if (installerDue()) {
       startInstaller(function () {
         cycleRunning = 0;
       });
