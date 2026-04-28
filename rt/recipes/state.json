@@ -1,7 +1,7 @@
 {
   "boot": false,
   "components": [
-    { "type": "number", "id": 201, "name": "Fan flow avg", "persisted": false, "default": 0, "min": 0, "max": 999, "step": 1, "unit": "l/s" },
+    { "type": "number", "id": 201, "name": "Total power", "persisted": false, "default": 0, "min": 0, "max": 9999, "step": 1, "unit": "W" },
     { "type": "number", "id": 202, "name": "VVX efficiency", "persisted": false, "default": 0, "min": 0, "max": 100, "step": 1, "unit": "%" },
     { "type": "number", "id": 203, "name": "Fan avg pct", "persisted": false, "default": 0, "min": 0, "max": 100, "step": 1, "unit": "%" }
   ],
