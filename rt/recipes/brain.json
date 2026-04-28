@@ -1,5 +1,12 @@
 {
   "boot": false,
+  "components": [
+    { "type": "boolean", "id": 200, "name": "On", "persisted": true, "default": true },
+    { "type": "boolean", "id": 201, "name": "Nightmode", "persisted": true, "default": false },
+    { "type": "enum", "id": 200, "name": "Mode", "persisted": true, "default": "STD", "options": ["STD", "BST", "FIRE", "MAN"] },
+    { "type": "number", "id": 200, "name": "Temp", "persisted": true, "default": 19, "min": 15, "max": 25, "step": 0.5, "unit": "C" },
+    { "type": "number", "id": 204, "name": "Target to house", "persisted": false, "default": 0, "min": -20, "max": 50, "step": 0.1, "unit": "C" }
+  ],
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/brain/base.js",
