@@ -1,17 +1,13 @@
-// inst.build 1.0.0
+// inst.build 1.1.0-print-only
 (function () {
   "use strict";
 
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
-  var TEXT_ID = 204;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
-  var SELF_NAME = "inst.build";
+  var SCRIPT_NAME = "inst.build";
 
-  function txt(s) {
-    print("inst.build " + String(s || ""));
-    Shelly.call("Text.Set", { id: TEXT_ID, value: String(s || "") }, function () {});
-  }
+  function log(s) { print(SCRIPT_NAME + " " + String(s || "")); }
 
   function get(path, cb) {
     Shelly.call("HTTP.GET", { url: BASE + path, timeout: 10 }, function (res, err) {
@@ -27,7 +23,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("IB100 " + tag + "E"); cb(null); return; }
+      if (!obj) { log("IB110 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -63,11 +59,11 @@
     Shelly.call("KVS.Set", { key: JOB_KEY, value: {} }, function () { cb(); });
   }
 
-  function selfStop() {
+  function selfStopLocal() {
     Shelly.call("Script.List", {}, function (res, err) {
       var s;
       if (err || !res || !res.scripts) return;
-      s = findByName(res.scripts, SELF_NAME);
+      s = findByName(res.scripts, SCRIPT_NAME);
       if (!s || s.id === undefined) return;
       Shelly.call("Script.Stop", { id: s.id }, function () {});
     });
@@ -75,12 +71,12 @@
 
   function chunks(id, arr, pos, cb) {
     if (pos >= arr.length) { cb(1); return; }
-    txt("IB100 W " + pos + "/" + arr.length);
+    log("IB110 W " + pos + "/" + arr.length);
     get(arr[pos], function (code) {
-      if (code === null) { txt("IB100 CE " + pos); cb(0); return; }
+      if (code === null) { log("IB110 CE " + pos); cb(0); return; }
       Timer.set(120, false, function () {
         put(id, code, pos > 0, function (ok) {
-          if (!ok) { txt("IB100 PE " + pos); cb(0); return; }
+          if (!ok) { log("IB110 PE " + pos); cb(0); return; }
           Timer.set(120, false, function () { chunks(id, arr, pos + 1, cb); });
         });
       });
@@ -88,18 +84,18 @@
   }
 
   function build(job) {
-    if (!job || !job.name || !job.recipe || job.id === undefined) { txt("IB100 BJ"); selfStop(); return; }
-    txt("IB100 R " + job.name);
+    if (!job || !job.name || !job.recipe || job.id === undefined) { log("IB110 BJ"); selfStopLocal(); return; }
+    log("IB110 R " + job.name);
     fetchJson(job.recipe, "R", function (recipe) {
-      if (!recipe || !recipe.chunks || !recipe.chunks.length) { txt("IB100 RCE"); selfStop(); return; }
+      if (!recipe || !recipe.chunks || !recipe.chunks.length) { log("IB110 RCE"); selfStopLocal(); return; }
       stop(job.id, function () {
         setBoot(job.id, !!recipe.boot, function () {
           chunks(job.id, recipe.chunks, 0, function (ok) {
-            if (!ok) { txt("IB100 WE " + job.name); selfStop(); return; }
+            if (!ok) { log("IB110 WE " + job.name); selfStopLocal(); return; }
             verSet(job.name, job.version, function () {
               jobClear(function () {
-                txt("IB100 OK " + job.name + " " + job.version);
-                selfStop();
+                log("IB110 OK " + job.name + " " + job.version);
+                selfStopLocal();
               });
             });
           });
@@ -109,9 +105,9 @@
   }
 
   function run() {
-    txt("IB100 RN");
+    log("IB110 RN");
     Shelly.call("KVS.Get", { key: JOB_KEY }, function (res, err) {
-      if (err || !res || !res.value || !res.value.name) { txt("IB100 NJ"); selfStop(); return; }
+      if (err || !res || !res.value || !res.value.name) { log("IB110 NJ"); selfStopLocal(); return; }
       build(res.value);
     });
   }
