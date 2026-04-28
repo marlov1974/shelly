@@ -1,19 +1,15 @@
-// inst.poll 1.0.1-build-name-fallback
+// inst.poll 1.1.0-print-only
 (function () {
   "use strict";
 
   var BASE = "https://raw.githubusercontent.com/marlov1974/shelly/main/";
   var SCRIPT_NAME = "inst.poll";
-  var TEXT_ID = 201;
   var VK = "ftx.ver.";
   var JOB_KEY = "ftx.install.job";
   var BUILD_NAME = "inst.build";
   var BUILD_NAME_LEGACY = "build";
 
-  function txt(s) {
-    print("inst.poll " + String(s || ""));
-    Shelly.call("Text.Set", { id: TEXT_ID, value: String(s || "") }, function () {});
-  }
+  function log(s) { print(SCRIPT_NAME + " " + String(s || "")); }
 
   function get(path, cb) {
     Shelly.call("HTTP.GET", { url: BASE + path, timeout: 10 }, function (res, err) {
@@ -29,7 +25,7 @@
   function fetchJson(path, tag, cb) {
     get(path, function (body) {
       var obj = body ? jp(body) : null;
-      if (!obj) { txt("IP101 " + tag + "E"); cb(null); return; }
+      if (!obj) { log("IP110 " + tag + "E"); cb(null); return; }
       cb(obj);
     });
   }
@@ -50,7 +46,7 @@
 
   function list(cb) {
     Shelly.call("Script.List", {}, function (res, err) {
-      if (err || !res || !res.scripts) { txt("IP101 LSE"); cb([]); return; }
+      if (err || !res || !res.scripts) { log("IP110 LSE"); cb([]); return; }
       cb(res.scripts);
     });
   }
@@ -67,7 +63,7 @@
     return findByName(arr, BUILD_NAME) || findByName(arr, BUILD_NAME_LEGACY);
   }
 
-  function selfStop() {
+  function selfStopLocal() {
     Shelly.call("Script.List", {}, function (res, err) {
       var s;
       if (err || !res || !res.scripts) return;
@@ -78,9 +74,9 @@
   }
 
   function createScript(pkg, cb) {
-    txt("IP101 CR " + pkg.name);
+    log("IP110 CR " + pkg.name);
     Shelly.call("Script.Create", { name: pkg.name }, function (res, err) {
-      if (err || !res || res.id === undefined) { txt("IP101 CRE " + pkg.name); cb(null); return; }
+      if (err || !res || res.id === undefined) { log("IP110 CRE " + pkg.name); cb(null); return; }
       pkg.id = res.id;
       cb(pkg);
     });
@@ -113,9 +109,9 @@
     Shelly.call("Script.Stop", { id: buildId }, function () {
       Timer.set(700, false, function () {
         Shelly.call("Script.Start", { id: buildId }, function (res, err2) {
-          if (err2) { txt("IP101 STE " + buildId); selfStop(); return; }
-          txt("IP101 ST " + job.name + " #" + buildId);
-          selfStop();
+          if (err2) { log("IP110 STE " + buildId); selfStopLocal(); return; }
+          log("IP110 ST " + job.name + " #" + buildId);
+          selfStopLocal();
         });
       });
     });
@@ -123,31 +119,31 @@
 
   function writeJob(job, cb) {
     Shelly.call("KVS.Set", { key: JOB_KEY, value: job }, function (res, err) {
-      if (err) { txt("IP101 JE"); cb(0); return; }
+      if (err) { log("IP110 JE"); cb(0); return; }
       cb(1);
     });
   }
 
   function run() {
-    txt("IP101 RN");
+    log("IP110 RN");
     Shelly.call("Shelly.GetDeviceInfo", {}, function (info, err) {
       var sid;
       var path;
-      if (err || !info) { txt("IP101 DIE"); selfStop(); return; }
+      if (err || !info) { log("IP110 DIE"); selfStopLocal(); return; }
       sid = shortId(info.id || info.mac || "");
       path = "rt/devices/" + sid + ".json";
-      txt("IP101 D " + sid);
+      log("IP110 D " + sid);
       fetchJson(path, "D", function (dev) {
-        if (!dev || !dev.packages) { txt("IP101 DE"); selfStop(); return; }
-        txt("IP101 MX");
+        if (!dev || !dev.packages) { log("IP110 DE"); selfStopLocal(); return; }
+        log("IP110 MX");
         list(function (scripts) {
           var build = findBuild(scripts);
-          if (!build || build.id === undefined) { txt("IP101 NOB"); selfStop(); return; }
+          if (!build || build.id === undefined) { log("IP110 NOB"); selfStopLocal(); return; }
           needJob(dev, scripts, 0, function (job) {
-            if (!job) { txt("IP101 OK"); selfStop(); return; }
+            if (!job) { log("IP110 OK"); selfStopLocal(); return; }
             writeJob(job, function (ok) {
-              if (!ok) { selfStop(); return; }
-              txt("IP101 JOB " + job.name + " " + job.version + " #" + job.id);
+              if (!ok) { selfStopLocal(); return; }
+              log("IP110 JOB " + job.name + " " + job.version + " #" + job.id);
               startBuild(build.id, job);
             });
           });
