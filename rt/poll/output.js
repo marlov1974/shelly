@@ -1,4 +1,4 @@
-// poll output 3.0.0
+// poll output 3.3.0-print-only
 function buildTelM(ctx) {
   return {
     t: {
@@ -47,8 +47,6 @@ function writeTelemetryM(ctx, cb) { kvsSet(KEY_TEL_M, buildTelM(ctx), cb); }
 function writeTelemetryAct(ctx, cb) { kvsSet(KEY_TEL_ACT, buildTelAct(ctx), cb); }
 
 function writePollStatus(ctx, cb) {
-  var s = "P OK S=" + ctx.supply.ls + " E=" + ctx.extract.ls + " C=" + ctx.process.co2_ppm;
-  Shelly.call("Text.Set", { id: POLL_STATUS_TEXT_ID, value: s }, function () {
-    if (cb) cb();
-  });
+  log("OK S=" + ctx.supply.ls + " E=" + ctx.extract.ls + " C=" + ctx.process.co2_ppm);
+  if (cb) cb();
 }
