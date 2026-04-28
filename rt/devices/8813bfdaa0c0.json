@@ -14,6 +14,12 @@
     },
     {
       "id": 6,
+      "name": "weather",
+      "version": "1.0.0",
+      "recipe": "rt/recipes/weather.json"
+    },
+    {
+      "id": 7,
       "name": "brain",
       "version": "2.3.0",
       "recipe": "rt/recipes/brain.json"
