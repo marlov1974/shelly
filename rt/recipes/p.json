@@ -2,6 +2,8 @@
   "chunks": [
     "rt/common/wrapper.start.js",
     "rt/poll/base.js",
+    "rt/common/script.js",
+    "rt/common/helpers.js",
     "rt/poll/numbers.js",
     "rt/common/kvs.js",
     "rt/common/shelly.js",
