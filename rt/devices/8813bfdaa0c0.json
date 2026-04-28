@@ -1,28 +1,41 @@
 {
-  "packages": [
+  "device_version": 1,
+  "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
+  "scripts": [
     {
-      "id": 4,
-      "name": "poll",
-      "version": "3.3.0",
-      "recipe": "rt/recipes/p.json"
-    },
-    {
-      "id": 5,
-      "name": "state",
-      "version": "1.4.0",
-      "recipe": "rt/recipes/state.json"
-    },
-    {
-      "id": 6,
-      "name": "weather",
+      "role": "master",
       "version": "1.0.0",
-      "recipe": "rt/recipes/weather.json"
+      "name": "master_v1_0_0",
+      "recipe": "rt/recipes/master.json",
+      "boot": true
     },
     {
-      "id": 7,
-      "name": "brain",
+      "role": "poll",
+      "version": "3.3.0",
+      "name": "poll_v3_3_0",
+      "recipe": "rt/recipes/p.json",
+      "boot": false
+    },
+    {
+      "role": "state",
+      "version": "1.4.0",
+      "name": "state_v1_4_0",
+      "recipe": "rt/recipes/state.json",
+      "boot": false
+    },
+    {
+      "role": "weather",
+      "version": "1.0.0",
+      "name": "weather_v1_0_0",
+      "recipe": "rt/recipes/weather.json",
+      "boot": false
+    },
+    {
+      "role": "brain",
       "version": "2.3.0",
-      "recipe": "rt/recipes/brain.json"
+      "name": "brain_v2_3_0",
+      "recipe": "rt/recipes/brain.json",
+      "boot": false
     }
   ]
 }
