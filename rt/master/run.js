@@ -1,13 +1,23 @@
-// master run 1.0.1-prefer-versioned
+// master run 1.0.2-prefer-highest-id-versioned
 function findByRolePrefix(scripts, role) {
   var i;
+  var s;
+  var best = null;
   var prefix = role + "_v";
+
   for (i = 0; i < scripts.length; i++) {
-    if (String(scripts[i].name || "").indexOf(prefix) === 0) return scripts[i];
+    s = scripts[i];
+    if (String(s.name || "").indexOf(prefix) === 0) {
+      if (!best || n(s.id, -1) > n(best.id, -1)) best = s;
+    }
   }
+
+  if (best) return best;
+
   for (i = 0; i < scripts.length; i++) {
     if (scripts[i].name === role) return scripts[i];
   }
+
   return null;
 }
 
