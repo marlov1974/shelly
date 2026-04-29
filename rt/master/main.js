@@ -1,4 +1,4 @@
-// master main 1.2.0-slotted-60s
+// master main 1.2.1-fixed-id-low-memory
 function weatherDue() {
   return tickCount > 0 && (tickCount % WEATHER_EVERY_TICKS) === 0;
 }
@@ -11,7 +11,7 @@ function installerDue() {
 function runServiceSlot(cb) {
   if (weatherDue()) {
     log("SLOT weather");
-    startScriptByRole("weather", TIMEOUT_WEATHER_MS, function () { cb("weather"); });
+    startWeather(function () { cb("weather"); });
     return;
   }
 
@@ -22,16 +22,16 @@ function runServiceSlot(cb) {
   }
 
   log("SLOT pollstate");
-  startScriptByRole("poll", TIMEOUT_POLL_MS, function () {
-    startScriptByRole("state", TIMEOUT_STATE_MS, function () {
+  startPoll(function () {
+    startState(function () {
       cb("pollstate");
     });
   });
 }
 
 function runBrainDriver(cb) {
-  startScriptByRole("brain", TIMEOUT_BRAIN_MS, function () {
-    startScriptByRole("driver", TIMEOUT_DRIVER_MS, function () {
+  startBrain(function () {
+    startDriver(function () {
       cb();
     });
   });
