@@ -120,3 +120,21 @@ The GitHub connector cannot rename/move a file with `update_file`. Moving a file
 3. delete old file using old SHA
 
 Do this in small batches to avoid SHA/synchronization issues.
+
+## Multi-file change method
+
+For more than three file changes, prefer a planned GitHub Action flow rather than individual connector writes.
+
+Method:
+
+1. ChatGPT writes a YAML plan or update plan into the repository and gets user approval through the normal GitHub write flow.
+2. The user runs the manual GitHub Action from the GitHub app/web UI.
+3. The Action applies the planned changes, commits them and pushes them.
+
+Current example:
+
+- workflow: `.github/workflows/commit-chatgpt-changes.yml`
+- plan: `tools/move_to_old.yaml`
+- helper: `tools/move_to_old.py`
+
+This method is especially suitable for repository cleanup, file moves and larger mechanical changes. Smaller changes of one to three files can still be done directly through the GitHub connector.
