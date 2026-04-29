@@ -1,4 +1,33 @@
-// master run 1.0.2-prefer-highest-id-versioned
+// master run 1.2.0-slotted-cleanup
+function startsWith2(s, p) {
+  s = String(s || "");
+  p = String(p || "");
+  return s.slice(0, p.length) === p;
+}
+
+function isWorkerScript(s) {
+  var name = String((s && s.name) || "");
+  var id = n(s && s.id, -1);
+
+  if (id === MASTER_ID) return 0;
+  if (id === INSTALLER_ID) return 1;
+
+  if (startsWith2(name, "poll_v")) return 1;
+  if (startsWith2(name, "state_v")) return 1;
+  if (startsWith2(name, "weather_v")) return 1;
+  if (startsWith2(name, "brain_v")) return 1;
+  if (startsWith2(name, "driver_v")) return 1;
+
+  if (name === "poll") return 1;
+  if (name === "state") return 1;
+  if (name === "weather") return 1;
+  if (name === "brain") return 1;
+  if (name === "driver") return 1;
+  if (name === "installer") return 1;
+
+  return 0;
+}
+
 function findByRolePrefix(scripts, role) {
   var i;
   var s;
@@ -66,9 +95,38 @@ function startScriptByRole(role, timeoutMs, cb) {
   });
 }
 
-function startInstaller(cb) {
+function startInstallerSlot(cb) {
   log("ST installer #" + INSTALLER_ID);
   Shelly.call("Script.Start", { id: INSTALLER_ID }, function () {
-    if (cb) cb();
+    Timer.set(TIMEOUT_INSTALLER_MS, false, cb);
+  });
+}
+
+function waitUntilCleanup(cb) {
+  var elapsed = (new Date()).getTime() - cycleStartMs;
+  var delay = CLEANUP_AT_MS - elapsed;
+  if (delay < 0) delay = 0;
+  log("REST " + i(delay / 1000));
+  Timer.set(delay, false, cb);
+}
+
+function stopWorkerList(arr, pos, cb) {
+  var s;
+  if (!arr || pos >= arr.length) { cb(); return; }
+  s = arr[pos];
+  if (!s || !isWorkerScript(s) || !s.running) {
+    stopWorkerList(arr, pos + 1, cb);
+    return;
+  }
+  log("KILL #" + s.id + " " + s.name);
+  Shelly.call("Script.Stop", { id: s.id }, function () {
+    Timer.set(80, false, function () { stopWorkerList(arr, pos + 1, cb); });
+  });
+}
+
+function cleanupWorkers(cb) {
+  Shelly.call("Script.List", {}, function (res, err) {
+    if (err || !res || !res.scripts) { cb(); return; }
+    stopWorkerList(res.scripts, 0, cb);
   });
 }
