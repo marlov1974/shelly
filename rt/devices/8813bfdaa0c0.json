@@ -1,11 +1,11 @@
 {
-  "device_version": 2,
+  "device_version": 3,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
       "role": "master",
-      "version": "1.0.0",
-      "name": "master_v1_0_0",
+      "version": "1.0.2",
+      "name": "master_v1_0_2",
       "recipe": "rt/recipes/master.json",
       "boot": true
     },
