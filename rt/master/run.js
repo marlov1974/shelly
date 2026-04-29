@@ -1,105 +1,42 @@
-// master run 1.2.0-slotted-cleanup
-function startsWith2(s, p) {
-  s = String(s || "");
-  p = String(p || "");
-  return s.slice(0, p.length) === p;
-}
+// master run 1.2.1-fixed-id-low-memory
+function startScriptById(id, name, timeoutMs, cb) {
+  log("ST " + name + " #" + id);
 
-function isWorkerScript(s) {
-  var name = String((s && s.name) || "");
-  var id = n(s && s.id, -1);
-
-  if (id === MASTER_ID) return 0;
-  if (id === INSTALLER_ID) return 1;
-
-  if (startsWith2(name, "poll_v")) return 1;
-  if (startsWith2(name, "state_v")) return 1;
-  if (startsWith2(name, "weather_v")) return 1;
-  if (startsWith2(name, "brain_v")) return 1;
-  if (startsWith2(name, "driver_v")) return 1;
-
-  if (name === "poll") return 1;
-  if (name === "state") return 1;
-  if (name === "weather") return 1;
-  if (name === "brain") return 1;
-  if (name === "driver") return 1;
-  if (name === "installer") return 1;
-
-  return 0;
-}
-
-function findByRolePrefix(scripts, role) {
-  var i;
-  var s;
-  var best = null;
-  var prefix = role + "_v";
-
-  for (i = 0; i < scripts.length; i++) {
-    s = scripts[i];
-    if (String(s.name || "").indexOf(prefix) === 0) {
-      if (!best || n(s.id, -1) > n(best.id, -1)) best = s;
-    }
-  }
-
-  if (best) return best;
-
-  for (i = 0; i < scripts.length; i++) {
-    if (scripts[i].name === role) return scripts[i];
-  }
-
-  return null;
-}
-
-function waitUntilStopped(id, cb) {
-  Timer.set(500, false, function () {
-    Shelly.call("Script.List", {}, function (res, err) {
-      var i;
-      var s = null;
-      if (err || !res || !res.scripts) { cb(0); return; }
-      for (i = 0; i < res.scripts.length; i++) {
-        if (res.scripts[i].id === id) { s = res.scripts[i]; break; }
-      }
-      if (!s) { cb(0); return; }
-      if (!s.running) { cb(1); return; }
-      waitUntilStopped(id, cb);
-    });
-  });
-}
-
-function startScriptByRole(role, timeoutMs, cb) {
-  Shelly.call("Script.List", {}, function (res, err) {
-    var s;
-    var done = false;
-    var timer = null;
-
-    function finish(ok) {
-      if (done) return;
-      done = true;
-      if (timer) Timer.clear(timer);
-      cb(ok);
+  Shelly.call("Script.Start", { id: id }, function (res, err) {
+    if (err) {
+      log("STE " + name);
+      cb(0);
+      return;
     }
 
-    if (err || !res || !res.scripts) { log("LS ERR " + role); cb(0); return; }
-    s = findByRolePrefix(res.scripts, role);
-    if (!s || s.id === undefined) { log("NO " + role); cb(0); return; }
-
-    log("ST " + role + " #" + s.id);
-    Shelly.call("Script.Start", { id: s.id }, function (r, e) {
-      if (e) { log("STE " + role); finish(0); return; }
-      timer = Timer.set(timeoutMs, false, function () {
-        log("TO " + role);
-        Shelly.call("Script.Stop", { id: s.id }, function () { finish(0); });
-      });
-      waitUntilStopped(s.id, function (ok) { finish(ok); });
+    Timer.set(timeoutMs, false, function () {
+      cb(1);
     });
   });
 }
 
 function startInstallerSlot(cb) {
-  log("ST installer #" + INSTALLER_ID);
-  Shelly.call("Script.Start", { id: INSTALLER_ID }, function () {
-    Timer.set(TIMEOUT_INSTALLER_MS, false, cb);
-  });
+  startScriptById(INSTALLER_ID, "installer", TIMEOUT_INSTALLER_MS, cb);
+}
+
+function startPoll(cb) {
+  startScriptById(POLL_ID, "poll", TIMEOUT_POLL_MS, cb);
+}
+
+function startState(cb) {
+  startScriptById(STATE_ID, "state", TIMEOUT_STATE_MS, cb);
+}
+
+function startWeather(cb) {
+  startScriptById(WEATHER_ID, "weather", TIMEOUT_WEATHER_MS, cb);
+}
+
+function startBrain(cb) {
+  startScriptById(BRAIN_ID, "brain", TIMEOUT_BRAIN_MS, cb);
+}
+
+function startDriver(cb) {
+  startScriptById(DRIVER_ID, "driver", TIMEOUT_DRIVER_MS, cb);
 }
 
 function waitUntilCleanup(cb) {
@@ -110,23 +47,26 @@ function waitUntilCleanup(cb) {
   Timer.set(delay, false, cb);
 }
 
-function stopWorkerList(arr, pos, cb) {
-  var s;
-  if (!arr || pos >= arr.length) { cb(); return; }
-  s = arr[pos];
-  if (!s || !isWorkerScript(s) || !s.running) {
-    stopWorkerList(arr, pos + 1, cb);
+function stopId(id, cb) {
+  if (id === MASTER_ID) {
+    cb();
     return;
   }
-  log("KILL #" + s.id + " " + s.name);
-  Shelly.call("Script.Stop", { id: s.id }, function () {
-    Timer.set(80, false, function () { stopWorkerList(arr, pos + 1, cb); });
+  Shelly.call("Script.Stop", { id: id }, function () {
+    Timer.set(80, false, cb);
   });
 }
 
 function cleanupWorkers(cb) {
-  Shelly.call("Script.List", {}, function (res, err) {
-    if (err || !res || !res.scripts) { cb(); return; }
-    stopWorkerList(res.scripts, 0, cb);
+  stopId(INSTALLER_ID, function () {
+    stopId(POLL_ID, function () {
+      stopId(STATE_ID, function () {
+        stopId(WEATHER_ID, function () {
+          stopId(BRAIN_ID, function () {
+            stopId(DRIVER_ID, cb);
+          });
+        });
+      });
+    });
   });
 }
