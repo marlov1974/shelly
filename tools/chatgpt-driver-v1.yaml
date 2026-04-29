@@ -1,0 +1,440 @@
+description: Build host-independent driver v1 and add it to master/device manifest.
+
+actions:
+  - action: write
+    path: rt/driver/base.js
+    reason: Driver base with script identity and KVS key.
+    content: |
+      // driver base 1.0.0
+      var SCRIPT_NAME = "driver";
+      var KEY_INTENT_ACT = "ftx.intent.act";
+
+      function createDriverCtx() {
+        return {
+          rawIntent: null,
+          intent: null,
+          thermalConflict: 0
+        };
+      }
+
+  - action: write
+    path: rt/driver/io-input.js
+    reason: Read desired actuator intent from KVS.
+    content: |
+      // driver io-input 1.0.0
+      function readDriverIntent(ctx, cb) {
+        kvsGet(KEY_INTENT_ACT, function (v) {
+          ctx.rawIntent = v || null;
+          cb();
+        });
+      }
+
+  - action: write
+    path: rt/driver/normalize.js
+    reason: Normalize intent and protect against invalid or conflicting actuator commands.
+    content: |
+      // driver normalize 1.0.0
+      function defaultDriverIntent() {
+        return {
+          driver_inhibit: 0,
+          sup:  { on: 0, pct: 0 },
+          ext:  { on: 0, pct: 0 },
+          vvx:  { on: 0 },
+          heat: { on: 0, pct: 0 },
+          cool: { on: 0, pct: 0 },
+          dmp:  { on: 0 }
+        };
+      }
+
+      function normOn(o) {
+        return o && o.on ? 1 : 0;
+      }
+
+      function normPct(o) {
+        if (!o || !o.on) return 0;
+        return clipPct(o.pct);
+      }
+
+      function normalizeDriverIntent(ctx) {
+        var src = ctx.rawIntent || {};
+        var out = defaultDriverIntent();
+
+        out.driver_inhibit = src.driver_inhibit ? 1 : 0;
+
+        out.sup.on = normOn(src.sup);
+        out.sup.pct = normPct(src.sup);
+
+        out.ext.on = normOn(src.ext);
+        out.ext.pct = normPct(src.ext);
+
+        out.vvx.on = normOn(src.vvx);
+
+        out.heat.on = normOn(src.heat);
+        out.heat.pct = normPct(src.heat);
+
+        out.cool.on = normOn(src.cool);
+        out.cool.pct = normPct(src.cool);
+
+        out.dmp.on = normOn(src.dmp);
+
+        if (out.heat.on && out.cool.on) {
+          ctx.thermalConflict = 1;
+          out.heat.on = 0;
+          out.heat.pct = 0;
+          out.cool.on = 0;
+          out.cool.pct = 0;
+        }
+
+        ctx.intent = out;
+      }
+
+      function driverIntentIsOff(intent) {
+        if (!intent) return 1;
+        return b(
+          !intent.sup.on &&
+          !intent.ext.on &&
+          !intent.vvx.on &&
+          !intent.heat.on &&
+          !intent.cool.on &&
+          !intent.dmp.on
+        );
+      }
+
+  - action: write
+    path: rt/driver/rpc.js
+    reason: Host-independent remote Shelly RPC helpers using HTTP GET.
+    content: |
+      // driver rpc 1.0.0
+      function remoteGet(url, tag, cb) {
+        Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
+          if (err || !res) {
+            log("ERR " + tag);
+            if (cb) cb(0);
+            return;
+          }
+          if (cb) cb(1);
+        });
+      }
+
+      function boolStr(v) {
+        return v ? "true" : "false";
+      }
+
+      function remoteSwitchSet(ip, id, onValue, cb) {
+        var url = "http://" + ip + "/rpc/Switch.Set?id=" + id + "&on=" + boolStr(onValue);
+        remoteGet(url, "SW " + ip, cb);
+      }
+
+      function remoteLightSet(ip, id, onValue, pctValue, cb) {
+        var pct2 = clipPct(pctValue);
+        var url = "http://" + ip + "/rpc/Light.Set?id=" + id + "&on=" + boolStr(onValue) + "&brightness=" + pct2;
+        remoteGet(url, "LT " + ip, cb);
+      }
+
+  - action: write
+    path: rt/driver/apply-dampers.js
+    reason: Apply dampers remotely so driver is not tied to a local host device.
+    content: |
+      // driver apply-dampers 1.0.0
+      var IP_DAMPERS = "192.168.77.30";
+      var DAMPERS_SWITCH_ID = 0;
+
+      function applyDampersOn(ctx, onValue, cb) {
+        remoteSwitchSet(IP_DAMPERS, DAMPERS_SWITCH_ID, onValue ? 1 : 0, cb);
+      }
+
+      function applyDampersIntent(ctx, cb) {
+        applyDampersOn(ctx, ctx.intent && ctx.intent.dmp && ctx.intent.dmp.on, cb);
+      }
+
+  - action: write
+    path: rt/driver/apply-fans.js
+    reason: Apply supply/extract fans remotely via Pro Dimmer Light.Set.
+    content: |
+      // driver apply-fans 1.0.0
+      var IP_SUPPLY_FAN = "192.168.77.10";
+      var IP_EXTRACT_FAN = "192.168.77.11";
+      var FAN_LIGHT_ID = 0;
+
+      function applyOneFan(ip, act, cb) {
+        var fanOn = act && act.on ? 1 : 0;
+        var p = fanOn ? clipPct(act.pct) : 0;
+        remoteLightSet(ip, FAN_LIGHT_ID, p > 0, p, cb);
+      }
+
+      function applyFansIntent(ctx, cb) {
+        applyOneFan(IP_SUPPLY_FAN, ctx.intent.sup, function () {
+          applyOneFan(IP_EXTRACT_FAN, ctx.intent.ext, cb);
+        });
+      }
+
+      function applyFansOff(ctx, cb) {
+        remoteLightSet(IP_SUPPLY_FAN, FAN_LIGHT_ID, 0, 0, function () {
+          remoteLightSet(IP_EXTRACT_FAN, FAN_LIGHT_ID, 0, 0, cb);
+        });
+      }
+
+  - action: write
+    path: rt/driver/apply-vvx.js
+    reason: Apply VVX switch remotely.
+    content: |
+      // driver apply-vvx 1.0.0
+      var IP_VVX = "192.168.77.40";
+      var VVX_SWITCH_ID = 0;
+
+      function applyVvxOn(ctx, onValue, cb) {
+        remoteSwitchSet(IP_VVX, VVX_SWITCH_ID, onValue ? 1 : 0, cb);
+      }
+
+      function applyVvxIntent(ctx, cb) {
+        applyVvxOn(ctx, ctx.intent && ctx.intent.vvx && ctx.intent.vvx.on, cb);
+      }
+
+  - action: write
+    path: rt/driver/apply-thermal.js
+    reason: Apply heat/cool remotely with conflict-safe behavior.
+    content: |
+      // driver apply-thermal 1.0.0
+      var IP_HEAT = "192.168.77.12";
+      var IP_COOL = "192.168.77.13";
+      var THERMAL_LIGHT_ID = 0;
+
+      function applyOneThermal(ip, act, cb) {
+        var aOn = act && act.on ? 1 : 0;
+        var p = aOn ? clipPct(act.pct) : 0;
+        remoteLightSet(ip, THERMAL_LIGHT_ID, p > 0, p, cb);
+      }
+
+      function applyThermalIntent(ctx, cb) {
+        if (ctx.thermalConflict) log("THERM CONFLICT");
+        applyOneThermal(IP_HEAT, ctx.intent.heat, function () {
+          applyOneThermal(IP_COOL, ctx.intent.cool, cb);
+        });
+      }
+
+      function applyThermalOff(ctx, cb) {
+        remoteLightSet(IP_HEAT, THERMAL_LIGHT_ID, 0, 0, function () {
+          remoteLightSet(IP_COOL, THERMAL_LIGHT_ID, 0, 0, cb);
+        });
+      }
+
+  - action: write
+    path: rt/driver/sequence.js
+    reason: Deterministic actuator sequence for on/off states.
+    content: |
+      // driver sequence 1.0.0
+      function applyOnSequence(ctx, cb) {
+        applyDampersIntent(ctx, function () {
+          applyFansIntent(ctx, function () {
+            applyVvxIntent(ctx, function () {
+              applyThermalIntent(ctx, cb);
+            });
+          });
+        });
+      }
+
+      function applyOffSequence(ctx, cb) {
+        applyThermalOff(ctx, function () {
+          applyVvxOn(ctx, 0, function () {
+            applyFansOff(ctx, function () {
+              applyDampersOn(ctx, 0, cb);
+            });
+          });
+        });
+      }
+
+  - action: write
+    path: rt/driver/main.js
+    reason: Driver main flow reads intent, normalizes, applies sequence and self-stops.
+    content: |
+      // driver main 1.0.0
+      function finishDriver() {
+        log("DON");
+        selfStop();
+      }
+
+      function runDriver() {
+        var ctx = createDriverCtx();
+
+        log("BOT");
+
+        readDriverIntent(ctx, function () {
+          normalizeDriverIntent(ctx);
+
+          if (ctx.intent.driver_inhibit) {
+            log("INH");
+            selfStop();
+            return;
+          }
+
+          if (driverIntentIsOff(ctx.intent)) {
+            log("OFF");
+            applyOffSequence(ctx, finishDriver);
+            return;
+          }
+
+          log("ON S=" + ctx.intent.sup.pct + " E=" + ctx.intent.ext.pct + " H=" + ctx.intent.heat.pct + " C=" + ctx.intent.cool.pct + " V=" + ctx.intent.vvx.on);
+          applyOnSequence(ctx, finishDriver);
+        });
+      }
+
+      runDriver();
+
+  - action: write
+    path: rt/recipes/driver.json
+    reason: Recipe for host-independent one-shot driver.
+    content: |
+      {
+        "boot": false,
+        "chunks": [
+          "rt/common/wrapper.start.js",
+          "rt/driver/base.js",
+          "rt/common/script.js",
+          "rt/common/helpers.js",
+          "rt/common/kvs.js",
+          "rt/driver/io-input.js",
+          "rt/driver/normalize.js",
+          "rt/driver/rpc.js",
+          "rt/driver/apply-dampers.js",
+          "rt/driver/apply-fans.js",
+          "rt/driver/apply-vvx.js",
+          "rt/driver/apply-thermal.js",
+          "rt/driver/sequence.js",
+          "rt/driver/main.js",
+          "rt/common/wrapper.end.js"
+        ]
+      }
+
+  - action: write
+    path: rt/master/base.js
+    reason: Add driver timeout and bump master base version.
+    content: |
+      // master base 1.1.0-driver
+      var SCRIPT_NAME = "master";
+
+      var INSTALLER_ID = 1;
+      var TICK_MS = 60000;
+      var WEATHER_EVERY_TICKS = 30;
+      var INSTALL_EVERY_TICKS = 5;
+
+      var TIMEOUT_POLL_MS = 25000;
+      var TIMEOUT_STATE_MS = 10000;
+      var TIMEOUT_WEATHER_MS = 30000;
+      var TIMEOUT_BRAIN_MS = 10000;
+      var TIMEOUT_DRIVER_MS = 10000;
+
+      var tickCount = 0;
+      var cycleRunning = 0;
+
+  - action: write
+    path: rt/master/main.js
+    reason: Start driver after brain in the 60-second runtime sequence.
+    content: |
+      // master main 1.1.0-with-driver
+      function runRuntimeCycle(done) {
+        startScriptByRole("poll", TIMEOUT_POLL_MS, function () {
+          startScriptByRole("state", TIMEOUT_STATE_MS, function () {
+            if (tickCount === 1 || (tickCount % WEATHER_EVERY_TICKS) === 0) {
+              startScriptByRole("weather", TIMEOUT_WEATHER_MS, function () {
+                startScriptByRole("brain", TIMEOUT_BRAIN_MS, function () {
+                  startScriptByRole("driver", TIMEOUT_DRIVER_MS, function () {
+                    done();
+                  });
+                });
+              });
+              return;
+            }
+            startScriptByRole("brain", TIMEOUT_BRAIN_MS, function () {
+              startScriptByRole("driver", TIMEOUT_DRIVER_MS, function () {
+                done();
+              });
+            });
+          });
+        });
+      }
+
+      function installerDue() {
+        return ((tickCount - 1) % INSTALL_EVERY_TICKS) === 0;
+      }
+
+      function tick() {
+        if (cycleRunning) {
+          log("SKIP busy");
+          return;
+        }
+
+        cycleRunning = 1;
+        tickCount = tickCount + 1;
+        log("TICK " + tickCount);
+
+        runRuntimeCycle(function () {
+          if (installerDue()) {
+            startInstaller(function () {
+              cycleRunning = 0;
+            });
+            return;
+          }
+          cycleRunning = 0;
+        });
+      }
+
+      function bootMaster() {
+        log("BOT");
+        Timer.set(3000, false, tick);
+        Timer.set(TICK_MS, true, tick);
+      }
+
+      bootMaster();
+
+  - action: write
+    path: rt/devices/8813bfdaa0c0.json
+    reason: Add driver package and bump device version.
+    content: |
+      {
+        "device_version": 4,
+        "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
+        "scripts": [
+          {
+            "role": "master",
+            "version": "1.1.0",
+            "name": "master_v1_1_0",
+            "recipe": "rt/recipes/master.json",
+            "boot": true
+          },
+          {
+            "role": "poll",
+            "version": "3.3.0",
+            "name": "poll_v3_3_0",
+            "recipe": "rt/recipes/p.json",
+            "boot": false
+          },
+          {
+            "role": "state",
+            "version": "1.4.0",
+            "name": "state_v1_4_0",
+            "recipe": "rt/recipes/state.json",
+            "boot": false
+          },
+          {
+            "role": "weather",
+            "version": "1.0.0",
+            "name": "weather_v1_0_0",
+            "recipe": "rt/recipes/weather.json",
+            "boot": false
+          },
+          {
+            "role": "brain",
+            "version": "2.4.0",
+            "name": "brain_v2_4_0",
+            "recipe": "rt/recipes/brain.json",
+            "boot": false
+          },
+          {
+            "role": "driver",
+            "version": "1.0.0",
+            "name": "driver_v1_0_0",
+            "recipe": "rt/recipes/driver.json",
+            "boot": false
+          }
+        ]
+      }
