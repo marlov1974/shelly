@@ -1,0 +1,20 @@
+{
+  "boot": false,
+  "chunks": [
+    "rt/common/wrapper.start.js",
+    "rt/driver/base.js",
+    "rt/common/script.js",
+    "rt/common/helpers.js",
+    "rt/common/kvs.js",
+    "rt/driver/io-input.js",
+    "rt/driver/normalize.js",
+    "rt/driver/rpc.js",
+    "rt/driver/apply-dampers.js",
+    "rt/driver/apply-fans.js",
+    "rt/driver/apply-vvx.js",
+    "rt/driver/apply-thermal.js",
+    "rt/driver/sequence.js",
+    "rt/driver/main.js",
+    "rt/common/wrapper.end.js"
+  ]
+}

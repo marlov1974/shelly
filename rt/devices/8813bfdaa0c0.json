@@ -1,11 +1,11 @@
 {
-  "device_version": 3,
+  "device_version": 4,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
       "role": "master",
-      "version": "1.0.2",
-      "name": "master_v1_0_2",
+      "version": "1.1.0",
+      "name": "master_v1_1_0",
       "recipe": "rt/recipes/master.json",
       "boot": true
     },
@@ -35,6 +35,13 @@
       "version": "2.4.0",
       "name": "brain_v2_4_0",
       "recipe": "rt/recipes/brain.json",
+      "boot": false
+    },
+    {
+      "role": "driver",
+      "version": "1.0.0",
+      "name": "driver_v1_0_0",
+      "recipe": "rt/recipes/driver.json",
       "boot": false
     }
   ]
