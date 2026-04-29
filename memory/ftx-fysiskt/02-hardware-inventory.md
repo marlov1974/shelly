@@ -1,17 +1,24 @@
 # Physical FTX Hardware Inventory
 
-This file captures small but important hardware facts for the physical FTX installation.
+This file captures small but important hardware facts for the physical FTX installation: brands, models, roles, signals, electrical data and practical notes.
 
 ## Aggregate
 
 - Physical unit: Karfax TOPIC-12.
-- Rotating heat exchanger: Heatex WA0540V-200-020-200-0-220.
+- Type: FTX ventilation aggregate with rotating heat exchanger, supply/extract fans, heating battery, cooling battery and dampers.
 - Practical current maximum airflow after modifications: about 250 l/s.
 - Historical reference maximum with older fans, clean filters and open terminals: about 300 l/s.
 
-## VVX rotor and motor
+## Rotating heat exchanger / VVX rotor
 
-Rotating heat exchanger motor identified from nameplate:
+- Rotating heat exchanger: Heatex WA0540V-200-020-200-0-220.
+- Function: rotating heat recovery wheel.
+- Measurement: VVX RPM is measured as rotor pulse/RPM in the digital system.
+- Run semantics: `vvx.run = 1` iff switch is on and measured RPM is above threshold.
+
+## VVX motor
+
+Motor identified from nameplate:
 
 ```text
 Manufacturer: Japan Servo Co., Ltd.
@@ -36,7 +43,80 @@ Wiring observation:
 2 supply conductors + protective earth to chassis
 ```
 
-Control implication: treat as AC on/off unless future hardware proves safe variable-speed operation.
+Control implication: treat as AC on/off unless future hardware proves safe variable-speed operation. Pulsing is possible conceptually but must be coordinated with heat control so the heating battery does not compensate during VVX off-periods.
+
+## Current EC fans
+
+Purchased fans:
+
+```text
+ebm-papst RadiCal K3G250-RE09-07
+ebm-papst RadiCal K3G250-RE07-07
+```
+
+Known common facts:
+
+- Both are ebm-papst RadiCal EC fans.
+- Both are similar in physical/electrical design.
+- Both have tach output.
+- Tach output is open collector.
+- Tach output gives 1 pulse per revolution.
+- Tach output is used for RPM measurement in the control system.
+- Fan speed is controlled through 0-10 V / dimmer percentage in the digital model.
+
+Current role mapping:
+
+```text
+Supply fan: exact mapping to K3G250-RE09-07 or K3G250-RE07-07 must be confirmed.
+Extract fan: exact mapping to K3G250-RE09-07 or K3G250-RE07-07 must be confirmed.
+```
+
+Canonical fan run semantics:
+
+```text
+fan.run = 1 iff switch = 1 and pct > 10 and rpm > 250
+```
+
+Known current fan calibration:
+
+```text
+K_SUPPLY_FAN = 11.6
+K_EXTRACT_FAN = 12.1
+lps = K * sqrt(Pa)
+```
+
+Current normal fan balance rule:
+
+```text
+supply_pct = round(0.9 * extract_pct - 1)
+```
+
+Earlier empirical relationship, now superseded:
+
+```text
+supply_pct = 1.0333 * extract_pct - 3.667
+```
+
+## Original/previous AC fan motors
+
+Original/previous fan motor information, verified from nameplate/photos:
+
+```text
+Manufacturer: Rosenberg Ventilatoren
+Motor type: ED 106-50-2 AA2 KS0,6
+Article no: L02-10665
+Supply: 230 V, 50 Hz, single-phase AC
+Insulation class: F
+Protection class: IP54
+Motor type: capacitor motor with external run capacitor
+Bearing: standard 6002, 15 x 32 x 9 mm
+Shaft diameter: 15 mm
+Bearing seat: 32 mm
+External run capacitor: ICAR Ecofill, 14 uF +/-5%, AC 450 V
+Capacitor label also indicated 400/500 V, 50/60 Hz
+```
+
+These motors were used as supply and extract fans in the Karfax TOPIC-12 before the EC fan modernization.
 
 ## Damper actuators
 
@@ -59,23 +139,37 @@ Wires: 1=RD, 2=BK
 
 Used for supply and extract dampers.
 
-## Fans
+Current physical/digital decision:
 
-Current digital model assumes separate supply and extract EC/dimmable fans controlled by 0-10 V and measured by RPM.
+- supply and extract dampers are wired/controlled together as one actuator group
+- controlled through one switch output in the digital model
+- digital semantics: `dmp.run = 1` iff damper switch is active
 
-Canonical fan run semantics:
-
-```text
-fan.run = 1 iff switch = 1 and pct > 10 and rpm > 250
-```
-
-Known current fan calibration:
+## Damper transformer
 
 ```text
-K_SUPPLY_FAN = 11.6
-K_EXTRACT_FAN = 12.1
-lps = K * sqrt(Pa)
+Manufacturer/model: Hager Safety Transformer ST314
+Function: 230 V to 12/24 V AC transformer
+Power: 40 VA
+Use: 24 V AC supply for damper actuators
 ```
+
+## Heating and cooling valves/batteries
+
+Known physical functions:
+
+- heating battery with 0-10 V valve control and pump/load switching/power measurement in the digital model
+- cooling battery with 0-10 V valve control and pump/load switching/power measurement in the digital model
+
+Known control constraint:
+
+- cooling is constrained by condensate/drain risk and should remain conservative until drainage is fully verified
+- valve percentage is not the same as delivered thermal power
+
+Open detail:
+
+- exact Siemens valve actuator model(s) for heating/cooling should be added from label/photo
+- exact pipe/rör dimensions for the 0-10 V water valves should be added when confirmed
 
 ## Sensors retained/used
 
@@ -95,43 +189,111 @@ The air-quality sensor can report high ppm-like values from VOC events, not only
 - perfume
 - ethanol/brine spill
 
-Control implication: avoid treating all high ppm readings as occupancy-driven CO2.
+Control implication: avoid treating all high ppm readings as occupancy-driven CO2. VOC-event handling or smoothing may be needed.
+
+Open detail:
+
+- exact CO2/VOC/RH sensor model should be added from label/order information
+- exact ppm scaling and whether the value is max(CO2,VOC) or another combined representation should be documented
+
+## Temperature/humidity sensors
+
+Known issue:
+
+- AM2302-class temperature/humidity sensor has shown hanging behavior
+- sensor can recover when VCC is interrupted and restored
+- AM2302B has been considered as a more stable replacement
+- suggested pull-up: about 4.7 kohm between data and VCC, close to the sensor
+- possible mitigation: power VCC via controllable UNI output if electrically suitable
+
+Cable note for external thermometers:
+
+```text
+4 m Cat6 cable
+all white wires = GND
+brown = VCC
+orange = data
+blue/brown pair unused
+```
+
+Known external thermometer uses include:
+
+- hot water
+- brine
+- supply air to house
+
+## Pressure sensors
+
+Known role:
+
+- 0-10 V pressure measurement to Shelly Plus UNI
+- supply pressure channel
+- extract pressure channel
+- converted to Pa and l/s in poll/runtime logic
+
+Open detail:
+
+- exact pressure transmitter make/model and range should be added from label/order information
 
 ## Shelly/edge hardware used around FTX
 
-Known device roles:
+Known device roles/IPs:
 
 ```text
-192.168.77.10  supply fan
-192.168.77.11  extract fan
+192.168.77.10  ftx-supply-fan
+192.168.77.11  ftx-extract-fan
 192.168.77.12  heat
 192.168.77.13  cool
-192.168.77.20  supply UNI
-192.168.77.21  extract UNI
-192.168.77.22  process UNI
-192.168.77.30  dampers
-192.168.77.40  VVX
+192.168.77.20  ftx-supply-uni
+192.168.77.21  ftx-extract-uni
+192.168.77.22  ftx-process-uni
+192.168.77.30  ftx-dampers / hub
+192.168.77.40  VVX control
 ```
 
 Shelly Plus UNI usage:
 
-- supply UNI: supply pressure, supply temperatures and supply RPM
-- extract UNI: extract pressure, extract temperatures and extract RPM
-- process UNI: CO2/VOC future/current process input, water/brine/after-battery temperatures and VVX RPM
+```text
+ftx-supply-uni:
+- 0-10 V Pa supply
+- supply air temperature before VVX / outdoor proxy
+- supply air temperature after VVX
+- supply fan RPM
+
+ftx-extract-uni:
+- 0-10 V Pa extract
+- extract/house air temperature before VVX
+- exhaust/to-outdoor temperature after VVX
+- extract fan RPM
+
+ftx-process-uni:
+- 0-10 V future/current CO2/VOC input
+- hotwater temperature
+- brine temperature
+- temperature after battery / to-house proxy
+- VVX RPM
+```
 
 ## Network hardware
 
-- DIN-mounted switch: Teltonika TSW030.
-- The TSW030 has DIN mount on the back and takes about two DIN modules in width.
+```text
+DIN-mounted switch: Teltonika TSW030
+```
+
+Known fact:
+
+- DIN mount on the back
+- takes about two DIN modules in width
 
 ## Open inventory gaps
 
-These should be filled when exact labels/photos are available:
+These should be filled when exact labels/photos/order info are available:
 
-- exact current supply fan make/model
-- exact current extract fan make/model
+- exact current supply fan role mapping: K3G250-RE09-07 vs K3G250-RE07-07
+- exact current extract fan role mapping: K3G250-RE09-07 vs K3G250-RE07-07
 - exact CO2/VOC/RH sensor model
 - exact 0-10 V pressure sensor make/model and range
 - exact temperature sensor models and which are retained vs newly bought
 - exact 0-10 V valve actuator models for heating/cooling
 - exact Shelly model names per IP address if not already in config
+- exact cable IDs/terminal mappings for all sensors and actuators

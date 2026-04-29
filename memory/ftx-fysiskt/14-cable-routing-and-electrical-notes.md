@@ -21,6 +21,23 @@ The FTX cabinet is metal. Grounding the cabinet is considered important both for
 
 Observed debugging note: after power cycling the cabinet following grounding work, a previously stuck sensor restarted without physically touching its VCC wire. This suggests power-cycling/reset behavior may have been part of the recovery, not only a loose contact.
 
+## External thermometer Cat6 mapping
+
+Known 4 m Cat6 cable mapping for external thermometers:
+
+```text
+all white wires = GND
+brown = VCC
+orange = data
+blue/brown pair unused
+```
+
+Used for:
+
+- hot water thermometer
+- brine thermometer
+- supply-air-to-house thermometer
+
 ## Sensor power reset issue
 
 AM2302-class temperature/humidity sensor has shown hanging behavior and can recover when VCC is interrupted and restored.
@@ -42,6 +59,27 @@ G/G0, 24 V AC
 ```
 
 Treat G/G0 as the 24 V AC supply pair. Do not assume DC polarity semantics unless the device/manual explicitly requires it.
+
+## VVX motor wiring note
+
+VVX motor has:
+
+```text
+2 supply conductors + protective earth to chassis
+```
+
+Treat it as AC on/off in the current control model.
+
+## RPM/tach wiring note
+
+The current ebm-papst RadiCal fans have tach output:
+
+```text
+open collector
+1 pulse per revolution
+```
+
+This is used for RPM measurement. Open-collector tach wiring requires a suitable pull-up/reference design according to the fan/Shelly input arrangement.
 
 ## Routing documentation gap
 
