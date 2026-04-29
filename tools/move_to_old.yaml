@@ -1,0 +1,63 @@
+# Move obsolete / superseded files to old folders.
+#
+# Usage from a local clone:
+#   python tools/move_to_old.py --plan tools/move_to_old.yaml --dry-run
+#   python tools/move_to_old.py --plan tools/move_to_old.yaml
+#   git status
+#   git diff --stat
+#   git commit -m "Move obsolete files to old"
+#   git push
+#
+# Notes:
+# - The script uses `git mv`.
+# - It refuses to overwrite existing destination files.
+# - It refuses missing sources unless --allow-missing is passed.
+# - Review active recipes before running. Files referenced by active recipes should not be moved.
+
+moves:
+  # ---------------------------------------------------------------------------
+  # Old weather implementation superseded by current modular weather runtime:
+  # rt/weather/base.js, url.js, http.js, parse.js, fetch.js, output.js, main.js
+  # ---------------------------------------------------------------------------
+  - from: rt/weather/meta.js
+    to: rt/old/weather/meta.js
+    reason: Superseded by current weather runtime and recipe.
+
+  - from: rt/weather/config.js
+    to: rt/old/weather/config.js
+    reason: Superseded by rt/weather/base.js and current weather recipe.
+
+  - from: rt/weather/solar.js
+    to: rt/old/weather/solar.js
+    reason: Superseded by rt/weather/parse.js and rt/weather/fetch.js.
+
+  - from: rt/weather/temp.js
+    to: rt/old/weather/temp.js
+    reason: Superseded by rt/weather/parse.js and rt/weather/fetch.js.
+
+  # ---------------------------------------------------------------------------
+  # Old common helpers superseded by current common structure:
+  # rt/common/script.js, helpers.js, kvs.js, shelly.js
+  # ---------------------------------------------------------------------------
+  - from: rt/common/runtime.js
+    to: rt/old/common/runtime.js
+    reason: Superseded by rt/common/script.js.
+
+  - from: rt/common/numbers.js
+    to: rt/old/common/numbers.js
+    reason: Superseded by rt/common/helpers.js.
+
+  - from: rt/common/http.js
+    to: rt/old/common/http.js
+    reason: No longer part of active recipes; weather has local http chunk.
+
+  # ---------------------------------------------------------------------------
+  # Test files from GitHub move experiment. Safe to archive/delete later.
+  # ---------------------------------------------------------------------------
+  - from: rt/old/test-move-a.txt
+    to: rt/old/test/test-move-a.txt
+    reason: Test file from move experiment.
+
+  - from: rt/old/test-move-b.txt
+    to: rt/old/test/test-move-b.txt
+    reason: Test file from move experiment.
