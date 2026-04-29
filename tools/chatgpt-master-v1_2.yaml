@@ -1,0 +1,308 @@
+description: Build master v1.2.0 with fixed 60s frame, service slot, cleanup watchdog and installer/weather slot replacement.
+
+actions:
+  - action: write
+    path: rt/master/base.js
+    reason: Master v1.2 timing constants and fixed master id.
+    content: |
+      // master base 1.2.0-slotted-60s
+      var SCRIPT_NAME = "master";
+
+      var INSTALLER_ID = 1;
+      var MASTER_ID = 2;
+
+      var TICK_MS = 60000;
+      var CLEANUP_AT_MS = 50000;
+
+      var WEATHER_EVERY_TICKS = 60;
+      var INSTALL_EVERY_TICKS = 5;
+
+      var TIMEOUT_POLL_MS = 10000;
+      var TIMEOUT_STATE_MS = 5000;
+      var TIMEOUT_WEATHER_MS = 15000;
+      var TIMEOUT_INSTALLER_MS = 15000;
+      var TIMEOUT_BRAIN_MS = 10000;
+      var TIMEOUT_DRIVER_MS = 15000;
+
+      var tickCount = 0;
+      var cycleRunning = 0;
+      var cycleStartMs = 0;
+
+  - action: write
+    path: rt/master/run.js
+    reason: Add installer slot, cleanup worker watchdog and wait-until-cleanup helpers.
+    content: |
+      // master run 1.2.0-slotted-cleanup
+      function startsWith2(s, p) {
+        s = String(s || "");
+        p = String(p || "");
+        return s.slice(0, p.length) === p;
+      }
+
+      function isWorkerScript(s) {
+        var name = String((s && s.name) || "");
+        var id = n(s && s.id, -1);
+
+        if (id === MASTER_ID) return 0;
+        if (id === INSTALLER_ID) return 1;
+
+        if (startsWith2(name, "poll_v")) return 1;
+        if (startsWith2(name, "state_v")) return 1;
+        if (startsWith2(name, "weather_v")) return 1;
+        if (startsWith2(name, "brain_v")) return 1;
+        if (startsWith2(name, "driver_v")) return 1;
+
+        if (name === "poll") return 1;
+        if (name === "state") return 1;
+        if (name === "weather") return 1;
+        if (name === "brain") return 1;
+        if (name === "driver") return 1;
+        if (name === "installer") return 1;
+
+        return 0;
+      }
+
+      function findByRolePrefix(scripts, role) {
+        var i;
+        var s;
+        var best = null;
+        var prefix = role + "_v";
+
+        for (i = 0; i < scripts.length; i++) {
+          s = scripts[i];
+          if (String(s.name || "").indexOf(prefix) === 0) {
+            if (!best || n(s.id, -1) > n(best.id, -1)) best = s;
+          }
+        }
+
+        if (best) return best;
+
+        for (i = 0; i < scripts.length; i++) {
+          if (scripts[i].name === role) return scripts[i];
+        }
+
+        return null;
+      }
+
+      function waitUntilStopped(id, cb) {
+        Timer.set(500, false, function () {
+          Shelly.call("Script.List", {}, function (res, err) {
+            var i;
+            var s = null;
+            if (err || !res || !res.scripts) { cb(0); return; }
+            for (i = 0; i < res.scripts.length; i++) {
+              if (res.scripts[i].id === id) { s = res.scripts[i]; break; }
+            }
+            if (!s) { cb(0); return; }
+            if (!s.running) { cb(1); return; }
+            waitUntilStopped(id, cb);
+          });
+        });
+      }
+
+      function startScriptByRole(role, timeoutMs, cb) {
+        Shelly.call("Script.List", {}, function (res, err) {
+          var s;
+          var done = false;
+          var timer = null;
+
+          function finish(ok) {
+            if (done) return;
+            done = true;
+            if (timer) Timer.clear(timer);
+            cb(ok);
+          }
+
+          if (err || !res || !res.scripts) { log("LS ERR " + role); cb(0); return; }
+          s = findByRolePrefix(res.scripts, role);
+          if (!s || s.id === undefined) { log("NO " + role); cb(0); return; }
+
+          log("ST " + role + " #" + s.id);
+          Shelly.call("Script.Start", { id: s.id }, function (r, e) {
+            if (e) { log("STE " + role); finish(0); return; }
+            timer = Timer.set(timeoutMs, false, function () {
+              log("TO " + role);
+              Shelly.call("Script.Stop", { id: s.id }, function () { finish(0); });
+            });
+            waitUntilStopped(s.id, function (ok) { finish(ok); });
+          });
+        });
+      }
+
+      function startInstallerSlot(cb) {
+        log("ST installer #" + INSTALLER_ID);
+        Shelly.call("Script.Start", { id: INSTALLER_ID }, function () {
+          Timer.set(TIMEOUT_INSTALLER_MS, false, cb);
+        });
+      }
+
+      function waitUntilCleanup(cb) {
+        var elapsed = (new Date()).getTime() - cycleStartMs;
+        var delay = CLEANUP_AT_MS - elapsed;
+        if (delay < 0) delay = 0;
+        log("REST " + i(delay / 1000));
+        Timer.set(delay, false, cb);
+      }
+
+      function stopWorkerList(arr, pos, cb) {
+        var s;
+        if (!arr || pos >= arr.length) { cb(); return; }
+        s = arr[pos];
+        if (!s || !isWorkerScript(s) || !s.running) {
+          stopWorkerList(arr, pos + 1, cb);
+          return;
+        }
+        log("KILL #" + s.id + " " + s.name);
+        Shelly.call("Script.Stop", { id: s.id }, function () {
+          Timer.set(80, false, function () { stopWorkerList(arr, pos + 1, cb); });
+        });
+      }
+
+      function cleanupWorkers(cb) {
+        Shelly.call("Script.List", {}, function (res, err) {
+          if (err || !res || !res.scripts) { cb(); return; }
+          stopWorkerList(res.scripts, 0, cb);
+        });
+      }
+
+  - action: write
+    path: rt/master/main.js
+    reason: Master v1.2 slot scheduler: poll+state OR weather OR installer, then brain/driver unless installer slot.
+    content: |
+      // master main 1.2.0-slotted-60s
+      function weatherDue() {
+        return tickCount > 0 && (tickCount % WEATHER_EVERY_TICKS) === 0;
+      }
+
+      function installerDue() {
+        if (weatherDue()) return 0;
+        return tickCount > 0 && (tickCount % INSTALL_EVERY_TICKS) === 0;
+      }
+
+      function runServiceSlot(cb) {
+        if (weatherDue()) {
+          log("SLOT weather");
+          startScriptByRole("weather", TIMEOUT_WEATHER_MS, function () { cb("weather"); });
+          return;
+        }
+
+        if (installerDue()) {
+          log("SLOT installer");
+          startInstallerSlot(function () { cb("installer"); });
+          return;
+        }
+
+        log("SLOT pollstate");
+        startScriptByRole("poll", TIMEOUT_POLL_MS, function () {
+          startScriptByRole("state", TIMEOUT_STATE_MS, function () {
+            cb("pollstate");
+          });
+        });
+      }
+
+      function runBrainDriver(cb) {
+        startScriptByRole("brain", TIMEOUT_BRAIN_MS, function () {
+          startScriptByRole("driver", TIMEOUT_DRIVER_MS, function () {
+            cb();
+          });
+        });
+      }
+
+      function finishCycle() {
+        waitUntilCleanup(function () {
+          cleanupWorkers(function () {
+            log("CLR");
+            cycleRunning = 0;
+          });
+        });
+      }
+
+      function tick() {
+        if (cycleRunning) {
+          log("SKIP busy");
+          return;
+        }
+
+        cycleRunning = 1;
+        cycleStartMs = (new Date()).getTime();
+        tickCount = tickCount + 1;
+        log("TICK " + tickCount);
+
+        runServiceSlot(function (slot) {
+          if (slot === "installer") {
+            finishCycle();
+            return;
+          }
+
+          runBrainDriver(function () {
+            finishCycle();
+          });
+        });
+      }
+
+      function bootMaster() {
+        log("BOT");
+        Timer.set(3000, false, tick);
+        Timer.set(TICK_MS, true, tick);
+      }
+
+      bootMaster();
+
+  - action: write
+    path: rt/devices/8813bfdaa0c0.json
+    reason: Bump device to master v1.2.0 with fixed ids.
+    content: |
+      {
+        "device_version": 6,
+        "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
+        "scripts": [
+          {
+            "role": "master",
+            "id": 2,
+            "version": "1.2.0",
+            "name": "master_v1_2_0",
+            "recipe": "rt/recipes/master.json",
+            "boot": true
+          },
+          {
+            "role": "poll",
+            "id": 3,
+            "version": "3.3.0",
+            "name": "poll_v3_3_0",
+            "recipe": "rt/recipes/p.json",
+            "boot": false
+          },
+          {
+            "role": "state",
+            "id": 4,
+            "version": "1.4.0",
+            "name": "state_v1_4_0",
+            "recipe": "rt/recipes/state.json",
+            "boot": false
+          },
+          {
+            "role": "weather",
+            "id": 5,
+            "version": "1.0.0",
+            "name": "weather_v1_0_0",
+            "recipe": "rt/recipes/weather.json",
+            "boot": false
+          },
+          {
+            "role": "brain",
+            "id": 6,
+            "version": "2.4.1",
+            "name": "brain_v2_4_1",
+            "recipe": "rt/recipes/brain.json",
+            "boot": false
+          },
+          {
+            "role": "driver",
+            "id": 7,
+            "version": "1.0.0",
+            "name": "driver_v1_0_0",
+            "recipe": "rt/recipes/driver.json",
+            "boot": false
+          }
+        ]
+      }
