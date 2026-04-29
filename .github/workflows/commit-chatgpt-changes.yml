@@ -15,7 +15,7 @@ on:
       commit_message:
         description: "Commit message"
         required: true
-        default: "Apply ChatGPT planned repository cleanup"
+        default: "Apply ChatGPT planned repository changes"
 
 permissions:
   contents: write
@@ -38,20 +38,20 @@ jobs:
       - name: Install Python dependencies
         run: python -m pip install pyyaml
 
-      - name: Show planned moves
+      - name: Show planned changes
         run: |
           if [ "${{ inputs.allow_missing }}" = "true" ]; then
-            python tools/move_to_old.py --plan "${{ inputs.plan }}" --dry-run --allow-missing
+            python tools/apply_chatgpt_plan.py --plan "${{ inputs.plan }}" --dry-run --allow-missing
           else
-            python tools/move_to_old.py --plan "${{ inputs.plan }}" --dry-run
+            python tools/apply_chatgpt_plan.py --plan "${{ inputs.plan }}" --dry-run
           fi
 
-      - name: Apply planned moves
+      - name: Apply planned changes
         run: |
           if [ "${{ inputs.allow_missing }}" = "true" ]; then
-            python tools/move_to_old.py --plan "${{ inputs.plan }}" --allow-missing
+            python tools/apply_chatgpt_plan.py --plan "${{ inputs.plan }}" --allow-missing
           else
-            python tools/move_to_old.py --plan "${{ inputs.plan }}"
+            python tools/apply_chatgpt_plan.py --plan "${{ inputs.plan }}"
           fi
 
       - name: Commit and push if changed
