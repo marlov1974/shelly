@@ -6,11 +6,11 @@ Supply and extract fans are EC/dimmable fans controlled by 0-10 V dimming. RPM i
 
 ## Current EC fans
 
-Purchased fans:
+Installed fans:
 
 ```text
-ebm-papst RadiCal K3G250-RE09-07
-ebm-papst RadiCal K3G250-RE07-07
+Supply fan: ebm-papst RadiCal K3G250-RE07-07
+Extract fan: ebm-papst RadiCal K3G250-RE09-07
 ```
 
 Known common facts:
@@ -21,13 +21,6 @@ Known common facts:
 - Tach output is open collector.
 - Tach output gives 1 pulse per revolution.
 - Tach output is used for RPM measurement in the control system.
-
-Open mapping:
-
-```text
-Supply fan: exact model assignment not yet confirmed.
-Extract fan: exact model assignment not yet confirmed.
-```
 
 ## Original/previous AC fan motors
 
