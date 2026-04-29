@@ -1,30 +1,38 @@
 # Filters and Ducting
 
-## Scope
+## Known filter requirement
 
-This document captures physical filter/duct observations relevant to FTX performance.
+Supply-side filter search has focused on bag filters with approximate dimensions:
 
-## Known principle
+```text
+287 x 592 mm
+maximum bag depth about 250 mm
+preferred class around F5 where practical
+```
 
-Filter condition can materially affect pressure, flow and fan balancing. Any before/after comparison should note:
+## Filter effect principle
 
-- filter age/status
-- fan command percentage
-- measured pressure
-- measured flow proxy
-- temperature conditions
-- damper state
+Filter condition affects:
 
-## Supply filter change
+- pressure drop
+- fan operating point
+- supply/extract balance
+- heat recovery performance
+- noise and power consumption
 
-A supply filter change has been observed and compared in runtime graphs. Detailed physical interpretation should be added from the FTX Physical project memory if available.
+Filter changes should therefore be evaluated under comparable fan percentages and weather/temperature conditions.
 
-## Digital implication
+## Measurement caution
 
-Digital control should not assume a permanent relationship between fan percentage and l/s unless filter and duct conditions remain comparable.
+A perceived airflow or VVX improvement after a filter change should be checked using comparable telemetry:
 
-## Open items
+- supply/extract pct
+- rpm
+- Pa
+- estimated l/s
+- relevant temperatures
+- VVX efficiency
 
-- Add filter type/dimensions when known.
-- Add normal maintenance interval.
-- Add before/after pressure/flow reference after confirmed measurements.
+## Ducting principle
+
+The current aggregate/ducting system should be treated as empirically calibrated. Small physical changes can move the operating point enough to require recalibration.

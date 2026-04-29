@@ -1,47 +1,35 @@
 # Temperature and Sensor Placement
 
-## Principle
+## Canonical temperature channels
 
-Each temperature value represents a physical sensor location. Do not treat the name as a perfect abstract air-stream value unless the placement is known.
-
-## Current temperature channel mapping
-
-Supply UNI mapping:
+FTX telemetry uses:
 
 ```text
-temperature:100 -> temp_supply_post_vvx_c
-temperature:101 -> temp_outdoor_c
-temperature:102 -> temp_exhaust_to_outdoor_c
+t.house       house/extract air before VVX
+t.out         outdoor/supply air before VVX
+t.post_vvx    supply air after VVX before battery
+t.to_house    supply air to house after battery
+t.to_outdoor  exhaust air after VVX to outdoor
+t.brine       brine or cooling water reference
+t.hotwater    heating water reference
 ```
 
-Extract UNI mapping:
+## Interpretation rule
 
-```text
-temperature:100 -> temp_supply_to_house_c
-temperature:101 -> temp_brine_c
-temperature:102 -> temp_hotwater_c
-```
+A temperature channel is only meaningful together with sensor placement. Do not treat it as a perfect thermodynamic node if the sensor is exposed to ambient air, poorly insulated or affected by radiation.
 
-These mappings reflect actual wiring after sensors were mounted inside the cabinet.
+## Known issue: water temperature measurement
 
-## Digital telemetry names
+Observed water temperature can be distorted if the thermometer is not insulated from surrounding air. Insulating the sensor/meter against air can materially improve the reading.
 
-The digital telemetry object uses:
+## House temperature
 
-```text
-t.house       = house/extract air reference
-t.out         = outdoor air reference
-t.to_house    = supply to house after battery
-t.post_vvx    = supply after VVX before battery
-t.to_outdoor  = exhaust to outdoor after VVX
-t.brine       = brine/water temperature reference
-t.hotwater    = hot water temperature reference
-```
+`t.house` is measured from extract/from-house air before VVX and acts as the house proxy for control logic.
 
-## Installed/available sensors
+## Outdoor proxy
 
-The project has 5 DS18B20 temperature sensors intended for Shelly The Pill / UNI style temperature measurement of air and heating/cooling battery water.
+The supply-side pre-VVX temperature acts as outdoor-air proxy when properly placed.
 
-## Caution
+## Design principle
 
-Water temperature sensors can be influenced by surrounding air temperature if not insulated. Interpret water temperature cautiously unless the sensor is thermally coupled to the pipe and insulated from air.
+Before changing control logic based on temperature, verify that the sensor represents the intended physical point.

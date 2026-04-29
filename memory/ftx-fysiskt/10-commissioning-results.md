@@ -1,29 +1,28 @@
 # Commissioning Results
 
-## Scope
+## Current practical airflow posture
 
-This file should contain confirmed physical commissioning observations and test results.
+Observed indoor air quality can remain good at relatively low fan levels, for example around 25 percent supply/extract-class operation when three people are in the house, with ppm/VOC around about 500 in one observation.
 
-## Current confirmed digital-runtime test observations
+## CO2/VOC interpretation
 
-The following runtime observations are relevant but are not full physical commissioning results:
+High readings are not always human CO2. Hair spray, perfume and ethanol/brine spill events can produce high VOC-driven ppm-like values.
 
-- Poll one-shot has successfully read device statuses and written `ftx.tel.m` / `ftx.tel.act`.
-- State one-shot has successfully derived run state and written selected virtual number outputs.
-- Brain one-shot has successfully produced reasonable low-ventilation intent in STD mode after command components were created.
+## VVX optimization observation
 
-## Physical commissioning to add
+During tests with four people in the house, the system appeared already well optimized for the then-current conditions. Further optimization should be based on comparable measurements rather than single snapshots.
 
-The FTX Physical memory should add:
+## Filter change evaluation
 
-- balanced flow points
-- final fan percentage calibration
-- pressure validation
-- filter baseline
-- cooling drain tests
-- VVX efficiency baseline under known conditions
-- heating/cooling battery response tests
+After changing supply filter, compare:
 
-## Note
+- supply Pa
+- supply rpm
+- estimated supply l/s
+- post-VVX temperature
+- VVX efficiency
+- fan power
 
-Do not use this file for transient logs. Summarize stable commissioning conclusions only.
+## Current maximum capacity reference
+
+Practical maximum airflow after modifications is estimated around 250 l/s, compared with historical about 300 l/s under old-fan/clean-filter/open-terminal conditions.

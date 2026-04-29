@@ -1,27 +1,25 @@
 # Known Issues and Maintenance
 
-## Condensate drain risk
+## Sensors hanging
 
-Cooling operation has a known condensate drain risk because the drain is an open hose to a floor drain without a confirmed water trap. High airflow can cause reverse airflow and hinder drainage.
+AM2302-class temperature/humidity sensor has shown hanging behavior and can recover when VCC is power-cycled. Pull-up resistor and power reset strategies have been discussed.
 
-Maintenance/validation:
+## Electrical/noise considerations
 
-- verify tray drainage at relevant fan speeds
-- inspect for pooling and leakage after cooling operation
-- consider water trap or water level sensor
+Signal wiring near 230 V can pick up noise. Use practical separation, short parallel runs where possible, and shielded cable where justified. Grounding the metal cabinet may improve stability.
 
-## Filter sensitivity
+## VOC events
 
-Filter condition affects pressure, flow and fan balance. Filter changes should be documented with before/after pressure and flow data where possible.
+Hair spray, perfume and ethanol/brine spill can produce elevated VOC/ppm-like readings. Avoid treating these as normal occupancy CO2 events.
 
-## Sensor interpretation
+## Filters
 
-Temperature sensors must be interpreted by physical placement. Water/pipe sensors should be insulated from air to reduce false readings.
+Filter condition materially affects pressure, flow and balance. Filter replacement should be logged and considered when comparing measurements.
 
-## VVX motor/control
+## VVX motor
 
-The VVX motor is a small AC geared induction motor. Current control is on/off. Do not assume analog speed control unless hardware is changed and verified.
+VVX motor is an old AC gearmotor. Treat as on/off unless future testing proves otherwise. Watch for rotor movement and RPM confirmation rather than assuming command equals run.
 
-## Airflow calibration
+## Condensate
 
-Runtime l/s values depend on calibration assumptions. Recalibrate or validate after major physical changes such as filter change, fan change, ducting change or damper adjustment.
+Cooling must remain conservative until condensate path and drainage are confirmed safe.

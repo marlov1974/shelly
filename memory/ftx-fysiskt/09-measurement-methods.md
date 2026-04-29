@@ -1,52 +1,37 @@
 # Measurement Methods
 
-## General principle
+## Principle
 
-Physical measurements should be documented with enough context to be comparable later. Always note:
+Measurements must be tied to method and physical point. Do not mix values from different measurement methods as if they were equivalent.
 
-- date/time
-- fan command percentages
-- filter condition
+## Relevant measurement types
+
+- pressure at stoss or measurement port
+- pressure across fan
+- fan RPM
+- fan percentage/dimmer value
+- estimated l/s from pressure and K factor
+- temperature before/after VVX
+- temperature after heating/cooling battery
+- CO2/VOC and RH in house/extract air
+- water/brine temperature and flow
+
+## Repeatability
+
+For before/after tests, keep these stable where possible:
+
+- fan percentages
 - damper state
-- VVX on/off state
-- outdoor temperature
-- house/extract temperature
-- measured pressure points
-- sensor placement
-- whether measurement is nozzle/stos, fan-side pressure or runtime telemetry
+- filter state
+- VVX state
+- occupancy
+- outdoor temperature/sun exposure
+- time since last control change
 
-## Stos/nozzle measurements
+## Temperature tests
 
-Canonical locked reference points:
+Temperature readings should be allowed to stabilize. Solar gain and uninsulated sensors can distort interpretation.
 
-```text
-85 V  -> ΔP = 20 Pa,  Q ≈ 110 l/s
-150 V -> ΔP = 120 Pa, Q ≈ 240 l/s
-```
+## Flow tests
 
-These are flow-proxy points and are treated as equivalent regardless of house/valves/filters for future calibration reconstruction.
-
-## Fan-side pressure measurements
-
-Canonical locked fan-side points:
-
-```text
-85 V  -> ΔP_fan ≈ 90 Pa
-150 V -> ΔP_fan ≈ 380 Pa
-```
-
-Flow from these fan-side points is considered invalid unless a specific reconstruction method is explicitly defined.
-
-## Runtime telemetry method
-
-Runtime telemetry reads pressure, RPM and flow values from the Shelly sensor network and stores them in `ftx.tel.m`.
-
-Use telemetry for trend and control. Use physical measurement for calibration and validation.
-
-## Temperature measurements
-
-Temperature readings must always be interpreted in relation to sensor location and insulation. Water/pipe sensors are especially sensitive to air influence if not insulated.
-
-## Before/after comparisons
-
-For filter changes, fan changes and duct adjustments, compare only under reasonably similar conditions. Prefer same command levels and similar environmental temperatures.
+Displayed pump flow with only one decimal m3/h should be treated as coarse. Small differences may be hidden by display resolution.

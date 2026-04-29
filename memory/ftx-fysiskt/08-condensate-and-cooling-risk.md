@@ -1,39 +1,23 @@
 # Condensate and Cooling Risk
 
-## Core risk
+## Role
 
-The cooling battery has an open condensate drain hose to a floor drain and no confirmed water trap.
+Cooling through the FTX cooling battery creates condensation risk. Condensate handling is therefore a control constraint, not only a plumbing detail.
 
-Risk model:
+## Known risk
 
-```text
-High airflow / pressure difference
-→ reverse airflow in condensate hose
-→ drainage is hindered
-→ 5–10 mm pooling can form in tray
-→ leakage risk at joints or tray edges
-```
+The system has had concern around condensate tray/drain behavior and water lock/open drain details. Cooling capacity or fan levels should not be expanded without confirming condensate can be safely removed.
 
 ## Control implication
 
-Cooling mode must limit airflow rather than rely only on pressure calculations.
+Cooling should require:
 
-Current conservative v1 cap:
+- fans running
+- dampers open
+- cooling water/brine available
+- safe condensate path
+- dew point/temperature logic where relevant
 
-```text
-When cooling battery is active, max fan level is capped to MEDIUM-equivalent level.
-```
+## Safety principle
 
-The cap can be adjusted after commissioning tests.
-
-## Future improvement
-
-Possible future improvement:
-
-- water level sensor in drip tray
-- better condensate drain/water trap solution
-- physical verification of drain behavior at multiple fan speeds
-
-## Digital link
-
-The digital brain has cooling/failsafe constraints, including cooling ventilation cap. The physical reason is condensate drainage risk, not only thermal comfort.
+When uncertain, limit cooling. Condensate and moisture problems are more serious than missing some cooling effect.
