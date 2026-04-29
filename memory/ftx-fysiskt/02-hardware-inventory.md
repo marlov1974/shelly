@@ -47,11 +47,11 @@ Control implication: treat as AC on/off unless future hardware proves safe varia
 
 ## Current EC fans
 
-Purchased fans:
+Purchased/installed fans:
 
 ```text
-ebm-papst RadiCal K3G250-RE09-07
-ebm-papst RadiCal K3G250-RE07-07
+Supply fan: ebm-papst RadiCal K3G250-RE07-07
+Extract fan: ebm-papst RadiCal K3G250-RE09-07
 ```
 
 Known common facts:
@@ -63,13 +63,6 @@ Known common facts:
 - Tach output gives 1 pulse per revolution.
 - Tach output is used for RPM measurement in the control system.
 - Fan speed is controlled through 0-10 V / dimmer percentage in the digital model.
-
-Current role mapping:
-
-```text
-Supply fan: exact mapping to K3G250-RE09-07 or K3G250-RE07-07 must be confirmed.
-Extract fan: exact mapping to K3G250-RE09-07 or K3G250-RE07-07 must be confirmed.
-```
 
 Canonical fan run semantics:
 
@@ -154,7 +147,30 @@ Power: 40 VA
 Use: 24 V AC supply for damper actuators
 ```
 
-## Heating and cooling valves/batteries
+## Heating and cooling valve actuators
+
+Identified valve actuator from photos:
+
+```text
+Manufacturer: Siemens Building Technologies AG
+Product family/label: HVAC Products
+Model: SSB61
+Supply: AC 24 V +/-20%, 50/60 Hz
+Control signal: DC 0-10 V
+Power: 2.5 VA
+Runtime: 150 s
+Country marking: Assembled in Sweden
+Wire 1 red: G
+Wire 8 grey: Y
+Wire 2 black: G0
+```
+
+Role mapping from physical appearance:
+
+```text
+Cooling actuator: the clean SSB61 actuator
+Heating actuator: the dirty SSB61 actuator
+```
 
 Known physical functions:
 
@@ -168,7 +184,6 @@ Known control constraint:
 
 Open detail:
 
-- exact Siemens valve actuator model(s) for heating/cooling should be added from label/photo
 - exact pipe/rör dimensions for the 0-10 V water valves should be added when confirmed
 
 ## Sensors retained/used
@@ -181,7 +196,17 @@ Current known sensor classes:
 - temperature sensors for outdoor/pre-VVX, house/extract, post-VVX, to-house, to-outdoor, brine and hotwater references
 - CO2/VOC/RH sensor for house air quality
 
-## CO2/VOC/PPM sensor behavior
+## CO2/VOC/PPM sensor
+
+Identified PPM/CO2 sensor:
+
+```text
+Manufacturer: Siemens
+Model: QPM2102
+Role: house air-quality / ppm input for FTX control
+```
+
+Known behavior:
 
 The air-quality sensor can report high ppm-like values from VOC events, not only human CO2. Known triggers:
 
@@ -193,7 +218,6 @@ Control implication: avoid treating all high ppm readings as occupancy-driven CO
 
 Open detail:
 
-- exact CO2/VOC/RH sensor model should be added from label/order information
 - exact ppm scaling and whether the value is max(CO2,VOC) or another combined representation should be documented
 
 ## Temperature/humidity sensors
@@ -224,16 +248,26 @@ Known external thermometer uses include:
 
 ## Pressure sensors
 
-Known role:
+Identified pressure sensors:
 
-- 0-10 V pressure measurement to Shelly Plus UNI
-- supply pressure channel
-- extract pressure channel
+```text
+Manufacturer: Siemens
+Model: QBM2030-5
+Quantity: 2
+Role: supply and extract differential pressure measurement
+Signal: 0-10 V pressure measurement to Shelly Plus UNI
+```
+
+Known runtime usage:
+
+- supply pressure channel to `ftx-supply-uni`
+- extract pressure channel to `ftx-extract-uni`
 - converted to Pa and l/s in poll/runtime logic
 
 Open detail:
 
-- exact pressure transmitter make/model and range should be added from label/order information
+- confirm exact measurement range interpretation for QBM2030-5 in current wiring/config
+- confirm which physical sensor is supply vs extract if not obvious from installation
 
 ## Shelly/edge hardware used around FTX
 
@@ -289,11 +323,9 @@ Known fact:
 
 These should be filled when exact labels/photos/order info are available:
 
-- exact current supply fan role mapping: K3G250-RE09-07 vs K3G250-RE07-07
-- exact current extract fan role mapping: K3G250-RE09-07 vs K3G250-RE07-07
-- exact CO2/VOC/RH sensor model
-- exact 0-10 V pressure sensor make/model and range
+- exact CO2/VOC/PPM output scaling and algorithm for Siemens QPM2102
+- exact pressure range/config interpretation for Siemens QBM2030-5
 - exact temperature sensor models and which are retained vs newly bought
-- exact 0-10 V valve actuator models for heating/cooling
+- exact pipe/rör dimensions for heating/cooling valves
 - exact Shelly model names per IP address if not already in config
 - exact cable IDs/terminal mappings for all sensors and actuators
