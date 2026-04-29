@@ -167,7 +167,7 @@ actions:
 
   - action: write
     path: rt/master/main.js
-    reason: Master v1.2 slot scheduler: poll+state OR weather OR installer, then brain/driver unless installer slot.
+    reason: "Master v1.2 slot scheduler: poll+state OR weather OR installer, then brain/driver unless installer slot."
     content: |
       // master main 1.2.0-slotted-60s
       function weatherDue() {
