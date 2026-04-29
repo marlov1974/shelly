@@ -1,0 +1,70 @@
+name: Commit ChatGPT changes
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: "YAML plan to execute"
+        required: true
+        default: "tools/move_to_old.yaml"
+      allow_missing:
+        description: "Skip missing source files"
+        required: true
+        type: boolean
+        default: true
+      commit_message:
+        description: "Commit message"
+        required: true
+        default: "Apply ChatGPT planned repository cleanup"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python dependencies
+        run: python -m pip install pyyaml
+
+      - name: Show planned moves
+        run: |
+          if [ "${{ inputs.allow_missing }}" = "true" ]; then
+            python tools/move_to_old.py --plan "${{ inputs.plan }}" --dry-run --allow-missing
+          else
+            python tools/move_to_old.py --plan "${{ inputs.plan }}" --dry-run
+          fi
+
+      - name: Apply planned moves
+        run: |
+          if [ "${{ inputs.allow_missing }}" = "true" ]; then
+            python tools/move_to_old.py --plan "${{ inputs.plan }}" --allow-missing
+          else
+            python tools/move_to_old.py --plan "${{ inputs.plan }}"
+          fi
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git status --short
+          git add -A
+          git commit -m "${{ inputs.commit_message }}"
+          git push
