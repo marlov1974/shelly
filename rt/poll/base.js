@@ -1,4 +1,4 @@
-// poll base 3.3.1-fixed-id
+// poll base 3.3.2-fixed-context-objects
 var SCRIPT_NAME = "poll";
 var SCRIPT_ID = 4;
 
@@ -20,16 +20,12 @@ var K_EXTRACT = 12.1;
 
 function createPollCtx() {
   return {
-    su: null,
-    sf: null,
-    eu: null,
-    ef: null,
-    pr: null,
-    ht: null,
-    cl: null,
-    vx: null,
-    dm: null,
-    telM: null,
-    telAct: null
+    supply: {},
+    extract: {},
+    process: {},
+    heat: {},
+    cool: {},
+    vvx: {},
+    dmp: {}
   };
 }

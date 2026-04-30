@@ -1,5 +1,5 @@
 {
-  "device_version": 9,
+  "device_version": 10,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
@@ -21,8 +21,8 @@
     {
       "role": "poll",
       "id": 4,
-      "version": "3.3.1",
-      "name": "poll_v3_3_1",
+      "version": "3.3.2",
+      "name": "poll_v3_3_2",
       "recipe": "rt/recipes/p.json",
       "boot": false
     },
