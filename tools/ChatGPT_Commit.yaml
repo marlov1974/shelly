@@ -1,172 +1,48 @@
-description: Patch master so first tick always runs installer.
+description: Fix poll context object names so poll reaches DON and self-stops.
 
 actions:
   - action: write
-    path: rt/master/main.js
-    reason: Master must always run installer on first tick before reboot/weather/poll-state.
+    path: rt/poll/base.js
+    reason: createPollCtx must expose the object names used by poll feature modules.
     content: |
-      // master main 1.3.1-first-tick-installer
-      function getHourNowLocal() { return (new Date()).getHours(); }
-      function getMinuteNowLocal() { return (new Date()).getMinutes(); }
+      // poll base 3.3.2-fixed-context-objects
+      var SCRIPT_NAME = "poll";
+      var SCRIPT_ID = 4;
 
-      function firstTickInstallerDue() {
-        return tickCount === 1 ? 1 : 0;
+      var KEY_TEL_M = "ftx.tel.m";
+      var KEY_TEL_ACT = "ftx.tel.act";
+
+      var IP_SUPPLY_UNI = "192.168.77.20";
+      var IP_EXTRACT_UNI = "192.168.77.21";
+      var IP_PROCESS_UNI = "192.168.77.22";
+      var IP_SUPPLY_FAN = "192.168.77.10";
+      var IP_EXTRACT_FAN = "192.168.77.11";
+      var IP_HEAT = "192.168.77.12";
+      var IP_COOL = "192.168.77.13";
+      var IP_VVX = "192.168.77.40";
+      var IP_DAMPERS = "192.168.77.30";
+
+      var K_SUPPLY = 11.6;
+      var K_EXTRACT = 12.1;
+
+      function createPollCtx() {
+        return {
+          supply: {},
+          extract: {},
+          process: {},
+          heat: {},
+          cool: {},
+          vvx: {},
+          dmp: {}
+        };
       }
-
-      function rebootDue() {
-        var h;
-        var m;
-        if (rebootStarted) return 0;
-        h = getHourNowLocal();
-        m = getMinuteNowLocal();
-        if (h !== REBOOT_START_HOUR) return 0;
-        if (m < REBOOT_START_MINUTE) return 0;
-        if (m > REBOOT_END_MINUTE) return 0;
-        return 1;
-      }
-
-      function weatherDue() {
-        return tickCount > 0 && (tickCount % WEATHER_EVERY_TICKS) === 0;
-      }
-
-      function installerDue() {
-        if (firstTickInstallerDue()) return 1;
-        if (weatherDue()) return 0;
-        return tickCount > 0 && (tickCount % INSTALL_EVERY_TICKS) === 0;
-      }
-
-      function runServiceSlot(cb) {
-        if (firstTickInstallerDue()) {
-          log("SLOT installer first");
-          startInstallerSlot(function () { cb("installer"); });
-          return;
-        }
-
-        if (rebootDue()) {
-          rebootStarted = 1;
-          log("SLOT reboot");
-          startRebootSlot(function () { cb("reboot"); });
-          return;
-        }
-
-        if (weatherDue()) {
-          log("SLOT weather");
-          startWeather(function () { cb("weather"); });
-          return;
-        }
-
-        if (installerDue()) {
-          log("SLOT installer");
-          startInstallerSlot(function () { cb("installer"); });
-          return;
-        }
-
-        log("SLOT pollstate");
-        startPoll(function () {
-          startState(function () {
-            cb("pollstate");
-          });
-        });
-      }
-
-      function runBrainDriver(cb) {
-        startBrain(function () {
-          startDriver(function () {
-            cb();
-          });
-        });
-      }
-
-      function finishCycle() {
-        waitUntilCleanup(function () {
-          cleanupWorkers(function () {
-            log("CLR");
-            cycleRunning = 0;
-          });
-        });
-      }
-
-      function tick() {
-        if (cycleRunning) {
-          log("SKIP busy");
-          return;
-        }
-
-        cycleRunning = 1;
-        cycleStartMs = (new Date()).getTime();
-        tickCount = tickCount + 1;
-        log("TICK " + tickCount);
-
-        runServiceSlot(function (slot) {
-          if (slot === "installer" || slot === "reboot") {
-            finishCycle();
-            return;
-          }
-
-          runBrainDriver(function () {
-            finishCycle();
-          });
-        });
-      }
-
-      function bootMaster() {
-        log("BOT");
-        Timer.set(1000, false, tick);
-        Timer.set(TICK_MS, true, tick);
-      }
-
-      bootMaster();
-
-  - action: write
-    path: rt/master/base.js
-    reason: Bump master version comment to 1.3.1 while keeping same runtime constants.
-    content: |
-      // master base 1.3.1-first-tick-installer
-      var SCRIPT_NAME = "master";
-      var SCRIPT_ID = 3;
-
-      var INSTALLER_ID = 1;
-      var BOOT_ID = 2;
-      var MASTER_ID = 3;
-      var POLL_ID = 4;
-      var STATE_ID = 5;
-      var WEATHER_ID = 6;
-      var BRAIN_ID = 7;
-      var DRIVER_ID = 8;
-      var REBOOT_ID = 9;
-
-      var TICK_MS = 60000;
-      var CLEANUP_AT_MS = 50000;
-
-      var WEATHER_EVERY_TICKS = 60;
-      var INSTALL_EVERY_TICKS = 5;
-
-      var TIMEOUT_POLL_MS = 10000;
-      var TIMEOUT_STATE_MS = 5000;
-      var TIMEOUT_WEATHER_MS = 15000;
-      var TIMEOUT_INSTALLER_MS = 15000;
-      var TIMEOUT_BRAIN_MS = 10000;
-      var TIMEOUT_DRIVER_MS = 15000;
-      var TIMEOUT_REBOOT_MS = 15000;
-
-      var REBOOT_START_HOUR = 13;
-      var REBOOT_START_MINUTE = 0;
-      var REBOOT_END_MINUTE = 5;
-
-      var tickCount = 0;
-      var cycleRunning = 0;
-      var cycleStartMs = 0;
-      var rebootStarted = 0;
-
-      function n(v, d) { var x = Number(v); return (x === x) ? x : d; }
-      function i(v) { var x = Number(v); if (x !== x) return 0; return Math.floor(x + 0.5); }
 
   - action: write
     path: rt/devices/8813bfdaa0c0.json
-    reason: Bump device manifest to rebuild master 1.3.1. Existing id layout remains unchanged.
+    reason: Bump device manifest to rebuild poll 3.3.2. Existing id layout remains unchanged.
     content: |
       {
-        "device_version": 9,
+        "device_version": 10,
         "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
         "scripts": [
           {
@@ -188,8 +64,8 @@ actions:
           {
             "role": "poll",
             "id": 4,
-            "version": "3.3.1",
-            "name": "poll_v3_3_1",
+            "version": "3.3.2",
+            "name": "poll_v3_3_2",
             "recipe": "rt/recipes/p.json",
             "boot": false
           },
