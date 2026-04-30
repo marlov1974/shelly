@@ -1,57 +1,52 @@
-// master run 1.3.0-fixed-id-boot-reboot
-function startScriptById(id, name, timeoutMs, cb) {
-  log("ST " + name + " #" + id);
-
-  Shelly.call("Script.Start", { id: id }, function (res, err) {
-    if (err) {
-      log("STE " + name);
-      cb(0);
-      return;
-    }
-
-    Timer.set(timeoutMs, false, function () {
-      cb(1);
-    });
-  });
-}
-
-function startInstallerSlot(cb) { startScriptById(INSTALLER_ID, "installer", TIMEOUT_INSTALLER_MS, cb); }
-function startRebootSlot(cb) { startScriptById(REBOOT_ID, "reboot", TIMEOUT_REBOOT_MS, cb); }
-function startPoll(cb) { startScriptById(POLL_ID, "poll", TIMEOUT_POLL_MS, cb); }
-function startState(cb) { startScriptById(STATE_ID, "state", TIMEOUT_STATE_MS, cb); }
-function startWeather(cb) { startScriptById(WEATHER_ID, "weather", TIMEOUT_WEATHER_MS, cb); }
-function startBrain(cb) { startScriptById(BRAIN_ID, "brain", TIMEOUT_BRAIN_MS, cb); }
-function startDriver(cb) { startScriptById(DRIVER_ID, "driver", TIMEOUT_DRIVER_MS, cb); }
-
-function waitUntilCleanup(cb) {
-  var elapsed = (new Date()).getTime() - cycleStartMs;
-  var delay = CLEANUP_AT_MS - elapsed;
-  if (delay < 0) delay = 0;
-  log("REST " + i(delay / 1000));
-  Timer.set(delay, false, cb);
-}
-
-function stopId(id, cb) {
-  if (id === MASTER_ID) { cb(); return; }
+// master run 1.4.0-score-dispatcher
+function stopWorker(id, cb) {
+  if (!id || id === MASTER_ID) {
+    cb();
+    return;
+  }
   Shelly.call("Script.Stop", { id: id }, function () {
     Timer.set(80, false, cb);
   });
 }
 
-function cleanupWorkers(cb) {
-  stopId(INSTALLER_ID, function () {
-    stopId(BOOT_ID, function () {
-      stopId(POLL_ID, function () {
-        stopId(STATE_ID, function () {
-          stopId(WEATHER_ID, function () {
-            stopId(BRAIN_ID, function () {
-              stopId(DRIVER_ID, function () {
-                stopId(REBOOT_ID, cb);
-              });
-            });
-          });
-        });
-      });
-    });
+function startWorker(id, name) {
+  log("ST " + name + " #" + id);
+  Shelly.call("Script.Start", { id: id }, function (res, err) {
+    if (err) log("STE " + name);
   });
+}
+
+function decScores() {
+  scoreInstaller = scoreInstaller - 1;
+  scorePoll = scorePoll - 1;
+  scoreState = scoreState - 1;
+  scoreWeather = scoreWeather - 1;
+  scoreBrain = scoreBrain - 1;
+  scoreDriver = scoreDriver - 1;
+  scoreReboot = scoreReboot - 1;
+}
+
+function chooseBest() {
+  var id = REBOOT_ID;
+  var name = "reboot";
+  var score = scoreReboot;
+
+  if (scoreInstaller < score) { id = INSTALLER_ID; name = "installer"; score = scoreInstaller; }
+  if (scoreWeather < score) { id = WEATHER_ID; name = "weather"; score = scoreWeather; }
+  if (scoreDriver < score) { id = DRIVER_ID; name = "driver"; score = scoreDriver; }
+  if (scoreBrain < score) { id = BRAIN_ID; name = "brain"; score = scoreBrain; }
+  if (scoreState < score) { id = STATE_ID; name = "state"; score = scoreState; }
+  if (scorePoll < score) { id = POLL_ID; name = "poll"; score = scorePoll; }
+
+  return { id: id, name: name };
+}
+
+function resetScore(id) {
+  if (id === INSTALLER_ID) scoreInstaller = RESET_INSTALLER;
+  else if (id === POLL_ID) scorePoll = RESET_POLL;
+  else if (id === STATE_ID) scoreState = RESET_STATE;
+  else if (id === WEATHER_ID) scoreWeather = RESET_WEATHER;
+  else if (id === BRAIN_ID) scoreBrain = RESET_BRAIN;
+  else if (id === DRIVER_ID) scoreDriver = RESET_DRIVER;
+  else if (id === REBOOT_ID) scoreReboot = RESET_REBOOT;
 }
