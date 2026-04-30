@@ -1,289 +1,17 @@
-description: Introduce boot/reboot runtime, fixed script ids 1-9, low-heap startup, and stable ChatGPT action plan file.
+description: Patch master so first tick always runs installer.
 
 actions:
   - action: write
-    path: rt/boot/base.js
-    reason: Boot is the only autostart worker and starts master after stabilization delay.
-    content: |
-      // boot base 1.0.0-stabilize-then-master
-      var SCRIPT_NAME = "boot";
-      var SCRIPT_ID = 2;
-      var MASTER_ID = 3;
-      var BOOT_DELAY_MS = 60000;
-
-  - action: write
-    path: rt/boot/main.js
-    reason: Wait for network/devices to stabilize, then start master and self-stop.
-    content: |
-      // boot main 1.0.0-stabilize-then-master
-      function startMasterAndStop() {
-        log("ST master #" + MASTER_ID);
-        Shelly.call("Script.Start", { id: MASTER_ID }, function () {
-          selfStop();
-        });
-      }
-
-      function boot() {
-        log("BOT");
-        log("WAIT 60");
-        Timer.set(BOOT_DELAY_MS, false, startMasterAndStop);
-      }
-
-      boot();
-
-  - action: write
-    path: rt/recipes/boot.json
-    reason: Recipe for boot script.
-    content: |
-      {
-        "boot": true,
-        "chunks": [
-          "rt/common/wrapper.start.js",
-          "rt/boot/base.js",
-          "rt/common/script.js",
-          "rt/boot/main.js",
-          "rt/common/wrapper.end.js"
-        ]
-      }
-
-  - action: write
-    path: rt/reboot/base.js
-    reason: Reboot script sequence and device targets.
-    content: |
-      // reboot base 1.0.0-daily-device-reboot
-      var SCRIPT_NAME = "reboot";
-      var SCRIPT_ID = 9;
-
-      var INSTALLER_ID = 1;
-      var BOOT_ID = 2;
-      var MASTER_ID = 3;
-      var POLL_ID = 4;
-      var STATE_ID = 5;
-      var WEATHER_ID = 6;
-      var BRAIN_ID = 7;
-      var DRIVER_ID = 8;
-
-      var LOCAL_SETTLE_MS = 300000;
-      var REMOTE_SETTLE_MS = 300000;
-
-      var IP_SUPPLY_UNI = "192.168.77.20";
-      var IP_EXTRACT_UNI = "192.168.77.21";
-      var IP_PROCESS_UNI = "192.168.77.22";
-      var IP_SUPPLY_FAN = "192.168.77.10";
-      var IP_EXTRACT_FAN = "192.168.77.11";
-      var IP_HEAT = "192.168.77.12";
-      var IP_COOL = "192.168.77.13";
-      var IP_DAMPERS = "192.168.77.30";
-
-  - action: write
-    path: rt/reboot/main.js
-    reason: Stop local workers, wait, reboot remote devices, wait, then reboot local device.
-    content: |
-      // reboot main 1.0.0-daily-device-reboot
-      function httpGet(url, tag, cb) {
-        Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
-          if (err || !res) log("ERR " + tag);
-          if (cb) cb();
-        });
-      }
-
-      function rebootIp(ip, cb) {
-        httpGet("http://" + ip + "/rpc/Shelly.Reboot", "RB " + ip, cb);
-      }
-
-      function stopId(id, cb) {
-        if (id === SCRIPT_ID) { cb(); return; }
-        Shelly.call("Script.Stop", { id: id }, function () {
-          Timer.set(80, false, cb);
-        });
-      }
-
-      function stopLocalWorkers(cb) {
-        log("KILL local");
-        stopId(INSTALLER_ID, function () {
-          stopId(BOOT_ID, function () {
-            stopId(MASTER_ID, function () {
-              stopId(POLL_ID, function () {
-                stopId(STATE_ID, function () {
-                  stopId(WEATHER_ID, function () {
-                    stopId(BRAIN_ID, function () {
-                      stopId(DRIVER_ID, cb);
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      }
-
-      function rebootRemotes(cb) {
-        log("RB remote");
-        rebootIp(IP_SUPPLY_UNI, function () {
-          rebootIp(IP_EXTRACT_UNI, function () {
-            rebootIp(IP_PROCESS_UNI, function () {
-              rebootIp(IP_SUPPLY_FAN, function () {
-                rebootIp(IP_EXTRACT_FAN, function () {
-                  rebootIp(IP_HEAT, function () {
-                    rebootIp(IP_COOL, function () {
-                      rebootIp(IP_DAMPERS, cb);
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      }
-
-      function rebootSelf() {
-        log("RB self");
-        Shelly.call("Shelly.Reboot", {}, function () {});
-      }
-
-      function runReboot() {
-        log("BOT");
-        stopLocalWorkers(function () {
-          log("WAIT local 300");
-          Timer.set(LOCAL_SETTLE_MS, false, function () {
-            rebootRemotes(function () {
-              log("WAIT remote 300");
-              Timer.set(REMOTE_SETTLE_MS, false, rebootSelf);
-            });
-          });
-        });
-      }
-
-      runReboot();
-
-  - action: write
-    path: rt/recipes/reboot.json
-    reason: Recipe for reboot worker.
-    content: |
-      {
-        "boot": false,
-        "chunks": [
-          "rt/common/wrapper.start.js",
-          "rt/reboot/base.js",
-          "rt/common/script.js",
-          "rt/reboot/main.js",
-          "rt/common/wrapper.end.js"
-        ]
-      }
-
-  - action: write
-    path: rt/master/base.js
-    reason: Shift master to script id 3 and add reboot slot constants.
-    content: |
-      // master base 1.3.0-boot-reboot-fixed-id
-      var SCRIPT_NAME = "master";
-      var SCRIPT_ID = 3;
-
-      var INSTALLER_ID = 1;
-      var BOOT_ID = 2;
-      var MASTER_ID = 3;
-      var POLL_ID = 4;
-      var STATE_ID = 5;
-      var WEATHER_ID = 6;
-      var BRAIN_ID = 7;
-      var DRIVER_ID = 8;
-      var REBOOT_ID = 9;
-
-      var TICK_MS = 60000;
-      var CLEANUP_AT_MS = 50000;
-
-      var WEATHER_EVERY_TICKS = 60;
-      var INSTALL_EVERY_TICKS = 5;
-
-      var TIMEOUT_POLL_MS = 10000;
-      var TIMEOUT_STATE_MS = 5000;
-      var TIMEOUT_WEATHER_MS = 15000;
-      var TIMEOUT_INSTALLER_MS = 15000;
-      var TIMEOUT_BRAIN_MS = 10000;
-      var TIMEOUT_DRIVER_MS = 15000;
-      var TIMEOUT_REBOOT_MS = 15000;
-
-      var REBOOT_START_HOUR = 13;
-      var REBOOT_START_MINUTE = 0;
-      var REBOOT_END_MINUTE = 5;
-
-      var tickCount = 0;
-      var cycleRunning = 0;
-      var cycleStartMs = 0;
-      var rebootStarted = 0;
-
-      function n(v, d) { var x = Number(v); return (x === x) ? x : d; }
-      function i(v) { var x = Number(v); if (x !== x) return 0; return Math.floor(x + 0.5); }
-
-  - action: write
-    path: rt/master/run.js
-    reason: Fixed-id low-memory runner with reboot worker included in cleanup.
-    content: |
-      // master run 1.3.0-fixed-id-boot-reboot
-      function startScriptById(id, name, timeoutMs, cb) {
-        log("ST " + name + " #" + id);
-
-        Shelly.call("Script.Start", { id: id }, function (res, err) {
-          if (err) {
-            log("STE " + name);
-            cb(0);
-            return;
-          }
-
-          Timer.set(timeoutMs, false, function () {
-            cb(1);
-          });
-        });
-      }
-
-      function startInstallerSlot(cb) { startScriptById(INSTALLER_ID, "installer", TIMEOUT_INSTALLER_MS, cb); }
-      function startRebootSlot(cb) { startScriptById(REBOOT_ID, "reboot", TIMEOUT_REBOOT_MS, cb); }
-      function startPoll(cb) { startScriptById(POLL_ID, "poll", TIMEOUT_POLL_MS, cb); }
-      function startState(cb) { startScriptById(STATE_ID, "state", TIMEOUT_STATE_MS, cb); }
-      function startWeather(cb) { startScriptById(WEATHER_ID, "weather", TIMEOUT_WEATHER_MS, cb); }
-      function startBrain(cb) { startScriptById(BRAIN_ID, "brain", TIMEOUT_BRAIN_MS, cb); }
-      function startDriver(cb) { startScriptById(DRIVER_ID, "driver", TIMEOUT_DRIVER_MS, cb); }
-
-      function waitUntilCleanup(cb) {
-        var elapsed = (new Date()).getTime() - cycleStartMs;
-        var delay = CLEANUP_AT_MS - elapsed;
-        if (delay < 0) delay = 0;
-        log("REST " + i(delay / 1000));
-        Timer.set(delay, false, cb);
-      }
-
-      function stopId(id, cb) {
-        if (id === MASTER_ID) { cb(); return; }
-        Shelly.call("Script.Stop", { id: id }, function () {
-          Timer.set(80, false, cb);
-        });
-      }
-
-      function cleanupWorkers(cb) {
-        stopId(INSTALLER_ID, function () {
-          stopId(BOOT_ID, function () {
-            stopId(POLL_ID, function () {
-              stopId(STATE_ID, function () {
-                stopId(WEATHER_ID, function () {
-                  stopId(BRAIN_ID, function () {
-                    stopId(DRIVER_ID, function () {
-                      stopId(REBOOT_ID, cb);
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      }
-
-  - action: write
     path: rt/master/main.js
-    reason: Service slot now supports daily reboot between 13:00 and 13:05, replacing poll/state/weather/install.
+    reason: Master must always run installer on first tick before reboot/weather/poll-state.
     content: |
-      // master main 1.3.0-boot-reboot-slots
+      // master main 1.3.1-first-tick-installer
       function getHourNowLocal() { return (new Date()).getHours(); }
       function getMinuteNowLocal() { return (new Date()).getMinutes(); }
+
+      function firstTickInstallerDue() {
+        return tickCount === 1 ? 1 : 0;
+      }
 
       function rebootDue() {
         var h;
@@ -302,11 +30,18 @@ actions:
       }
 
       function installerDue() {
+        if (firstTickInstallerDue()) return 1;
         if (weatherDue()) return 0;
         return tickCount > 0 && (tickCount % INSTALL_EVERY_TICKS) === 0;
       }
 
       function runServiceSlot(cb) {
+        if (firstTickInstallerDue()) {
+          log("SLOT installer first");
+          startInstallerSlot(function () { cb("installer"); });
+          return;
+        }
+
         if (rebootDue()) {
           rebootStarted = 1;
           log("SLOT reboot");
@@ -383,162 +118,55 @@ actions:
       bootMaster();
 
   - action: write
-    path: rt/poll/base.js
-    reason: Add fixed script id for low-heap selfStop.
+    path: rt/master/base.js
+    reason: Bump master version comment to 1.3.1 while keeping same runtime constants.
     content: |
-      // poll base 3.3.1-fixed-id
-      var SCRIPT_NAME = "poll";
-      var SCRIPT_ID = 4;
+      // master base 1.3.1-first-tick-installer
+      var SCRIPT_NAME = "master";
+      var SCRIPT_ID = 3;
 
-      var KEY_TEL_M = "ftx.tel.m";
-      var KEY_TEL_ACT = "ftx.tel.act";
+      var INSTALLER_ID = 1;
+      var BOOT_ID = 2;
+      var MASTER_ID = 3;
+      var POLL_ID = 4;
+      var STATE_ID = 5;
+      var WEATHER_ID = 6;
+      var BRAIN_ID = 7;
+      var DRIVER_ID = 8;
+      var REBOOT_ID = 9;
 
-      var IP_SUPPLY_UNI = "192.168.77.20";
-      var IP_EXTRACT_UNI = "192.168.77.21";
-      var IP_PROCESS_UNI = "192.168.77.22";
-      var IP_SUPPLY_FAN = "192.168.77.10";
-      var IP_EXTRACT_FAN = "192.168.77.11";
-      var IP_HEAT = "192.168.77.12";
-      var IP_COOL = "192.168.77.13";
-      var IP_VVX = "192.168.77.40";
-      var IP_DAMPERS = "192.168.77.30";
+      var TICK_MS = 60000;
+      var CLEANUP_AT_MS = 50000;
 
-      var K_SUPPLY = 11.6;
-      var K_EXTRACT = 12.1;
+      var WEATHER_EVERY_TICKS = 60;
+      var INSTALL_EVERY_TICKS = 5;
 
-      function createPollCtx() {
-        return {
-          su: null,
-          sf: null,
-          eu: null,
-          ef: null,
-          pr: null,
-          ht: null,
-          cl: null,
-          vx: null,
-          dm: null,
-          telM: null,
-          telAct: null
-        };
-      }
+      var TIMEOUT_POLL_MS = 10000;
+      var TIMEOUT_STATE_MS = 5000;
+      var TIMEOUT_WEATHER_MS = 15000;
+      var TIMEOUT_INSTALLER_MS = 15000;
+      var TIMEOUT_BRAIN_MS = 10000;
+      var TIMEOUT_DRIVER_MS = 15000;
+      var TIMEOUT_REBOOT_MS = 15000;
 
-  - action: write
-    path: rt/state/base.js
-    reason: Add fixed script id for low-heap selfStop.
-    content: |
-      // state base 1.4.1-fixed-id
-      var SCRIPT_NAME = "state";
-      var SCRIPT_ID = 5;
+      var REBOOT_START_HOUR = 13;
+      var REBOOT_START_MINUTE = 0;
+      var REBOOT_END_MINUTE = 5;
 
-      var KEY_TEL_M = "ftx.tel.m";
-      var KEY_TEL_ACT = "ftx.tel.act";
-      var KEY_STATE_RUN = "ftx.state.run";
+      var tickCount = 0;
+      var cycleRunning = 0;
+      var cycleStartMs = 0;
+      var rebootStarted = 0;
 
-      function createStateCtx() {
-        return {
-          telM: {},
-          telAct: {},
-          run: { sup: 0, ext: 0, vvx: 0, heat: 0, cool: 0, dmp: 0 },
-          power_w: 0,
-          fan_avg_pct: 0,
-          vvx_eff_pct: 0,
-          vvx_eff_hist: { r0: 0, r1: 0, r2: 0 }
-        };
-      }
-
-  - action: write
-    path: rt/weather/base.js
-    reason: Add fixed script id for low-heap selfStop.
-    content: |
-      // weather base 1.0.1-fixed-id
-      var SCRIPT_NAME = "weather";
-      var SCRIPT_ID = 6;
-
-      var LAT = "59.6214405";
-      var LON = "17.7336153";
-      var KEY_WEATHER_ACT = "ftx.weather.act";
-
-      var SOLAR_GAIN_FACTOR_KWH_PER_MJ = 2.0;
-
-      var API_DAILY_BASE =
-        "https://api.open-meteo.com/v1/forecast" +
-        "?latitude=" + LAT +
-        "&longitude=" + LON +
-        "&daily=shortwave_radiation_sum" +
-        "&timezone=auto";
-
-      var API_HOURLY_BASE =
-        "https://api.open-meteo.com/v1/forecast" +
-        "?latitude=" + LAT +
-        "&longitude=" + LON +
-        "&hourly=temperature_2m" +
-        "&forecast_hours=1" +
-        "&timezone=auto";
-
-      function createWeatherCtx() {
-        return {
-          today: "",
-          daily_url: "",
-          hourly_url: "",
-          act: { solar_kwh_today: 0, temp_now: 0 }
-        };
-      }
-
-  - action: write
-    path: rt/brain/base.js
-    reason: Add fixed script id for low-heap selfStop.
-    content: |
-      // brain base 2.4.2-fixed-id
-      var SCRIPT_NAME = "brain";
-      var SCRIPT_ID = 7;
-
-      function createBrainCtx() {
-        return {
-          cmd: {},
-          weather: {},
-          forced: {},
-          inp: {},
-          sig: {},
-          intent: null
-        };
-      }
-
-  - action: write
-    path: rt/driver/base.js
-    reason: Add fixed script id for low-heap selfStop.
-    content: |
-      // driver base 1.0.1-fixed-id
-      var SCRIPT_NAME = "driver";
-      var SCRIPT_ID = 8;
-      var KEY_INTENT_ACT = "ftx.intent.act";
-
-      function createDriverCtx() {
-        return {
-          rawIntent: null,
-          intent: null,
-          thermalConflict: 0
-        };
-      }
-
-  - action: write
-    path: rt/common/script.js
-    reason: Use fixed SCRIPT_ID for self-stop; avoid Script.List heap cost.
-    content: |
-      // common script 1.1.0-fixed-id-self-stop
-      function log(s) {
-        print(SCRIPT_NAME + " " + String(s || ""));
-      }
-
-      function selfStop() {
-        Shelly.call("Script.Stop", { id: SCRIPT_ID }, function () {});
-      }
+      function n(v, d) { var x = Number(v); return (x === x) ? x : d; }
+      function i(v) { var x = Number(v); if (x !== x) return 0; return Math.floor(x + 0.5); }
 
   - action: write
     path: rt/devices/8813bfdaa0c0.json
-    reason: Update device manifest to ids 1-9 with boot as only startup script.
+    reason: Bump device manifest to rebuild master 1.3.1. Existing id layout remains unchanged.
     content: |
       {
-        "device_version": 8,
+        "device_version": 9,
         "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
         "scripts": [
           {
@@ -552,8 +180,8 @@ actions:
           {
             "role": "master",
             "id": 3,
-            "version": "1.3.0",
-            "name": "master_v1_3_0",
+            "version": "1.3.1",
+            "name": "master_v1_3_1",
             "recipe": "rt/recipes/master.json",
             "boot": false
           },
