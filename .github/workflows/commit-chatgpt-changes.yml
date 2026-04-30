@@ -6,7 +6,7 @@ on:
       plan:
         description: "YAML plan to execute"
         required: true
-        default: "tools/move_to_old.yaml"
+        default: "tools/ChatGPT_Commit.yaml"
       allow_missing:
         description: "Skip missing source files"
         required: true
