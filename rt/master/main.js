@@ -1,6 +1,10 @@
-// master main 1.3.0-boot-reboot-slots
+// master main 1.3.1-first-tick-installer
 function getHourNowLocal() { return (new Date()).getHours(); }
 function getMinuteNowLocal() { return (new Date()).getMinutes(); }
+
+function firstTickInstallerDue() {
+  return tickCount === 1 ? 1 : 0;
+}
 
 function rebootDue() {
   var h;
@@ -19,11 +23,18 @@ function weatherDue() {
 }
 
 function installerDue() {
+  if (firstTickInstallerDue()) return 1;
   if (weatherDue()) return 0;
   return tickCount > 0 && (tickCount % INSTALL_EVERY_TICKS) === 0;
 }
 
 function runServiceSlot(cb) {
+  if (firstTickInstallerDue()) {
+    log("SLOT installer first");
+    startInstallerSlot(function () { cb("installer"); });
+    return;
+  }
+
   if (rebootDue()) {
     rebootStarted = 1;
     log("SLOT reboot");

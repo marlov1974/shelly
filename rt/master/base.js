@@ -1,4 +1,4 @@
-// master base 1.3.0-boot-reboot-fixed-id
+// master base 1.3.1-first-tick-installer
 var SCRIPT_NAME = "master";
 var SCRIPT_ID = 3;
 
