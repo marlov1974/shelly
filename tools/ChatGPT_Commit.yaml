@@ -1,48 +1,146 @@
-description: Fix poll context object names so poll reaches DON and self-stops.
+description: Build master v1.4.0 score dispatcher with one worker per 15s tick.
 
 actions:
   - action: write
-    path: rt/poll/base.js
-    reason: createPollCtx must expose the object names used by poll feature modules.
+    path: rt/master/base.js
+    reason: Master v1.4 score dispatcher constants and initial scores.
     content: |
-      // poll base 3.3.2-fixed-context-objects
-      var SCRIPT_NAME = "poll";
-      var SCRIPT_ID = 4;
+      // master base 1.4.0-score-dispatcher
+      var SCRIPT_NAME = "master";
+      var SCRIPT_ID = 3;
 
-      var KEY_TEL_M = "ftx.tel.m";
-      var KEY_TEL_ACT = "ftx.tel.act";
+      var INSTALLER_ID = 1;
+      var BOOT_ID = 2;
+      var MASTER_ID = 3;
+      var POLL_ID = 4;
+      var STATE_ID = 5;
+      var WEATHER_ID = 6;
+      var BRAIN_ID = 7;
+      var DRIVER_ID = 8;
+      var REBOOT_ID = 9;
 
-      var IP_SUPPLY_UNI = "192.168.77.20";
-      var IP_EXTRACT_UNI = "192.168.77.21";
-      var IP_PROCESS_UNI = "192.168.77.22";
-      var IP_SUPPLY_FAN = "192.168.77.10";
-      var IP_EXTRACT_FAN = "192.168.77.11";
-      var IP_HEAT = "192.168.77.12";
-      var IP_COOL = "192.168.77.13";
-      var IP_VVX = "192.168.77.40";
-      var IP_DAMPERS = "192.168.77.30";
+      var TICK_MS = 15000;
 
-      var K_SUPPLY = 11.6;
-      var K_EXTRACT = 12.1;
+      var RESET_POLL = 4;
+      var RESET_STATE = 4;
+      var RESET_BRAIN = 4;
+      var RESET_DRIVER = 4;
+      var RESET_INSTALLER = 20;
+      var RESET_WEATHER = 240;
+      var RESET_REBOOT = 5760;
 
-      function createPollCtx() {
-        return {
-          supply: {},
-          extract: {},
-          process: {},
-          heat: {},
-          cool: {},
-          vvx: {},
-          dmp: {}
-        };
+      var scoreInstaller = 1;
+      var scorePoll = 2;
+      var scoreState = 3;
+      var scoreWeather = 4;
+      var scoreBrain = 5;
+      var scoreDriver = 6;
+      var scoreReboot = 5760;
+
+      var tickCount = 0;
+      var lastWorkerId = 0;
+      var runningTick = 0;
+
+      function n(v, d) { var x = Number(v); return (x === x) ? x : d; }
+      function i(v) { var x = Number(v); if (x !== x) return 0; return Math.floor(x + 0.5); }
+
+  - action: write
+    path: rt/master/run.js
+    reason: Minimal fixed-id worker start/stop helpers for one-script-per-tick dispatch.
+    content: |
+      // master run 1.4.0-score-dispatcher
+      function stopWorker(id, cb) {
+        if (!id || id === MASTER_ID) {
+          cb();
+          return;
+        }
+        Shelly.call("Script.Stop", { id: id }, function () {
+          Timer.set(80, false, cb);
+        });
+      }
+
+      function startWorker(id, name) {
+        log("ST " + name + " #" + id);
+        Shelly.call("Script.Start", { id: id }, function (res, err) {
+          if (err) log("STE " + name);
+        });
+      }
+
+      function decScores() {
+        scoreInstaller = scoreInstaller - 1;
+        scorePoll = scorePoll - 1;
+        scoreState = scoreState - 1;
+        scoreWeather = scoreWeather - 1;
+        scoreBrain = scoreBrain - 1;
+        scoreDriver = scoreDriver - 1;
+        scoreReboot = scoreReboot - 1;
+      }
+
+      function chooseBest() {
+        var id = REBOOT_ID;
+        var name = "reboot";
+        var score = scoreReboot;
+
+        if (scoreInstaller < score) { id = INSTALLER_ID; name = "installer"; score = scoreInstaller; }
+        if (scoreWeather < score) { id = WEATHER_ID; name = "weather"; score = scoreWeather; }
+        if (scoreDriver < score) { id = DRIVER_ID; name = "driver"; score = scoreDriver; }
+        if (scoreBrain < score) { id = BRAIN_ID; name = "brain"; score = scoreBrain; }
+        if (scoreState < score) { id = STATE_ID; name = "state"; score = scoreState; }
+        if (scorePoll < score) { id = POLL_ID; name = "poll"; score = scorePoll; }
+
+        return { id: id, name: name };
+      }
+
+      function resetScore(id) {
+        if (id === INSTALLER_ID) scoreInstaller = RESET_INSTALLER;
+        else if (id === POLL_ID) scorePoll = RESET_POLL;
+        else if (id === STATE_ID) scoreState = RESET_STATE;
+        else if (id === WEATHER_ID) scoreWeather = RESET_WEATHER;
+        else if (id === BRAIN_ID) scoreBrain = RESET_BRAIN;
+        else if (id === DRIVER_ID) scoreDriver = RESET_DRIVER;
+        else if (id === REBOOT_ID) scoreReboot = RESET_REBOOT;
       }
 
   - action: write
+    path: rt/master/main.js
+    reason: 15s score dispatcher loop; one worker per tick; previous worker killed at next tick start.
+    content: |
+      // master main 1.4.0-score-dispatcher
+      function tick() {
+        if (runningTick) {
+          log("SKIP");
+          return;
+        }
+
+        runningTick = 1;
+        tickCount = tickCount + 1;
+
+        stopWorker(lastWorkerId, function () {
+          var w;
+          decScores();
+          w = chooseBest();
+          resetScore(w.id);
+          lastWorkerId = w.id;
+          log("T" + tickCount + " " + w.name);
+          startWorker(w.id, w.name);
+          runningTick = 0;
+        });
+      }
+
+      function bootMaster() {
+        log("BOT");
+        Timer.set(1000, false, tick);
+        Timer.set(TICK_MS, true, tick);
+      }
+
+      bootMaster();
+
+  - action: write
     path: rt/devices/8813bfdaa0c0.json
-    reason: Bump device manifest to rebuild poll 3.3.2. Existing id layout remains unchanged.
+    reason: Bump device manifest to rebuild master 1.4.0. Existing fixed-id layout remains unchanged.
     content: |
       {
-        "device_version": 10,
+        "device_version": 11,
         "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
         "scripts": [
           {
@@ -56,8 +154,8 @@ actions:
           {
             "role": "master",
             "id": 3,
-            "version": "1.3.1",
-            "name": "master_v1_3_1",
+            "version": "1.4.0",
+            "name": "master_v1_4_0",
             "recipe": "rt/recipes/master.json",
             "boot": false
           },
