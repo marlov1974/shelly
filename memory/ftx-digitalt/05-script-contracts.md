@@ -11,14 +11,33 @@ Runtime scripts are named with role and version:
 Examples:
 
 ```text
-master_v1_0_0
-poll_v3_3_0
-state_v1_4_0
-weather_v1_0_0
-brain_v2_3_0
+boot_v1_0_0
+master_v1_4_0
+poll_v3_3_2
+state_v1_4_1
+weather_v1_0_1
+brain_v2_4_2
+driver_v1_0_1
+reboot_v1_0_0
 ```
 
-`installer` is the exception. It is fixed at script id 1 and is not auto-updated.
+## Fixed script ids
+
+Canonical fixed ids:
+
+```text
+1 installer
+2 boot
+3 master
+4 poll
+5 state
+6 weather
+7 brain
+8 driver
+9 reboot
+```
+
+Each worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()`.
 
 ## installer
 
@@ -31,6 +50,7 @@ Script id:
 Lifecycle:
 - One-shot when started manually or by master.
 - Self-stops after completion or no-op.
+- Not auto-updated.
 
 Inputs:
 - GitHub raw device manifest: `rt/devices/<device-id>.json`.
@@ -39,36 +59,60 @@ Inputs:
 
 Outputs:
 - Creates missing virtual components.
-- Creates missing scripts.
+- Creates missing scripts on fixed ids.
 - Writes script code.
 - Starts `master` when done.
 - Updates `text:200` only when the whole device version is complete.
 
+## boot
+
+Role:
+- Startup handoff script.
+
+Script id:
+- Fixed id 2.
+
+Lifecycle:
+- The only script with Run on startup enabled.
+- Waits for stabilization after physical boot/reboot.
+- Starts master id 3.
+- Self-stops.
+
+Restrictions:
+- Must not set a ventilation startup state.
+- Must not alter actuator outputs.
+
 ## master
 
 Role:
-- Long-lived runtime scheduler and orchestrator.
+- Long-lived runtime scheduler and dispatcher.
+
+Script id:
+- Fixed id 3.
 
 Lifecycle:
-- Boot-enabled.
-- Runs a 60-second tick loop.
+- Started by boot or installer.
+- Runs a 15-second score-dispatch tick loop.
 
 Inputs:
-- Script list.
-- Tick counters.
+- Internal scores and counters.
 
 Outputs:
-- Starts `poll`, `state`, `weather`, `brain`, later `driver`.
-- Starts installer id 1 on due ticks.
+- Starts exactly one worker per tick by fixed script id.
+- Stops the previous worker at the beginning of the next tick if still running.
 
 Restrictions:
 - Must not implement control logic.
-- Must tolerate missing worker scripts.
+- Must not use `Script.List` during normal runtime.
+- Must remain low-heap and avoid long nested callback chains.
 
 ## poll
 
 Role:
 - Reads physical/edge device statuses and writes normalized telemetry.
+
+Script id:
+- Fixed id 4.
 
 Lifecycle:
 - One-shot.
@@ -90,13 +134,16 @@ Outputs:
 - `ftx.tel.m`
 - `ftx.tel.act`
 
-Virtual components:
-- None owned by poll in current design.
+Implementation note:
+- `createPollCtx()` must expose object names used by features: `supply`, `extract`, `process`, `heat`, `cool`, `vvx`, `dmp`.
 
 ## state
 
 Role:
 - Derives run state and selected UI/performance outputs from telemetry.
+
+Script id:
+- Fixed id 5.
 
 Lifecycle:
 - One-shot.
@@ -117,11 +164,15 @@ Outputs:
 ## weather
 
 Role:
-- Fetches weather data and writes current weather actuation/reference object.
+- Fetches weather data and writes current weather reference object.
+
+Script id:
+- Fixed id 6.
 
 Lifecycle:
 - One-shot.
 - Self-stops after writing weather KVS.
+- Runs at startup before first brain run and periodically thereafter.
 
 Inputs:
 - Open-Meteo daily shortwave radiation.
@@ -130,13 +181,13 @@ Inputs:
 Outputs:
 - `ftx.weather.act = { solar_kwh_today, temp_now }`
 
-Virtual components:
-- None currently owned by weather.
-
 ## brain
 
 Role:
-- Computes control intent from commands, telemetry, weather and persisted forced-mode state.
+- Computes control intent from commands, telemetry, run state, weather and persisted forced-mode state.
+
+Script id:
+- Fixed id 7.
 
 Lifecycle:
 - One-shot.
@@ -151,6 +202,7 @@ Inputs:
 - KVS:
   - `ftx.tel.m`
   - `ftx.tel.act`
+  - `ftx.state.run`
   - `ftx.weather.act`
   - `ftx.mode_forced_state`
 
@@ -170,15 +222,37 @@ Internal architecture:
 Role:
 - Applies `ftx.intent.act` to physical actuators.
 
-Status:
-- Not yet rebuilt in the new runtime/installer architecture.
+Script id:
+- Fixed id 8.
 
-Expected lifecycle:
+Lifecycle:
 - One-shot.
-- Self-stop after applying outputs.
+- Self-stops after applying outputs.
 
-Expected input:
+Input:
 - `ftx.intent.act`
 
-Expected output:
-- RPC writes to fan dimmers, heat/cool dimmers, VVX switch and dampers.
+Output:
+- RPC writes to dampers, fan dimmers, heat/cool dimmers and VVX switch.
+
+## reboot
+
+Role:
+- Daily/full-device reboot orchestrator.
+
+Script id:
+- Fixed id 9.
+
+Lifecycle:
+- One-shot takeover script selected by master score dispatcher.
+- Does not self-stop in normal path because it reboots the local device.
+
+Behavior:
+1. Stops all other local scripts, including master.
+2. Waits 5 minutes.
+3. Reboots remote Shelly devices.
+4. Waits 5 minutes.
+5. Reboots local device.
+
+Purpose:
+- Recover from long-lived memory/RPC degradation and keep the Shelly mesh stable.
