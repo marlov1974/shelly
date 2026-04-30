@@ -1,5 +1,6 @@
-// state base 1.4.0-common-log
+// state base 1.4.1-fixed-id
 var SCRIPT_NAME = "state";
+var SCRIPT_ID = 5;
 
 var KEY_TEL_M = "ftx.tel.m";
 var KEY_TEL_ACT = "ftx.tel.act";

@@ -1,5 +1,6 @@
-// weather base 1.0.0
+// weather base 1.0.1-fixed-id
 var SCRIPT_NAME = "weather";
+var SCRIPT_ID = 6;
 
 var LAT = "59.6214405";
 var LON = "17.7336153";
