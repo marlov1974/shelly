@@ -4,7 +4,9 @@
 
 KVS is used for runtime data sharing between one-shot scripts. It is not used as durable installer-version storage because KVS has shown unreliable persistence across reboot.
 
-Installer device-version state is stored in `text:200`.
+Installer device-version state is stored in persistent `text:200`.
+
+Runtime logs are print-only via `log()`/`print()`. Text components are not used for runtime logs.
 
 ## KVS keys
 
@@ -62,6 +64,8 @@ Actual actuator states from `poll`.
 }
 ```
 
+Important: `pct` may be non-zero even when `on=0`. Consumers must treat `on=0` as dominant.
+
 ### `ftx.state.run`
 
 Derived run booleans from `state`.
@@ -81,6 +85,16 @@ Derived run booleans from `state`.
 
 Short persisted history used for VVX efficiency smoothing.
 
+Current shape:
+
+```json
+{
+  "r0": 0,
+  "r1": 0,
+  "r2": 0
+}
+```
+
 ### `ftx.weather.act`
 
 Weather reference object from `weather`.
@@ -94,7 +108,7 @@ Weather reference object from `weather`.
 
 ### `ftx.intent.act`
 
-Final control intent from `brain`, later consumed by `driver`.
+Final full desired actuator state from `brain`, consumed by `driver`.
 
 ```json
 {
@@ -108,34 +122,67 @@ Final control intent from `brain`, later consumed by `driver`.
 }
 ```
 
+This is a full desired state, not a delta.
+
 ### `ftx.mode_forced_state`
 
 Runtime state for forced-mode timeout/counter. This is not the command. The command comes from `enum:200 Mode`.
+
+Typical shape:
+
+```json
+{
+  "mode": "STD",
+  "cycles": 0
+}
+```
 
 ## Virtual components
 
 ### Installer/device owned
 
-- `text:200` Installer state. Example: `{"dv":1,"ok":1}`.
+Defined in the device manifest:
+
+```text
+text:200 Installer state
+```
+
+Example value:
+
+```json
+{"dv":11,"ok":1}
+```
 
 ### Brain owned
 
-- `boolean:200` On
-- `boolean:201` Nightmode
-- `enum:200` Mode, values: `STD`, `BST`, `FIRE`, `MAN`
-- `number:200` Temp, house setpoint
-- `number:204` Target to house
+Defined in `rt/recipes/brain.json`:
+
+```text
+boolean:200 On
+boolean:201 Nightmode
+enum:200    Mode = STD, BST, FIRE, MAN
+number:200  Temp, C
+number:204  Target to house, C
+```
 
 ### State owned
 
-- `number:201` Total power, W
-- `number:202` VVX efficiency, %
-- `number:203` Fan avg pct, %
+Defined in `rt/recipes/state.json`:
 
-## Explicit correction
+```text
+number:201 Total power, W
+number:202 VVX efficiency, %
+number:203 Fan avg pct, %
+```
 
-`number:201` is Total power. It is not fan flow average. Average l/s has not been agreed as a virtual component and should remain in `ftx.tel.m.ls.sup/ext` unless explicitly added later.
+## Explicit corrections
 
-## Logging
+`number:201` is Total power. It is not fan average, fan flow average or l/s.
 
-No runtime logging should use Text components. Logging is print-only through `log()`.
+Average l/s is not currently a virtual component. Flow values remain in `ftx.tel.m.ls.sup` and `ftx.tel.m.ls.ext` unless a new component is explicitly added later.
+
+## Component drift principle
+
+Installer should create missing virtual components required by the manifest/recipes. It should not aggressively mutate, rename or delete existing components during normal deployment because component names/settings may be visible in Homey/UI/manual workflows.
+
+If a component was created earlier with an obsolete name, the current installer may not automatically rename it. The code-level semantic contract in this file and in the recipes is the source of truth.
