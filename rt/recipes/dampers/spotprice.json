@@ -11,6 +11,7 @@
     "rt/spotprice-dampers/auth.js",
     "rt/spotprice-dampers/tibber-query.js",
     "rt/spotprice-dampers/http.js",
+    "rt/spotprice-dampers/price-model.js",
     "rt/spotprice-dampers/parse.js",
     "rt/spotprice-dampers/output.js",
     "rt/spotprice-dampers/main.js",
