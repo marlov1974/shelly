@@ -37,7 +37,7 @@ Canonical fixed ids:
 9 reboot
 ```
 
-Each worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()`.
+Each auto-managed worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()` from `rt/common/script.js`.
 
 ## installer
 
@@ -59,10 +59,14 @@ Inputs:
 
 Outputs:
 - Creates missing virtual components.
-- Creates missing scripts on fixed ids.
-- Writes script code.
-- Starts `master` when done.
+- Creates or reuses missing scripts on fixed ids.
+- Writes script code from recipe chunks.
+- Starts `master` when done if possible.
 - Updates `text:200` only when the whole device version is complete.
+
+Restrictions:
+- Installer may use `Script.List` and more standalone code because deployment/discovery is its job.
+- Installer is the recovery path and should remain manually maintained.
 
 ## boot
 
@@ -73,7 +77,7 @@ Script id:
 - Fixed id 2.
 
 Lifecycle:
-- The only script with Run on startup enabled.
+- The only script with Run on startup enabled in the current device manifest.
 - Waits for stabilization after physical boot/reboot.
 - Starts master id 3.
 - Self-stops.
@@ -184,7 +188,7 @@ Outputs:
 ## brain
 
 Role:
-- Computes control intent from commands, telemetry, run state, weather and persisted forced-mode state.
+- Computes full desired control intent from commands, telemetry, run state, weather and persisted forced-mode state.
 
 Script id:
 - Fixed id 7.
@@ -217,6 +221,10 @@ Internal architecture:
 - `intent.js` merges/prioritizes signals into `ctx.intent`.
 - `output.js` writes external state.
 
+Restrictions:
+- Brain must not call physical actuator RPCs directly.
+- Brain writes desired full state, not deltas.
+
 ## driver
 
 Role:
@@ -232,8 +240,22 @@ Lifecycle:
 Input:
 - `ftx.intent.act`
 
-Output:
-- RPC writes to dampers, fan dimmers, heat/cool dimmers and VVX switch.
+Outputs:
+- RPC writes to:
+  - dampers switch/device
+  - supply fan dimmer
+  - extract fan dimmer
+  - VVX switch
+  - heat dimmer
+  - cool dimmer
+
+Behavior:
+- Reads intent using `rt/driver/io-input.js`.
+- Normalizes intent in `rt/driver/normalize.js`.
+- Respects `driver_inhibit`: if set, logs `INH` and self-stops without applying actuator outputs.
+- Treats `on=0` as dominant over non-zero `pct`.
+- Protects against simultaneous heat and cool: if both are requested, normalize disables both and marks thermal conflict.
+- Applies either off sequence or on sequence from `rt/driver/sequence.js`.
 
 ## reboot
 
@@ -245,7 +267,7 @@ Script id:
 
 Lifecycle:
 - One-shot takeover script selected by master score dispatcher.
-- Does not self-stop in normal path because it reboots the local device.
+- Does not self-stop in the normal path because it reboots the local device.
 
 Behavior:
 1. Stops all other local scripts, including master.
