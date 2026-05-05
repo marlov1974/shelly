@@ -1,9 +1,83 @@
-function wd(d){var w=d.getDay();return w===0?7:w;}
-function high(m,w,h){return GRID==="time_tariff"&&has(HM,m)&&has(HD,w)&&h>=H0&&h<H1;}
-function gp(m,w,h){if(GRID==="flat")return GFLAT;if(GRID==="time_tariff")return high(m,w,h)?GHIGH:GLOW;return GFLAT;}
-function tp(spot,m,w,h){return (SPOT_EX?iv(spot):spot)+iv(MARKUP_EX)+iv(VARCOST_EX)+iv(ETAX_EX)+gp(m,w,h);}
-function set(k,v,cb){Shelly.call("KVS.Set",{key:k,value:String(v)},function(res,err){if(err)log("KVS err "+k);if(cb)cb(!err);});}
-function status(s){set(KS,s,null);}
-function blocks(body,d){var key='"SEK_per_kWh":',pos=0,q=0,cnt=0,sum=0,out=[],m=d.getMonth()+1,w=wd(d);
- while(1){var i=body.indexOf(key,pos);if(i<0)break;i+=key.length;var j=i;
-  while(j<body.length){var c=body.charAt(j);if((c>="0"&&c<="9")||c==="."||c==="-")j++;else break;}
+  // ---------------------------
+  // Helpers
+  // ---------------------------
+  function log(s) {
+    print("spotprice " + String(s || ""));
+  }
+
+  function pad2(n) {
+    n = Number(n);
+    return n < 10 ? "0" + n : String(n);
+  }
+
+  function round3(n) {
+    return Math.round(n * 1000) / 1000;
+  }
+
+  function incVat(v) {
+    return v * (1 + VAT_RATE);
+  }
+
+  function containsCsvInt(csv, value) {
+    return ("," + csv + ",").indexOf("," + String(value) + ",") >= 0;
+  }
+
+  function nowIsoLite() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "T" +
+      pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+
+  function targetDateObj() {
+    var d = new Date();
+    if (FETCH_TOMORROW) d = new Date(d.getTime() + 86400000);
+    return d;
+  }
+
+  function dateStr(d) {
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  function urlForDate(d) {
+    return "https://www.elprisetjustnu.se/api/v1/prices/" +
+      d.getFullYear() + "/" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + "_" + PRICE_AREA + ".json";
+  }
+
+  function weekdayMon1(d) {
+    var w = d.getDay();
+    return w === 0 ? 7 : w;
+  }
+
+  function isHighLoadTime(month, weekday, hour) {
+    return GRID_MODEL === "time_tariff" &&
+      containsCsvInt(GRID_HIGH_MONTHS, month) &&
+      containsCsvInt(GRID_HIGH_WEEKDAYS, weekday) &&
+      hour >= GRID_HIGH_START_HOUR && hour < GRID_HIGH_END_HOUR;
+  }
+
+  function gridPriceIncVat(month, weekday, hour) {
+    if (GRID_MODEL === "flat") return GRID_FLAT_SEK_PER_KWH_INC_VAT;
+    if (GRID_MODEL === "time_tariff") return isHighLoadTime(month, weekday, hour) ? GRID_HIGH_SEK_PER_KWH_INC_VAT : GRID_LOW_SEK_PER_KWH_INC_VAT;
+    return GRID_FLAT_SEK_PER_KWH_INC_VAT;
+  }
+
+  function totalPriceIncVat(spotPrice, month, weekday, hour) {
+    var spotIncVat = SPOT_PRICE_IS_EX_VAT ? incVat(spotPrice) : spotPrice;
+    return spotIncVat +
+      incVat(RETAILER_MARKUP_SEK_PER_KWH_EX_VAT) +
+      incVat(RETAILER_VARIABLE_COST_SEK_PER_KWH_EX_VAT) +
+      incVat(ENERGY_TAX_SEK_PER_KWH_EX_VAT) +
+      gridPriceIncVat(month, weekday, hour);
+  }
+
+  function kvSet(key, value, cb) {
+    Shelly.call("KVS.Set", { key: key, value: String(value) }, function (res, err) {
+      if (err) log("KVS.Set failed " + key);
+      if (cb) cb(!err);
+    });
+  }
+
+  function setStatus(s) {
+    kvSet(KEY_PRICE_STATUS, s, null);
+  }
+
