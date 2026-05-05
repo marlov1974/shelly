@@ -1,4 +1,4 @@
-// spotprice-dampers parse 1.1.0-tibber
+// spotprice-dampers parse 1.1.3-tax-grid
 function parseTotals(body, wantTomorrow) {
   var marker = wantTomorrow ? '"tomorrow"' : '"today"';
   var p = body.indexOf(marker);
@@ -33,12 +33,12 @@ function parseTotals(body, wantTomorrow) {
 
 function blocksFromTotals(values) {
   var out = [];
-  var step = 0;
   var perBlock = 0;
+  var count = 0;
 
   if (!values || !values.length) return null;
-  if (values.length >= 96) { step = 1; perBlock = 8; }
-  else if (values.length >= 24) { step = 1; perBlock = 2; }
+  if (values.length >= 96) { count = 96; perBlock = 8; }
+  else if (values.length >= 24) { count = 24; perBlock = 2; }
   else return null;
 
   var idx = 0;
@@ -46,8 +46,8 @@ function blocksFromTotals(values) {
     var sum = 0;
     var c = 0;
     while (c < perBlock) {
-      sum += values[idx];
-      idx += step;
+      sum += finalPriceFromTibber(values[idx], idx, count, FETCH_TOMORROW);
+      idx++;
       c++;
     }
     out.push(d1(sum / perBlock));
