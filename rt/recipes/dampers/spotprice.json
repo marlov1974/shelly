@@ -1,6 +1,8 @@
 {
   "components": [],
   "chunks": [
-    "rt/scripts/dampers/spotprice.js"
+    "rt/chunks/dampers/spotprice/01-head.js",
+    "rt/chunks/dampers/spotprice/02-helpers.js",
+    "rt/chunks/dampers/spotprice/03-body.js"
   ]
 }
