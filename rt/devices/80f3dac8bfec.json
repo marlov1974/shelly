@@ -1,58 +1,44 @@
 {
-  "dv": 1,
-  "dev_ver": 1,
-  "device_ver": 1,
-  "device_version": 1,
-  "build_id": 1,
-  "v": 1,
-  "version": 1,
-  "device_id": "80f3dac8bfec",
-  "name": "dampers-lab",
-  "description": "Lab runtime manifest for dampers Pro device. Installs Boot, Master, Spotprice and Weather support scripts.",
+  "device_version": 2,
+  "state_component": {
+    "type": "text",
+    "id": 200,
+    "name": "Installer state",
+    "persisted": true,
+    "default": "{\"dv\":0,\"ok\":0}"
+  },
   "scripts": [
     {
+      "role": "boot",
+      "version": "1.0.0",
       "id": 2,
-      "name": "Boot",
-      "file": "rt/scripts/dampers/boot.js",
-      "path": "rt/scripts/dampers/boot.js",
-      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/boot.js",
-      "enable": true,
-      "run_on_startup": true,
-      "ver": 1,
-      "version": 1
+      "name": "boot_v1_0_0",
+      "boot": true,
+      "recipe": "rt/recipes/dampers/boot.json"
     },
     {
+      "role": "master",
+      "version": "1.0.0",
       "id": 3,
-      "name": "Master",
-      "file": "rt/scripts/dampers/master.js",
-      "path": "rt/scripts/dampers/master.js",
-      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/master.js",
-      "enable": false,
-      "run_on_startup": false,
-      "ver": 1,
-      "version": 1
+      "name": "master_v1_0_0",
+      "boot": false,
+      "recipe": "rt/recipes/dampers/master.json"
     },
     {
+      "role": "spotprice",
+      "version": "1.0.0",
       "id": 4,
-      "name": "Spotprice",
-      "file": "rt/scripts/dampers/spotprice.js",
-      "path": "rt/scripts/dampers/spotprice.js",
-      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/spotprice.js",
-      "enable": false,
-      "run_on_startup": false,
-      "ver": 1,
-      "version": 1
+      "name": "spotprice_v1_0_0",
+      "boot": false,
+      "recipe": "rt/recipes/dampers/spotprice.json"
     },
     {
+      "role": "weather",
+      "version": "1.0.0",
       "id": 5,
-      "name": "Weather",
-      "file": "rt/scripts/dampers/weather.js",
-      "path": "rt/scripts/dampers/weather.js",
-      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/weather.js",
-      "enable": false,
-      "run_on_startup": false,
-      "ver": 1,
-      "version": 1
+      "name": "weather_v1_0_0",
+      "boot": false,
+      "recipe": "rt/recipes/dampers/weather.json"
     }
   ]
 }
