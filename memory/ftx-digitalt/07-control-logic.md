@@ -1,6 +1,8 @@
 # Control Logic
 
-## Brain design principle
+## Current implementation status
+
+This document describes the current implementation in `rt/brain/` on `main`. Future design ideas must be clearly separated from the current implementation.
 
 Brain is a one-shot decision script. It reads commands, telemetry, weather and runtime state, computes independent signals, then resolves them into final intent.
 
@@ -15,6 +17,27 @@ output     -> KVS / virtual components
 
 Features should not write final actuator intent. They write signals, candidates and constraints. The intent layer decides what wins.
 
+## Current brain execution flow
+
+Current `rt/brain/main.js` flow:
+
+```text
+readCommands
+-> readInputs
+-> readWeather
+-> readForcedMode
+-> applyForcedModeTimeout
+-> calcTarget
+-> calcVentilation
+-> calcFailsafe
+-> calcThermal
+-> calcVvx
+-> buildIntent
+-> writeTargetToHouse
+-> writeIntent
+-> selfStop
+```
+
 ## Modes
 
 Mode command is read from `enum:200`.
@@ -24,25 +47,45 @@ Current modes:
 - `STD`: normal automatic ventilation/control.
 - `BST`: boost mode.
 - `FIRE`: fireplace/positive-pressure mode.
-- `MAN`: manual/inhibit mode; brain may write intent with `driver_inhibit=1` so driver does not apply automatic control.
+- `MAN`: manual/inhibit mode. Brain writes `driver_inhibit=1`, so driver does not apply automatic control.
 
 ## Forced mode state
 
-Forced mode command is the mode value (`BST` or `FIRE`).
+`BST` and `FIRE` are forced modes.
 
-Forced mode runtime state is separate and stored in `ftx.mode_forced_state`. It tracks timeout/counter state for automatic return to `STD`. It is not the command itself.
+Forced mode runtime state is separate from the command and is stored in:
+
+```text
+ftx.mode_forced_state
+```
+
+Typical shape:
+
+```json
+{"mode":"STD","cycles":0}
+```
+
+`applyForcedModeTimeout()` increments a cycle counter when the current command mode is a forced mode. After `FORCED_MODE_MAX_CYCLES`, it writes the command mode back to `STD`, resets the forced state and continues with `STD` behavior.
 
 ## Target to house
 
-Brain computes `target_to_house_c`, written to `number:204`.
+Brain computes `target_to_house_c`, written to:
 
-Target calculation includes:
+```text
+number:204 Target to house
+```
 
-- house temperature setpoint from `number:200`
-- current house temperature
-- night setback when active
-- weather bias when active
-- dewpoint floor
+Current target calculation:
+
+1. Starts from house setpoint from `number:200`.
+2. Applies house temperature error correction using current house temperature.
+3. Applies night setback during the configured night window when `boolean:201 Nightmode` is active.
+4. Applies weather bias during the configured daytime window using `ftx.weather.act`.
+5. Calculates house dew point.
+6. Applies dewpoint floor by taking max of target and dew point.
+7. Calculates:
+   - `supply_delta_post_c = target_to_house_c - t_post_vvx_c`
+   - `delta_to_house_c = target_to_house_c - t_to_house_c`
 
 ## Weather bias
 
@@ -53,7 +96,7 @@ Inputs:
 - `solar_kwh_today`
 - `temp_now`
 
-Weather bias shifts target temperature during the configured daytime window. The intent is to account for expected solar and outdoor-temperature effect on the house.
+Weather bias shifts target temperature during the configured daytime window. The current implementation reduces target for high solar/warm weather and can increase target during colder weather relative to the neutral point.
 
 ## Ventilation
 
@@ -68,44 +111,51 @@ Supply is normally derived from extract using the locked normal operation rule:
 supply_pct = round(0.9 * extract_pct - 1)
 ```
 
-Explicit overpressure modes such as `FIRE` may override this relationship.
+Explicit overpressure mode `FIRE` overrides the normal relationship.
+
+Current standard ventilation constants are in `rt/brain/feature-ventilation.js`.
 
 ## Full air ready
 
-`sig.full_air_ready` means the air chain is actually running:
+`full_air_ready` means the air chain is actually running:
 
 ```text
-dampers running + supply fan running + extract fan running
+full_air_ready = dmp_run && sup_run && ext_run
 ```
 
 It is a readiness/safety signal used before enabling process tools such as VVX, heating and cooling.
 
-## VVX
+## Current VVX logic
 
-VVX is controlled on/off only. There is no analog or speed control available.
+Current code in `rt/brain/feature-vvx.js` is intentionally simple:
 
-Brain compares theoretical off/on temperatures using an assumed VVX efficiency and selects the state that brings supply temperature closest to target, with bias according to whether the house generally needs heating or cooling.
+```text
+vvx_candidate_on = full_air_ready ? 1 : 0
+```
 
-Relevant signals include:
+Current implementation therefore means:
 
-- `sig.vvx_candidate_on`
-- `sig.t_vvx_off_theory_c`
-- `sig.t_vvx_on_theory_c`
-- `sig.vvx_cost_off`
-- `sig.vvx_cost_on`
+- VVX candidate is ON when the air chain is ready.
+- VVX candidate is OFF when the air chain is not ready.
+- Current code does not compare theoretical VVX ON/OFF temperatures.
+- Current code does not optimize VVX against `target_to_house_c`.
 
 ## Heating and cooling
 
-Brain computes heat/cool demand and candidate percentages from target-vs-post-VVX and target-vs-to-house deltas.
+Current heat/cool demand is based on:
 
-Heating and cooling are constrained by:
+```text
+target_to_house_c - post_vvx
+```
 
-- air readiness
-- outdoor-temperature allow rules
-- demand hysteresis
-- current actual valve percentage
+Implementation details:
 
-Heat/cool outputs are candidates until merged by the intent layer.
+- `heat_demand` starts when `target_to_house_c - post_vvx` is above heat on-deadband.
+- `cool_demand` starts when `target_to_house_c - post_vvx` is below negative cool on-deadband.
+- If already active, smaller off-deadbands are used for hysteresis.
+- Heat/cool candidate percentages are based on delta to actual to-house temperature and actual current percentage.
+- Heat/cool candidates require `full_air_ready`.
+- Driver normalize protects against simultaneous heat and cool by disabling both if both are requested.
 
 ## Failsafe and constraints
 
@@ -119,7 +169,9 @@ Constraints are applied in the intent layer, not directly in feature calculation
 
 ## Intent resolution
 
-Intent merges signals into final desired actuator state:
+Brain writes a full desired state in `ftx.intent.act`, not a delta.
+
+Output shape:
 
 ```json
 {
@@ -133,11 +185,30 @@ Intent merges signals into final desired actuator state:
 }
 ```
 
-Priority principles:
+Priority principles in current intent code:
 
-- OFF wins over everything.
-- MAN sets driver inhibit.
-- Dampers/fans are started before process tools.
-- Startup/freeze/failsafe may limit fans.
-- BST/FIRE can override normal fan percentages.
-- Heat/cool/VVX are applied only after readiness and constraints.
+- OFF wins over everything. If enable is off, base off intent is written.
+- MAN sets `driver_inhibit`.
+- If enabled, dampers and fans are requested on.
+- If dampers are not running, fans start at start percentage.
+- Freeze/failsafe can limit fan percentages.
+- `BST` overrides fan pct to boost values.
+- `FIRE` overrides fan pct to positive-pressure relation.
+- VVX, heat and cool are written from candidates.
+
+## Driver responsibility
+
+Brain does not apply actuator RPCs. Driver reads `ftx.intent.act`, normalizes it and applies the desired actuator state.
+
+Driver responsibilities include:
+
+- respecting `driver_inhibit`
+- treating `on=0` as dominant over non-zero `pct`
+- preventing simultaneous heat and cool
+- applying dampers, fans, VVX, heat and cool through RPC
+
+## Future design candidate: VVX optimization
+
+A future design candidate is to estimate theoretical supply temperature with VVX off/on and select the VVX state that brings supply closest to `target_to_house_c`, possibly with bias depending on whether the house generally needs heating or cooling.
+
+This is not current implementation. Current implementation is air-readiness based only.
