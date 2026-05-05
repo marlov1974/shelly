@@ -1,8 +1,19 @@
 {
+  "boot": false,
   "components": [],
   "chunks": [
-    "rt/chunks/dampers/spotprice/01-head.js",
-    "rt/chunks/dampers/spotprice/02-helpers.js",
-    "rt/chunks/dampers/spotprice/03-body.js"
+    "rt/common/wrapper.start.js",
+    "rt/spotprice-dampers/base.js",
+    "rt/common/script.js",
+    "rt/common/helpers.js",
+    "rt/common/kvs.js",
+    "rt/spotprice-dampers/config.js",
+    "rt/spotprice-dampers/auth.js",
+    "rt/spotprice-dampers/tibber-query.js",
+    "rt/spotprice-dampers/http.js",
+    "rt/spotprice-dampers/parse.js",
+    "rt/spotprice-dampers/output.js",
+    "rt/spotprice-dampers/main.js",
+    "rt/common/wrapper.end.js"
   ]
 }
