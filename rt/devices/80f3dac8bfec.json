@@ -1,5 +1,5 @@
 {
-  "device_version": 2,
+  "device_version": 3,
   "state_component": {
     "type": "text",
     "id": 200,
@@ -26,9 +26,9 @@
     },
     {
       "role": "spotprice",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "id": 4,
-      "name": "spotprice_v1_0_0",
+      "name": "spotprice_v1_0_1",
       "boot": false,
       "recipe": "rt/recipes/dampers/spotprice.json"
     },
