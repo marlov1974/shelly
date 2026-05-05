@@ -1,0 +1,53 @@
+{
+  "v": 1,
+  "version": 1,
+  "device_id": "80f3dac8bfec",
+  "name": "dampers-lab",
+  "description": "Lab runtime manifest for dampers Pro device. Installs Boot, Master, Spotprice and Weather support scripts.",
+  "scripts": [
+    {
+      "id": 2,
+      "name": "Boot",
+      "file": "rt/scripts/dampers/boot.js",
+      "path": "rt/scripts/dampers/boot.js",
+      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/boot.js",
+      "enable": true,
+      "run_on_startup": true,
+      "ver": 1,
+      "version": 1
+    },
+    {
+      "id": 3,
+      "name": "Master",
+      "file": "rt/scripts/dampers/master.js",
+      "path": "rt/scripts/dampers/master.js",
+      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/master.js",
+      "enable": false,
+      "run_on_startup": false,
+      "ver": 1,
+      "version": 1
+    },
+    {
+      "id": 4,
+      "name": "Spotprice",
+      "file": "rt/scripts/dampers/spotprice.js",
+      "path": "rt/scripts/dampers/spotprice.js",
+      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/spotprice.js",
+      "enable": false,
+      "run_on_startup": false,
+      "ver": 1,
+      "version": 1
+    },
+    {
+      "id": 5,
+      "name": "Weather",
+      "file": "rt/scripts/dampers/weather.js",
+      "path": "rt/scripts/dampers/weather.js",
+      "url": "https://raw.githubusercontent.com/marlov1974/shelly/main/rt/scripts/dampers/weather.js",
+      "enable": false,
+      "run_on_startup": false,
+      "ver": 1,
+      "version": 1
+    }
+  ]
+}
