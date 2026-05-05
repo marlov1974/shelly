@@ -1,44 +1,9 @@
 {
-  "device_version": 4,
-  "state_component": {
-    "type": "text",
-    "id": 200,
-    "name": "Installer state",
-    "persisted": true,
-    "default": "{\"dv\":0,\"ok\":0}"
-  },
+  "device_version": 5,
   "scripts": [
-    {
-      "role": "boot",
-      "version": "1.0.0",
-      "id": 2,
-      "name": "boot_v1_0_0",
-      "boot": true,
-      "recipe": "rt/recipes/dampers/boot.json"
-    },
-    {
-      "role": "master",
-      "version": "1.0.0",
-      "id": 3,
-      "name": "master_v1_0_0",
-      "boot": false,
-      "recipe": "rt/recipes/dampers/master.json"
-    },
-    {
-      "role": "spotprice",
-      "version": "1.0.2",
-      "id": 4,
-      "name": "spotprice_v1_0_2",
-      "boot": false,
-      "recipe": "rt/recipes/dampers/spotprice.json"
-    },
-    {
-      "role": "weather",
-      "version": "1.0.0",
-      "id": 5,
-      "name": "weather_v1_0_0",
-      "boot": false,
-      "recipe": "rt/recipes/dampers/weather.json"
-    }
+    {"role":"boot","version":"1.0.0","id":2,"name":"boot_v1_0_0","boot":true,"recipe":"rt/recipes/dampers/boot.json"},
+    {"role":"master","version":"1.0.0","id":3,"name":"master_v1_0_0","boot":false,"recipe":"rt/recipes/dampers/master.json"},
+    {"role":"spotprice","version":"1.0.3","id":4,"name":"spotprice_v1_0_3","boot":false,"recipe":"rt/recipes/dampers/spotprice.json"},
+    {"role":"weather","version":"1.0.0","id":5,"name":"weather_v1_0_0","boot":false,"recipe":"rt/recipes/dampers/weather.json"}
   ]
 }
