@@ -1,4 +1,4 @@
-// spotprice-dampers main 1.1.1-tibber-debug
+// spotprice-dampers main 1.1.4-callback-stop
 function writeDebug(body, reason, cb) {
   var s = String(body || "");
   var shortBody = s;
@@ -35,8 +35,9 @@ function run() {
         return;
       }
 
-      writePriceBlocks(blocks);
-      selfStop();
+      writePriceBlocks(blocks, function () {
+        selfStop();
+      });
     });
   });
 }
