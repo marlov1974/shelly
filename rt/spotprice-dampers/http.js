@@ -1,7 +1,8 @@
-// spotprice-dampers http 1.1.0-tibber
+// spotprice-dampers http 1.1.2-tibber-auth-header
 function fetchTibberPrices(token, cb) {
   kvsSet(KEY_PRICE_STATUS, "fetching", function () {
-    Shelly.call("HTTP.POST", {
+    Shelly.call("HTTP.Request", {
+      method: "POST",
       url: TIBBER_URL,
       headers: tibberHeaders(token),
       body: tibberPayload(),
