@@ -1,15 +1,42 @@
-// spotprice 1.0.4-chunked
-(function(){
-"use strict";
-var AREA="SE3",TOM=1,VAT=0.25,SPOT_EX=1,MARKUP_EX=0.06,VARCOST_EX=0,ETAX_EX=0.36;
-var GRID="time_tariff",GFLAT=0.305,GHIGH=0.765,GLOW=0.305,HM="1,2,3,11,12",HD="1,2,3,4,5",H0=6,H1=22;
-var K2H="hp.price.2h",KD="hp.price.date",KA="hp.price.area",KS="hp.price.status",KU="hp.price.updated";
-function log(s){print("spotprice "+String(s||""));}
-function p2(n){n=Number(n);return n<10?"0"+n:String(n);}
-function r3(n){return Math.round(n*1000)/1000;}
-function iv(v){return v*(1+VAT);}
-function has(csv,v){return (","+csv+",").indexOf(","+String(v)+",")>=0;}
-function iso(){var d=new Date();return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+"T"+p2(d.getHours())+":"+p2(d.getMinutes())+":"+p2(d.getSeconds());}
-function tdate(){var d=new Date();if(TOM)d=new Date(d.getTime()+86400000);return d;}
-function ds(d){return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());}
-function url(d){return "https://www.elprisetjustnu.se/api/v1/prices/"+d.getFullYear()+"/"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+"_"+AREA+".json";}
+// === spotprice v1.0.5-readable-chunked ===
+(function () {
+  "use strict";
+
+  // ---------------------------
+  // User configuration
+  // ---------------------------
+  var PRICE_AREA = "SE3";
+  var FETCH_TOMORROW = true;
+
+  var VAT_RATE = 0.25;
+  var SPOT_PRICE_IS_EX_VAT = true;
+
+  // Retailer / elhandel, SEK/kWh ex VAT.
+  // Tibber example: 0.06 SEK/kWh ex VAT = 0.075 SEK/kWh inc VAT.
+  var RETAILER_MARKUP_SEK_PER_KWH_EX_VAT = 0.06;
+  var RETAILER_VARIABLE_COST_SEK_PER_KWH_EX_VAT = 0.00;
+
+  // Energy tax, SEK/kWh ex VAT. Adjust per year/location.
+  var ENERGY_TAX_SEK_PER_KWH_EX_VAT = 0.36;
+
+  // Grid model: "flat" or "time_tariff".
+  var GRID_MODEL = "time_tariff";
+
+  // Grid transfer fees are configured inc VAT.
+  var GRID_FLAT_SEK_PER_KWH_INC_VAT = 0.305;
+  var GRID_HIGH_SEK_PER_KWH_INC_VAT = 0.765;
+  var GRID_LOW_SEK_PER_KWH_INC_VAT = 0.305;
+
+  // High-load definition. Monday=1 ... Sunday=7.
+  var GRID_HIGH_MONTHS = "1,2,3,11,12";
+  var GRID_HIGH_WEEKDAYS = "1,2,3,4,5";
+  var GRID_HIGH_START_HOUR = 6;
+  var GRID_HIGH_END_HOUR = 22;
+
+  // KVS keys
+  var KEY_PRICE_2H = "hp.price.2h";
+  var KEY_PRICE_DATE = "hp.price.date";
+  var KEY_PRICE_AREA = "hp.price.area";
+  var KEY_PRICE_STATUS = "hp.price.status";
+  var KEY_PRICE_UPDATED = "hp.price.updated";
+
