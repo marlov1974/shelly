@@ -1,4 +1,4 @@
-// prep-dampers model 1.1.0-one-output-with-levels
+// prep-dampers model 1.2.0-costed-levels
 function comfortBandC(mode) {
   if (mode === "HIGH") return 0.5;
   if (mode === "LOW") return 2.0;
@@ -43,6 +43,6 @@ function buildPrep(ctx) {
   return {
     required_heat_kwh: required,
     start_plan: startPlanForPeriod(ctx.periodName),
-    levels: levelSpecForPeriod(ctx.periodName)
+    levels: costedLevels(ctx.periodName, ctx.priceCsv)
   };
 }
