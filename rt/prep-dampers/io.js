@@ -1,4 +1,4 @@
-// prep-dampers io 1.0.0
+// prep-dampers io 1.2.0-costed-levels
 function readComfort(cb) {
   Shelly.call("Enum.GetStatus", { id: COMFORT_ENUM_ID }, function (res, err) {
     if (err || !res || !res.value) { cb("MED"); return; }
@@ -16,6 +16,12 @@ function readTargetTemp(cb) {
 function readWeatherDayAvg(cb) {
   kvsGet(KEY_WEATHER_DAY_AVG_TEMP_C, function (v) {
     cb(n(v, 0));
+  });
+}
+
+function readPriceBlocks(cb) {
+  kvsGet(KEY_PRICE_2H, function (v) {
+    cb(String(v || ""));
   });
 }
 
