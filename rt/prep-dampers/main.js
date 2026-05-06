@@ -1,4 +1,4 @@
-// prep-dampers main 1.1.0-one-output
+// prep-dampers main 1.2.0-costed-levels
 function run() {
   var ctx = { now: new Date() };
   readComfort(function (comfort) {
@@ -14,13 +14,16 @@ function run() {
         ctx.houseTemp = houseTemp;
         readWeatherDayAvg(function (dayAvgTemp) {
           ctx.dayAvgTemp = dayAvgTemp;
-          ctx.periodName = periodName(ctx.now);
-          ctx.periodHours = periodHours(ctx.now);
-          ctx.cpHour = checkpointHour(ctx.now);
-          ctx.cpWeekday = checkpointWeekday(ctx.now);
-          ctx.targetPct = checkpointTargetPct(ctx.cpWeekday, ctx.cpHour);
-          writePrep(buildPrep(ctx), function () {
-            selfStop();
+          readPriceBlocks(function (priceCsv) {
+            ctx.priceCsv = priceCsv;
+            ctx.periodName = periodName(ctx.now);
+            ctx.periodHours = periodHours(ctx.now);
+            ctx.cpHour = checkpointHour(ctx.now);
+            ctx.cpWeekday = checkpointWeekday(ctx.now);
+            ctx.targetPct = checkpointTargetPct(ctx.cpWeekday, ctx.cpHour);
+            writePrep(buildPrep(ctx), function () {
+              selfStop();
+            });
           });
         });
       });
