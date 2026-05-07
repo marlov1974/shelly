@@ -1,4 +1,4 @@
-// prep-dampers io 1.7.0-compact-output
+// prep-dampers io 1.9.0-heat-balance
 function readComfort(cb) {
   Shelly.call("Enum.GetStatus", { id: COMFORT_ENUM_ID }, function (res, err) {
     if (err || !res || !res.value) { cb("MED"); return; }
@@ -13,9 +13,8 @@ function readTargetTemp(cb) {
   });
 }
 
-function readWeatherDayAvg(cb) {
-  kvsGet(KEY_WEATHER_DAY_AVG_TEMP_C, function (v) { cb(n(v, 0)); });
-}
+function readWeatherDayAvg(cb) { kvsGet(KEY_WEATHER_DAY_AVG_TEMP_C, function (v) { cb(n(v, 0)); }); }
+function readSolar(cb) { kvsGet(KEY_WEATHER_SOLAR_WM2, function (v) { cb(n(v, 0)); }); }
 
 function readPriceBlocks(cb) {
   kvsGet(KEY_PRICE_2H, function (v) {
