@@ -1,4 +1,4 @@
-// prep-dampers model 1.2.0-costed-levels
+// prep-dampers model 1.3.0-calendar-periods
 function comfortBandC(mode) {
   if (mode === "HIGH") return 0.5;
   if (mode === "LOW") return 2.0;
@@ -25,7 +25,7 @@ function heatLossForPeriodKwh(outdoorTempC, hours) {
 }
 
 function startPlanForPeriod(periodName) {
-  if (periodName === "night") return "0;4;0;0";
+  if (periodName === "p1") return "4;0;0;0";
   return "0;0;0;0";
 }
 
