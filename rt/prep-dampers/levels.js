@@ -1,4 +1,4 @@
-// prep-dampers levels 1.4.1-no-lib-recursion
+// prep-dampers levels 1.5.0-flat-builder
 // levels: block,level,electric_kW,heat_kWh_per_2h,cost
 // steps:  block,from,to,delta_heat_kWh,delta_cost,sek_per_kWh
 function parsePriceAt(csv, idx) {
@@ -16,94 +16,46 @@ function parsePriceAt(csv, idx) {
   return n(s.substring(p, e), 0);
 }
 
-function levelEl(periodName, level) {
+function buildLevelData(periodName, priceCsv) {
+  var start = 0;
+  var e0 = 0.8, e1 = 1.1, e2 = 1.8, e3 = 2.4, e4 = 7.5;
+  var h0 = 8.8, h1 = 11.4, h2 = 18.8, h3 = 24.0, h4 = 54.0;
+  var levels = "";
+  var steps = "";
+  var b;
+
   if (periodName === "p2") {
-    if (level === 0) return 0.5;
-    if (level === 1) return 0.7;
-    if (level === 2) return 1.2;
-    if (level === 3) return 1.7;
-    return 5.2;
+    start = 4;
+    e0 = 0.5; e1 = 0.7; e2 = 1.2; e3 = 1.7; e4 = 5.2;
+    h0 = 5.8; h1 = 7.8; h2 = 12.8; h3 = 17.0; h4 = 40.0;
   }
   if (periodName === "p3") {
-    if (level === 0) return 0.65;
-    if (level === 1) return 0.9;
-    if (level === 2) return 1.5;
-    if (level === 3) return 2.0;
-    return 6.5;
+    start = 8;
+    e0 = 0.65; e1 = 0.9; e2 = 1.5; e3 = 2.0; e4 = 6.5;
+    h0 = 7.2; h1 = 9.6; h2 = 15.6; h3 = 20.0; h4 = 48.0;
   }
-  if (level === 0) return 0.8;
-  if (level === 1) return 1.1;
-  if (level === 2) return 1.8;
-  if (level === 3) return 2.4;
-  return 7.5;
-}
 
-function levelHeat(periodName, level) {
-  if (periodName === "p2") {
-    if (level === 0) return 5.8;
-    if (level === 1) return 7.8;
-    if (level === 2) return 12.8;
-    if (level === 3) return 17.0;
-    return 40.0;
-  }
-  if (periodName === "p3") {
-    if (level === 0) return 7.2;
-    if (level === 1) return 9.6;
-    if (level === 2) return 15.6;
-    if (level === 3) return 20.0;
-    return 48.0;
-  }
-  if (level === 0) return 8.8;
-  if (level === 1) return 11.4;
-  if (level === 2) return 18.8;
-  if (level === 3) return 24.0;
-  return 54.0;
-}
-
-function priceStartIndex(periodName) {
-  if (periodName === "p2") return 4;
-  if (periodName === "p3") return 8;
-  return 0;
-}
-
-function levelCost(periodName, price, level) {
-  return d1(price * levelEl(periodName, level) * 2.0);
-}
-
-function costedLevels(periodName, priceCsv) {
-  var out = "";
-  var start = priceStartIndex(periodName);
-  var b;
-  var l;
   for (b = 0; b < 4; b++) {
     var price = parsePriceAt(priceCsv, start + b);
-    for (l = 0; l < 5; l++) {
-      var el = levelEl(periodName, l);
-      var heat = levelHeat(periodName, l);
-      var cost = levelCost(periodName, price, l);
-      if (out !== "") out += ";";
-      out += String(b) + "," + String(l) + "," + String(el) + "," + String(heat) + "," + String(cost);
-    }
-  }
-  return out;
-}
+    var c0 = d1(price * e0 * 2.0);
+    var c1 = d1(price * e1 * 2.0);
+    var c2 = d1(price * e2 * 2.0);
+    var c3 = d1(price * e3 * 2.0);
+    var c4 = d1(price * e4 * 2.0);
 
-function costedSteps(periodName, priceCsv) {
-  var out = "";
-  var start = priceStartIndex(periodName);
-  var b;
-  var from;
-  for (b = 0; b < 4; b++) {
-    var price = parsePriceAt(priceCsv, start + b);
-    for (from = 0; from < 4; from++) {
-      var to = from + 1;
-      var dh = d1(levelHeat(periodName, to) - levelHeat(periodName, from));
-      var dc = d1(levelCost(periodName, price, to) - levelCost(periodName, price, from));
-      var spk = 0;
-      if (dh > 0) spk = d1(dc / dh);
-      if (out !== "") out += ";";
-      out += String(b) + "," + String(from) + "," + String(to) + "," + String(dh) + "," + String(dc) + "," + String(spk);
-    }
+    if (levels !== "") levels += ";";
+    levels += b + ",0," + e0 + "," + h0 + "," + c0;
+    levels += ";" + b + ",1," + e1 + "," + h1 + "," + c1;
+    levels += ";" + b + ",2," + e2 + "," + h2 + "," + c2;
+    levels += ";" + b + ",3," + e3 + "," + h3 + "," + c3;
+    levels += ";" + b + ",4," + e4 + "," + h4 + "," + c4;
+
+    if (steps !== "") steps += ";";
+    steps += b + ",0,1," + d1(h1 - h0) + "," + d1(c1 - c0) + "," + d1((c1 - c0) / (h1 - h0));
+    steps += ";" + b + ",1,2," + d1(h2 - h1) + "," + d1(c2 - c1) + "," + d1((c2 - c1) / (h2 - h1));
+    steps += ";" + b + ",2,3," + d1(h3 - h2) + "," + d1(c3 - c2) + "," + d1((c3 - c2) / (h3 - h2));
+    steps += ";" + b + ",3,4," + d1(h4 - h3) + "," + d1(c4 - c3) + "," + d1((c4 - c3) / (h4 - h3));
   }
-  return out;
+
+  return { levels: levels, steps: steps };
 }
