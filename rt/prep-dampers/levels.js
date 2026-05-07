@@ -1,4 +1,4 @@
-// prep-dampers levels 1.4.0-step-sek-per-kwh
+// prep-dampers levels 1.4.1-no-lib-recursion
 // levels: block,level,electric_kW,heat_kWh_per_2h,cost
 // steps:  block,from,to,delta_heat_kWh,delta_cost,sek_per_kWh
 function parsePriceAt(csv, idx) {
@@ -16,22 +16,15 @@ function parsePriceAt(csv, idx) {
   return n(s.substring(p, e), 0);
 }
 
-function libName(periodName) {
-  if (periodName === "p2") return "morning";
-  if (periodName === "p3") return "afternoon";
-  return "night";
-}
-
 function levelEl(periodName, level) {
-  var p = libName(periodName);
-  if (p === "morning") {
+  if (periodName === "p2") {
     if (level === 0) return 0.5;
     if (level === 1) return 0.7;
     if (level === 2) return 1.2;
     if (level === 3) return 1.7;
     return 5.2;
   }
-  if (p === "afternoon") {
+  if (periodName === "p3") {
     if (level === 0) return 0.65;
     if (level === 1) return 0.9;
     if (level === 2) return 1.5;
@@ -46,15 +39,14 @@ function levelEl(periodName, level) {
 }
 
 function levelHeat(periodName, level) {
-  var p = libName(periodName);
-  if (p === "morning") {
+  if (periodName === "p2") {
     if (level === 0) return 5.8;
     if (level === 1) return 7.8;
     if (level === 2) return 12.8;
     if (level === 3) return 17.0;
     return 40.0;
   }
-  if (p === "afternoon") {
+  if (periodName === "p3") {
     if (level === 0) return 7.2;
     if (level === 1) return 9.6;
     if (level === 2) return 15.6;
