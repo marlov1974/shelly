@@ -1,51 +1,45 @@
-// optimize-dampers parse 1.0.0
-function splitSemi(s) {
-  if (!s) return [];
-  return String(s).split(";");
+// optimize-dampers parse 1.1.0-compact-prep
+function splitSemi(s) { if (!s) return []; return String(s).split(";"); }
+function splitComma(s) { if (!s) return []; return String(s).split(","); }
+
+function fieldVal(s, tag) {
+  var key = tag + "=";
+  var p = String(s || "").indexOf(key);
+  if (p < 0) return "";
+  p += key.length;
+  var e = String(s || "").indexOf("|", p);
+  if (e < 0) e = String(s || "").length;
+  return String(s || "").substring(p, e);
 }
 
-function splitComma(s) {
-  if (!s) return [];
-  return String(s).split(",");
+function parseCompactPrep(s) {
+  return {
+    required_heat_kwh: n(fieldVal(s, "r"), 0),
+    start_plan: fieldVal(s, "p"),
+    period_code: i(n(fieldVal(s, "q"), 1)),
+    prices: fieldVal(s, "c")
+  };
 }
 
 function parsePlan(s) {
-  var a = splitSemi(s);
   var out = [0, 0, 0, 0];
   var k;
-  for (k = 0; k < 4 && k < a.length; k++) out[k] = i(n(a[k], 0));
+  s = String(s || "0000");
+  if (s.indexOf(";") >= 0) {
+    var a = splitSemi(s);
+    for (k = 0; k < 4 && k < a.length; k++) out[k] = i(n(a[k], 0));
+  } else {
+    for (k = 0; k < 4 && k < s.length; k++) out[k] = i(n(s.charAt(k), 0));
+  }
   return out;
 }
 
 function planString(p) {
-  return String(p[0]) + ";" + String(p[1]) + ";" + String(p[2]) + ";" + String(p[3]);
+  return String(p[0]) + String(p[1]) + String(p[2]) + String(p[3]);
 }
 
-function parseLevelMap(s) {
-  var rows = splitSemi(s);
-  var heat = [];
-  var cost = [];
-  var k;
-  for (k = 0; k < 20; k++) { heat[k] = 0; cost[k] = 0; }
-  for (k = 0; k < rows.length; k++) {
-    var c = splitComma(rows[k]);
-    if (c.length >= 5) {
-      var b = i(n(c[0], 0));
-      var l = i(n(c[1], 0));
-      var idx = b * 5 + l;
-      if (idx >= 0 && idx < 20) {
-        heat[idx] = n(c[3], 0);
-        cost[idx] = n(c[4], 0);
-      }
-    }
-  }
-  return { heat: heat, cost: cost };
-}
-
-function getHeat(map, block, level) {
-  return map.heat[block * 5 + level] || 0;
-}
-
-function getCost(map, block, level) {
-  return map.cost[block * 5 + level] || 0;
+function priceAt(csv, idx) {
+  var a = splitComma(csv);
+  if (idx < 0 || idx >= a.length) return 0;
+  return n(a[idx], 0);
 }
