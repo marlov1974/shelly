@@ -1,4 +1,4 @@
-// prep-dampers model 1.4.0-step-sek-per-kwh
+// prep-dampers model 1.5.0-flat-builder
 function comfortBandC(mode) {
   if (mode === "HIGH") return 0.5;
   if (mode === "LOW") return 2.0;
@@ -38,12 +38,15 @@ function buildPrep(ctx) {
   var deltaKwh = d1(targetKwh - socKwh);
   var lossKwh = heatLossForPeriodKwh(ctx.dayAvgTemp, ctx.periodHours);
   var required = d1(lossKwh + deltaKwh);
+  var ld = null;
   if (required < 0) required = 0;
+
+  ld = buildLevelData(ctx.periodName, ctx.priceCsv);
 
   return {
     required_heat_kwh: required,
     start_plan: startPlanForPeriod(ctx.periodName),
-    levels: costedLevels(ctx.periodName, ctx.priceCsv),
-    steps: costedSteps(ctx.periodName, ctx.priceCsv)
+    levels: ld.levels,
+    steps: ld.steps
   };
 }
