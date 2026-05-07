@@ -1,5 +1,6 @@
-// prep-dampers levels 1.3.0-calendar-periods
-// Output format per option: block,level,electric_kW,heat_kWh_per_2h,cost
+// prep-dampers levels 1.4.0-step-sek-per-kwh
+// levels: block,level,electric_kW,heat_kWh_per_2h,cost
+// steps:  block,from,to,delta_heat_kWh,delta_cost,sek_per_kWh
 function parsePriceAt(csv, idx) {
   var s = String(csv || "");
   var p = 0;
@@ -73,6 +74,10 @@ function priceStartIndex(periodName) {
   return 0;
 }
 
+function levelCost(periodName, price, level) {
+  return d1(price * levelEl(periodName, level) * 2.0);
+}
+
 function costedLevels(periodName, priceCsv) {
   var out = "";
   var start = priceStartIndex(periodName);
@@ -83,9 +88,29 @@ function costedLevels(periodName, priceCsv) {
     for (l = 0; l < 5; l++) {
       var el = levelEl(periodName, l);
       var heat = levelHeat(periodName, l);
-      var cost = d1(price * el * 2.0);
+      var cost = levelCost(periodName, price, l);
       if (out !== "") out += ";";
       out += String(b) + "," + String(l) + "," + String(el) + "," + String(heat) + "," + String(cost);
+    }
+  }
+  return out;
+}
+
+function costedSteps(periodName, priceCsv) {
+  var out = "";
+  var start = priceStartIndex(periodName);
+  var b;
+  var from;
+  for (b = 0; b < 4; b++) {
+    var price = parsePriceAt(priceCsv, start + b);
+    for (from = 0; from < 4; from++) {
+      var to = from + 1;
+      var dh = d1(levelHeat(periodName, to) - levelHeat(periodName, from));
+      var dc = d1(levelCost(periodName, price, to) - levelCost(periodName, price, from));
+      var spk = 0;
+      if (dh > 0) spk = d1(dc / dh);
+      if (out !== "") out += ";";
+      out += String(b) + "," + String(from) + "," + String(to) + "," + String(dh) + "," + String(dc) + "," + String(spk);
     }
   }
   return out;
