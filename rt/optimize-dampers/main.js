@@ -1,7 +1,7 @@
-// optimize-dampers main 1.0.0
+// optimize-dampers main 1.1.1-compact-prep
 function run() {
   readPrep(function (prep) {
-    if (!prep || !prep.levels || !prep.start_plan) {
+    if (!prep || !prep.start_plan || !prep.prices) {
       log("NO PREP");
       selfStop();
       return;
