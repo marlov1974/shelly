@@ -1,10 +1,8 @@
-// optimize-dampers io 1.0.0
+// optimize-dampers io 1.1.0-compact-prep
 function readPrep(cb) {
   kvsGet(KEY_PREP_OBJECT, function (v) {
     if (!v) { cb(null); return; }
-    if (typeof v === "string") {
-      try { v = JSON.parse(v); } catch (e) { v = null; }
-    }
+    if (typeof v === "string") { cb(parseCompactPrep(v)); return; }
     cb(v);
   });
 }
