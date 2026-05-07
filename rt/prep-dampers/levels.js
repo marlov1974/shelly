@@ -1,4 +1,4 @@
-// prep-dampers levels 1.2.0-costed-levels
+// prep-dampers levels 1.3.0-calendar-periods
 // Output format per option: block,level,electric_kW,heat_kWh_per_2h,cost
 function parsePriceAt(csv, idx) {
   var s = String(csv || "");
@@ -15,15 +15,22 @@ function parsePriceAt(csv, idx) {
   return n(s.substring(p, e), 0);
 }
 
+function libName(periodName) {
+  if (periodName === "p2") return "morning";
+  if (periodName === "p3") return "afternoon";
+  return "night";
+}
+
 function levelEl(periodName, level) {
-  if (periodName === "morning") {
+  var p = libName(periodName);
+  if (p === "morning") {
     if (level === 0) return 0.5;
     if (level === 1) return 0.7;
     if (level === 2) return 1.2;
     if (level === 3) return 1.7;
     return 5.2;
   }
-  if (periodName === "afternoon") {
+  if (p === "afternoon") {
     if (level === 0) return 0.65;
     if (level === 1) return 0.9;
     if (level === 2) return 1.5;
@@ -38,14 +45,15 @@ function levelEl(periodName, level) {
 }
 
 function levelHeat(periodName, level) {
-  if (periodName === "morning") {
+  var p = libName(periodName);
+  if (p === "morning") {
     if (level === 0) return 5.8;
     if (level === 1) return 7.8;
     if (level === 2) return 12.8;
     if (level === 3) return 17.0;
     return 40.0;
   }
-  if (periodName === "afternoon") {
+  if (p === "afternoon") {
     if (level === 0) return 7.2;
     if (level === 1) return 9.6;
     if (level === 2) return 15.6;
@@ -60,8 +68,8 @@ function levelHeat(periodName, level) {
 }
 
 function priceStartIndex(periodName) {
-  if (periodName === "morning") return 3;
-  if (periodName === "afternoon") return 7;
+  if (periodName === "p2") return 4;
+  if (periodName === "p3") return 8;
   return 0;
 }
 
