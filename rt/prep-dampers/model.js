@@ -1,4 +1,4 @@
-// prep-dampers model 1.3.0-calendar-periods
+// prep-dampers model 1.4.0-step-sek-per-kwh
 function comfortBandC(mode) {
   if (mode === "HIGH") return 0.5;
   if (mode === "LOW") return 2.0;
@@ -43,6 +43,7 @@ function buildPrep(ctx) {
   return {
     required_heat_kwh: required,
     start_plan: startPlanForPeriod(ctx.periodName),
-    levels: costedLevels(ctx.periodName, ctx.priceCsv)
+    levels: costedLevels(ctx.periodName, ctx.priceCsv),
+    steps: costedSteps(ctx.periodName, ctx.priceCsv)
   };
 }
