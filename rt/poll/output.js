@@ -1,4 +1,4 @@
-// poll output 3.3.0-print-only
+// poll output 3.4.0-damper-power
 function buildTelM(ctx) {
   return {
     t: {
@@ -39,7 +39,7 @@ function buildTelAct(ctx) {
     vvx: { on: ctx.vvx.on, w: ctx.vvx.w },
     heat: { on: ctx.heat.on, pct: ctx.heat.pct, w: ctx.heat.w },
     cool: { on: ctx.cool.on, pct: ctx.cool.pct, w: ctx.cool.w },
-    dmp: { on: ctx.dmp.on }
+    dmp: { on: ctx.dmp.on, w: ctx.dmp.w }
   };
 }
 
