@@ -1,9 +1,10 @@
-// poll feature-dampers 1.2.1-direct-parse-low-memory
+// poll feature-dampers 1.3.0-pro1pm-power
 var IP_DAMPERS = "192.168.77.30";
 
 function applyDampers(ctx, js) {
   var x = js ? parseSwitch0(js) : null;
   ctx.dmp.on = x ? x.on : 0;
+  ctx.dmp.w = x ? x.w : 0;
 }
 
 function readDampers(ctx, cb) {
