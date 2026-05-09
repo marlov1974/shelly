@@ -1,5 +1,5 @@
 {
-  "device_version": 12,
+  "device_version": 13,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
@@ -29,8 +29,8 @@
     {
       "role": "state",
       "id": 5,
-      "version": "1.5.0",
-      "name": "state_v1_5_0",
+      "version": "1.6.0",
+      "name": "state_v1_6_0",
       "recipe": "rt/recipes/state.json",
       "boot": false
     },
