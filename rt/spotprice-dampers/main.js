@@ -1,4 +1,4 @@
-// spotprice-dampers main 1.1.4-callback-stop
+// spotprice-dampers main 1.2.0-fallback
 function writeDebug(body, reason, cb) {
   var s = String(body || "");
   var shortBody = s;
@@ -10,28 +10,29 @@ function writeDebug(body, reason, cb) {
   });
 }
 
+function fallback(reason, body) {
+  log("FALLBACK " + reason);
+  writeDebug(body || "", reason, function () {
+    writeFallbackPrices(reason, function () { selfStop(); });
+  });
+}
+
 function run() {
   readTibberToken(function (token) {
-    if (!token) { selfStop(); return; }
+    if (!token) { fallback("no_token", ""); return; }
 
     fetchTibberPrices(token, function (body) {
-      if (!body) { selfStop(); return; }
+      if (!body) { fallback("no_body", ""); return; }
 
       var values = parseTotals(body, FETCH_TOMORROW);
       if (!values || !values.length) {
-        log("NO PRICES");
-        writeDebug(body, "no_prices", function () {
-          kvsSet(KEY_PRICE_STATUS, "no_prices", function () { selfStop(); });
-        });
+        fallback("no_prices", body);
         return;
       }
 
       var blocks = blocksFromTotals(values);
       if (!blocks) {
-        log("BAD COUNT " + values.length);
-        writeDebug(body, "bad_count_" + values.length, function () {
-          kvsSet(KEY_PRICE_STATUS, "bad_count_" + values.length, function () { selfStop(); });
-        });
+        fallback("bad_count_" + values.length, body);
         return;
       }
 
