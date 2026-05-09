@@ -1,5 +1,6 @@
-// state perf-power 1.5.0-measured-damper-power
+// state perf-power 1.6.0-primary-power-component
 var TOTAL_POWER_ID = 201;
+var PRIMARY_POWER_ID = 205;
 var IDLE_POWER_W = 14;
 
 function calcPower(telM, telAct) {
@@ -18,5 +19,8 @@ function calcPowerFeature(ctx) {
 }
 
 function writePowerFeature(ctx, cb) {
-  numberSet(TOTAL_POWER_ID, ctx.power_w || 0, cb);
+  var p = ctx.power_w || 0;
+  numberSet(TOTAL_POWER_ID, p, function () {
+    numberSet(PRIMARY_POWER_ID, p, cb);
+  });
 }
