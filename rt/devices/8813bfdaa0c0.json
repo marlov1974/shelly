@@ -1,5 +1,5 @@
 {
-  "device_version": 14,
+  "device_version": 15,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
@@ -45,8 +45,8 @@
     {
       "role": "brain",
       "id": 7,
-      "version": "2.5.0",
-      "name": "brain_v2_5_0",
+      "version": "2.5.1",
+      "name": "brain_v2_5_1",
       "recipe": "rt/recipes/brain.json",
       "boot": false
     },
