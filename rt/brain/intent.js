@@ -1,10 +1,9 @@
-// brain intent 2.2.0-signal-resolve
-var FAN_START_PCT = 15;
+// brain intent 2.5.0-supply-primary-resolve
+var FAN_START_SUP_PCT = 15;
 var BST_SUP_PCT = 90;
 var BST_EXT_PCT = 90;
 var FIRE_SUP_PCT = 75;
 var FIRE_EXT_PCT = 25;
-var STD_COOL_CAP_PCT = 75;
 
 function baseOffIntent() {
   return {
@@ -29,36 +28,35 @@ function resolveDampersAndFansOn(ctx, intent) {
 }
 
 function resolveFanPct(ctx, intent) {
-  var extPct;
   var supPct;
+  var extPct;
 
   if (!ctx.inp.dmp_run) {
-    extPct = FAN_START_PCT;
-    supPct = supplyPctFromExtractPct(FAN_START_PCT);
+    supPct = FAN_START_SUP_PCT;
+    extPct = extractPctFromSupplyPct(supPct);
   } else if (ctx.sig.freeze_guard_active) {
-    extPct = FAN_START_PCT;
-    supPct = supplyPctFromExtractPct(FAN_START_PCT);
+    supPct = FAN_START_SUP_PCT;
+    extPct = extractPctFromSupplyPct(supPct);
   } else {
-    extPct = ctx.sig.std_ext_pct;
+    supPct = max2(ctx.sig.std_sup_pct, ctx.sig.thermal_sup_pct || 0);
 
-    if (ctx.cmd.mode === MODE_STD) {
-      if (ctx.sig.cool_candidate_pct > 0) extPct = min2(extPct, STD_COOL_CAP_PCT);
-      if (ctx.sig.failsafe_active) extPct = min2(extPct, ctx.sig.failsafe_ext_cap_pct);
+    if (ctx.cmd.mode === MODE_STD && ctx.sig.failsafe_active) {
+      supPct = min2(supPct, supplyPctFromExtractPct(ctx.sig.failsafe_ext_cap_pct));
     }
 
     if (ctx.cmd.mode === MODE_BST) {
-      extPct = BST_EXT_PCT;
       supPct = BST_SUP_PCT;
+      extPct = BST_EXT_PCT;
     } else if (ctx.cmd.mode === MODE_FIRE) {
-      extPct = FIRE_EXT_PCT;
       supPct = FIRE_SUP_PCT;
+      extPct = FIRE_EXT_PCT;
     } else {
-      supPct = supplyPctFromExtractPct(extPct);
+      extPct = extractPctFromSupplyPct(supPct);
     }
   }
 
-  intent.sup.pct = supPct;
-  intent.ext.pct = extPct;
+  intent.sup.pct = clipPct(supPct);
+  intent.ext.pct = clipPct(extPct);
 }
 
 function resolveThermalIntent(ctx, intent) {
