@@ -1,4 +1,4 @@
-// brain intent 2.5.0-supply-primary-resolve
+// brain intent 2.5.1-cool-supply-cap
 var FAN_START_SUP_PCT = 15;
 var BST_SUP_PCT = 90;
 var BST_EXT_PCT = 90;
@@ -39,6 +39,10 @@ function resolveFanPct(ctx, intent) {
     extPct = extractPctFromSupplyPct(supPct);
   } else {
     supPct = max2(ctx.sig.std_sup_pct, ctx.sig.thermal_sup_pct || 0);
+
+    if (ctx.cmd.mode === MODE_STD && ctx.sig.cool_candidate_pct > 0) {
+      supPct = min2(supPct, COOL_MAX_SUPPLY_PCT);
+    }
 
     if (ctx.cmd.mode === MODE_STD && ctx.sig.failsafe_active) {
       supPct = min2(supPct, supplyPctFromExtractPct(ctx.sig.failsafe_ext_cap_pct));
