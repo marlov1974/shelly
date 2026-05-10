@@ -1,65 +1,103 @@
-// brain feature-thermal 2.4.0-simple-post-vvx-demand
+// brain feature-thermal 2.5.0-supply-resolved
 var HEAT_ON_DB_C = 0.3;
-var HEAT_OFF_DB_C = 0.1;
 var COOL_ON_DB_C = 0.3;
-var COOL_OFF_DB_C = 0.1;
+var OVER_TEMP_RECOVERY_C = 0.5;
+var UNDER_TEMP_RECOVERY_C = 0.5;
 
-var HEAT_KP_STEP = 0.5;
-var HEAT_HOLD_BAND_C = 0.1;
-var HEAT_STEP_MAX_UP_PCT = 8;
-var HEAT_STEP_MAX_DOWN_PCT = 8;
+var HOUSE_LOSS_KWH_DAY_PER_C = 12.5;
+var BASE_INTERNAL_KWH_DAY = 42.0;
+var COOL_MAX_SUPPLY_PCT = 75;
+var HEAT_MAX_SUPPLY_PCT = 75;
+var THERMAL_MIN_SUPPLY_PCT = 20;
 
-var COOL_STEP_PCT = 5;
-var COOL_HOLD_BAND_C = 0.1;
-
-function calcHeatDemand(postDeltaC, isActive) {
-  if (isActive) return b(postDeltaC > HEAT_OFF_DB_C);
-  return b(postDeltaC > HEAT_ON_DB_C);
+function heatNeedKwhDay(ctx) {
+  var need = HOUSE_LOSS_KWH_DAY_PER_C * (ctx.inp.t_house_c - ctx.inp.t_out_c) - BASE_INTERNAL_KWH_DAY - n(ctx.weather.solar_kwh_today, 0);
+  return need > 0 ? need : 0;
 }
 
-function calcCoolDemand(postDeltaC, isActive) {
-  if (isActive) return b(postDeltaC < -COOL_OFF_DB_C);
-  return b(postDeltaC < -COOL_ON_DB_C);
+function coolNeedKwhDay(ctx) {
+  var need = HOUSE_LOSS_KWH_DAY_PER_C * (ctx.inp.t_out_c - ctx.inp.t_house_c) + BASE_INTERNAL_KWH_DAY + n(ctx.weather.solar_kwh_today, 0);
+  return need > 0 ? need : 0;
 }
 
-function nextHeatPct(ctx) {
-  var step;
-
-  if (!ctx.sig.full_air_ready || !ctx.sig.heat_demand) return 0;
-
-  if (abs(ctx.sig.delta_to_house_c) <= HEAT_HOLD_BAND_C) {
-    return clipPct(ctx.inp.heat_pct_actual);
-  }
-
-  step = Math.round(HEAT_KP_STEP * ctx.sig.delta_to_house_c);
-
-  if (step > 0) step = min2(step, HEAT_STEP_MAX_UP_PCT);
-  else step = max2(step, -HEAT_STEP_MAX_DOWN_PCT);
-
-  return clipPct(ctx.inp.heat_pct_actual + step);
+function targetForCool(ctx, supPct, needKwhDay) {
+  var k = airKwhDayPerC(supPct);
+  var delta = k > 0 ? needKwhDay / k : 0;
+  return max2(ctx.sig.min_supply_temp_c, ctx.inp.t_house_c - delta);
 }
 
-function nextCoolPct(ctx) {
-  if (!ctx.sig.full_air_ready || !ctx.sig.cool_demand) return 0;
+function targetForHeat(ctx, supPct, needKwhDay) {
+  var k = airKwhDayPerC(supPct);
+  var delta = k > 0 ? needKwhDay / k : 0;
+  return min2(TARGET_TO_HOUSE_MAX_C, ctx.inp.t_house_c + delta);
+}
 
-  if (ctx.sig.delta_to_house_c < -COOL_HOLD_BAND_C) {
-    return clipPct(ctx.inp.cool_pct_actual + COOL_STEP_PCT);
+function chooseCoolSupplyPct(ctx, needKwhDay) {
+  var p;
+  var t;
+  for (p = THERMAL_MIN_SUPPLY_PCT; p <= COOL_MAX_SUPPLY_PCT; p += 5) {
+    t = targetForCool(ctx, p, needKwhDay);
+    if (t >= ctx.sig.min_supply_temp_c) return p;
   }
+  return COOL_MAX_SUPPLY_PCT;
+}
 
-  if (ctx.sig.delta_to_house_c > COOL_HOLD_BAND_C) {
-    return clipPct(ctx.inp.cool_pct_actual - COOL_STEP_PCT);
+function chooseHeatSupplyPct(ctx, needKwhDay) {
+  var p;
+  var t;
+  for (p = THERMAL_MIN_SUPPLY_PCT; p <= HEAT_MAX_SUPPLY_PCT; p += 5) {
+    t = targetForHeat(ctx, p, needKwhDay);
+    if (t <= TARGET_TO_HOUSE_MAX_C) return p;
   }
-
-  return clipPct(ctx.inp.cool_pct_actual);
+  return HEAT_MAX_SUPPLY_PCT;
 }
 
 function calcThermal(ctx) {
-  var heatIsActive = b(ctx.inp.heat_pct_actual > 0);
-  var coolIsActive = b(ctx.inp.cool_pct_actual > 0);
+  var overTemp = ctx.inp.t_house_c - ctx.sig.house_target_c;
+  var underTemp = ctx.sig.house_target_c - ctx.inp.t_house_c;
+  var need;
+  var sup;
 
-  ctx.sig.heat_demand = calcHeatDemand(ctx.sig.supply_delta_post_c, heatIsActive);
-  ctx.sig.cool_demand = calcCoolDemand(ctx.sig.supply_delta_post_c, coolIsActive);
+  ctx.sig.cool_candidate_pct = 0;
+  ctx.sig.heat_candidate_pct = 0;
+  ctx.sig.thermal_sup_pct = 0;
+  ctx.sig.thermal_mode = "NEU";
 
-  ctx.sig.heat_candidate_pct = nextHeatPct(ctx);
-  ctx.sig.cool_candidate_pct = nextCoolPct(ctx);
+  if (overTemp > OVER_TEMP_RECOVERY_C) {
+    ctx.sig.thermal_mode = "CREC";
+    ctx.sig.cool_need_kwh_day = coolNeedKwhDay(ctx);
+    ctx.sig.thermal_sup_pct = COOL_MAX_SUPPLY_PCT;
+    ctx.sig.target_to_house_c = ctx.sig.min_supply_temp_c;
+    ctx.sig.cool_candidate_pct = 100;
+  } else if (underTemp > UNDER_TEMP_RECOVERY_C) {
+    ctx.sig.thermal_mode = "HREC";
+    ctx.sig.heat_need_kwh_day = heatNeedKwhDay(ctx);
+    ctx.sig.thermal_sup_pct = HEAT_MAX_SUPPLY_PCT;
+    ctx.sig.target_to_house_c = TARGET_TO_HOUSE_MAX_C;
+    ctx.sig.heat_candidate_pct = 100;
+  } else {
+    need = coolNeedKwhDay(ctx);
+    ctx.sig.cool_need_kwh_day = d1(need);
+    if (need > COOL_ON_DB_C) {
+      ctx.sig.thermal_mode = "CBAL";
+      sup = chooseCoolSupplyPct(ctx, need);
+      ctx.sig.thermal_sup_pct = sup;
+      ctx.sig.target_to_house_c = d1(targetForCool(ctx, sup, need));
+      ctx.sig.cool_candidate_pct = 100;
+    } else {
+      need = heatNeedKwhDay(ctx);
+      ctx.sig.heat_need_kwh_day = d1(need);
+      if (need > HEAT_ON_DB_C) {
+        ctx.sig.thermal_mode = "HBAL";
+        sup = chooseHeatSupplyPct(ctx, need);
+        ctx.sig.thermal_sup_pct = sup;
+        ctx.sig.target_to_house_c = d1(targetForHeat(ctx, sup, need));
+        ctx.sig.heat_candidate_pct = 100;
+      }
+    }
+  }
+
+  ctx.sig.target_to_house_c = clip(ctx.sig.target_to_house_c, ctx.sig.min_supply_temp_c, TARGET_TO_HOUSE_MAX_C);
+  ctx.sig.supply_delta_post_c = ctx.sig.target_to_house_c - ctx.inp.t_post_vvx_c;
+  ctx.sig.delta_to_house_c = ctx.sig.target_to_house_c - ctx.inp.t_to_house_c;
 }
