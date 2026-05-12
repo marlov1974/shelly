@@ -4,6 +4,41 @@ This folder is the canonical repo-based long-term memory for the Shelly-based di
 
 The documentation in this folder must be readable without any external project memory. Current code, device manifests and recipes in `main` are the source of truth. If historical design ideas are preserved, they must be marked as obsolete historical notes or future design candidates.
 
+## Primary runtime device
+
+Primary active runtime host:
+
+- `rt/devices/8813bfdaa0c0.json`
+
+This device runs the canonical FTX runtime:
+
+- installer
+- boot
+- master
+- poll
+- state
+- weather
+- brain
+- driver
+- reboot
+
+## Important warning
+
+There is currently another active runtime device in the repository:
+
+- `rt/devices/80f3dac8bfec.json`
+
+That runtime belongs to the separate dampers / heat-pump optimizer track.
+
+It:
+
+- uses `hp.*` KVS keys
+- has separate architecture
+- uses separate recipes/chunks
+- is NOT part of the primary FTX runtime pipeline
+
+Do not assume all runtime code in `rt/` belongs to the same architecture.
+
 ## Current runtime architecture
 
 Canonical fixed script ids:
