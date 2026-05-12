@@ -1,4 +1,4 @@
-// brain feature-thermal 2.5.3-emergency-slim
+// brain feature-thermal 2.5.4-emergency-target-cap
 var HEAT_ON_DB_C = 0.3;
 var COOL_ON_DB_C = 0.3;
 var OVER_TEMP_RECOVERY_C = 0.5;
@@ -11,6 +11,7 @@ var THERMAL_MIN_SUPPLY_PCT = 20;
 var HEAT_STEP_PCT = 8;
 var COOL_STEP_PCT = 5;
 var THERMAL_HOLD_BAND_C = 0.2;
+var THERMAL_TARGET_MAX_LIFT_C = 2.0;
 
 function r5(v) { return 5 * i(n(v, 0) / 5); }
 
@@ -21,7 +22,9 @@ function calcThermal(ctx) {
   var cn = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (o - h) + BASE_INTERNAL_KWH_DAY + s);
   var hn = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (h - o) - BASE_INTERNAL_KWH_DAY - s);
   var sup = 0;
-  var trg = ctx.sig.target_to_house_c;
+  var baseTrg = ctx.sig.target_to_house_c;
+  var maxHeatTrg = min2(TARGET_TO_HOUSE_MAX_C, baseTrg + THERMAL_TARGET_MAX_LIFT_C);
+  var trg = baseTrg;
   var d = 0;
   var e = 0;
 
@@ -39,7 +42,7 @@ function calcThermal(ctx) {
   } else if (h < ctx.sig.house_target_c - UNDER_TEMP_RECOVERY_C) {
     ctx.sig.thermal_mode = "HREC";
     sup = HEAT_MAX_SUPPLY_PCT;
-    trg = TARGET_TO_HOUSE_MAX_C;
+    trg = maxHeatTrg;
   } else if (cn > COOL_ON_DB_C) {
     ctx.sig.thermal_mode = "CBAL";
     d = h - ctx.sig.min_supply_temp_c;
@@ -48,14 +51,14 @@ function calcThermal(ctx) {
     trg = max2(ctx.sig.min_supply_temp_c, h - cn / airKwhDayPerC(sup));
   } else if (hn > HEAT_ON_DB_C) {
     ctx.sig.thermal_mode = "HBAL";
-    d = TARGET_TO_HOUSE_MAX_C - h;
+    d = maxHeatTrg - h;
     if (d < 0.5) d = 0.5;
     sup = clip(r5(hn / (0.077 * d)), THERMAL_MIN_SUPPLY_PCT, HEAT_MAX_SUPPLY_PCT);
-    trg = min2(TARGET_TO_HOUSE_MAX_C, h + hn / airKwhDayPerC(sup));
+    trg = min2(maxHeatTrg, h + hn / airKwhDayPerC(sup));
   }
 
   ctx.sig.thermal_sup_pct = clipPct(sup);
-  ctx.sig.target_to_house_c = d1(clip(trg, ctx.sig.min_supply_temp_c, TARGET_TO_HOUSE_MAX_C));
+  ctx.sig.target_to_house_c = d1(clip(trg, ctx.sig.min_supply_temp_c, maxHeatTrg));
 
   if (ctx.sig.thermal_mode === "CREC" || ctx.sig.thermal_mode === "CBAL") {
     e = ctx.inp.t_to_house_c - ctx.sig.target_to_house_c;
