@@ -1,5 +1,5 @@
 {
-  "device_version": 18,
+  "device_version": 19,
   "state_component": { "type": "text", "id": 200, "name": "Installer state", "persisted": true, "default": "{\"dv\":0,\"ok\":0}" },
   "scripts": [
     {
@@ -21,8 +21,8 @@
     {
       "role": "poll",
       "id": 4,
-      "version": "3.4.0",
-      "name": "poll_v3_4_0",
+      "version": "3.4.1",
+      "name": "poll_v3_4_1",
       "recipe": "rt/recipes/p.json",
       "boot": false
     },
@@ -45,8 +45,8 @@
     {
       "role": "brain",
       "id": 7,
-      "version": "2.5.3",
-      "name": "brain_v2_5_3",
+      "version": "2.5.4",
+      "name": "brain_v2_5_4",
       "recipe": "rt/recipes/brain.json",
       "boot": false
     },
