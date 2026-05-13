@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This file exists to help a new ChatGPT session quickly rebuild an accurate mental model of the repository.
+This file explains how a new ChatGPT or AI session must rebuild an accurate mental model of the repository.
 
 The repository itself is the canonical long-term memory.
 
@@ -14,73 +14,52 @@ If memory files and runtime implementation differ, runtime implementation is con
 
 ---
 
-# 1. Read Order
+# 1. Mandatory Bootstrap Entry Point
 
-A new session should normally read files in this order.
+A new AI/chat session must begin with:
 
-## 1. Repository root
+1. `README.md`
+2. `memory/bootstrap-manifest.json`
+3. every file listed in `memory/bootstrap-manifest.json` `read_order`, in order
 
-- `README.md`
+This is mandatory before producing any user-facing answer.
 
-## 2. Global memory
+The model must not answer, greet, ask clarifying questions, provide advice, summarize, or make partial claims before all mandatory bootstrap files have been read.
 
-- `memory/00-index.md`
-- `memory/01-current-state.md`
+If any mandatory bootstrap step or file read fails, the model must stop and report:
 
-## 3. FTX Digital memory
+```text
+BOOTSTRAP FAILED
+```
 
-- `memory/ftx-digitalt/00-index.md`
-- `memory/ftx-digitalt/00-file-map.md`
-- `memory/ftx-digitalt/03-runtime-model.md`
-- `memory/ftx-digitalt/05-script-contracts.md`
-- `memory/ftx-digitalt/06-kvs-and-components.md`
-- `memory/ftx-digitalt/10-coding-standards.md`
+The report must include the missing step or file path and the reason.
 
-## 4. Actual runtime manifest
-
-Read the active runtime manifest before reasoning about runtime behavior.
-
-Current primary runtime:
-
-- `rt/devices/8813bfdaa0c0.json`
-
-Important:
-
-The manifest defines:
-
-- current device version
-- actual active script versions
-- recipe bindings
-- fixed runtime ids
-- startup ownership
-
-## 5. Actual recipes and runtime chunks
-
-Read recipes and central runtime chunks before proposing changes.
-
-Core recipes:
-
-- `rt/recipes/boot.json`
-- `rt/recipes/master.json`
-- `rt/recipes/p.json`
-- `rt/recipes/state.json`
-- `rt/recipes/weather.json`
-- `rt/recipes/brain.json`
-- `rt/recipes/driver.json`
-- `rt/recipes/reboot.json`
-
-Important runtime chunks:
-
-- `rt/common/script.js`
-- `rt/master/*`
-- `rt/brain/*`
-- `rt/driver/*`
-- `rt/poll/*`
-- `rt/state/*`
+The model must not silently continue with partial bootstrap context.
 
 ---
 
-# 2. Canonical Runtime Understanding
+# 2. Bootstrap Manifest
+
+The authoritative bootstrap file list is:
+
+```text
+memory/bootstrap-manifest.json
+```
+
+The manifest defines:
+
+- repository
+- ref
+- mandatory/fail-closed behavior
+- exact file read order
+- runtime truth hierarchy
+- governance rule for keeping the bootstrap current
+
+Do not treat the read order in this Markdown file as authoritative. This file explains the bootstrap model. The manifest is the machine-readable source of truth for the actual mandatory file set.
+
+---
+
+# 3. Canonical Runtime Understanding
 
 ## Runtime model
 
@@ -146,7 +125,7 @@ Driver is the only layer allowed to apply physical outputs.
 
 ---
 
-# 3. Architectural Principles
+# 4. Architectural Principles
 
 The repository strongly prefers:
 
@@ -169,7 +148,7 @@ Avoid:
 
 ---
 
-# 4. Runtime Source of Truth
+# 5. Runtime Source of Truth
 
 For runtime behavior, trust order is:
 
@@ -182,3 +161,5 @@ For runtime behavior, trust order is:
 The repository is expected to evolve continuously.
 
 Architecture notes may lag implementation.
+
+After bootstrap, claims about actual runtime behavior must be grounded in the relevant implementation files already read during bootstrap. If the user asks about an area outside the manifest, the relevant repo files must be read before making claims.
