@@ -1,8 +1,7 @@
-// brain feature-thermal 2.5.4-emergency-target-cap
-var HEAT_ON_DB_C = 0.3;
-var COOL_ON_DB_C = 0.3;
-var OVER_TEMP_RECOVERY_C = 0.5;
-var UNDER_TEMP_RECOVERY_C = 0.5;
+// brain feature-thermal 2.6.0-supply-primary-energy-reversal
+var HEAT_ON_KWH_DAY = 0.3;
+var COOL_ON_KWH_DAY = 0.3;
+var HOUSE_RECOVERY_KWH_PER_C = 100.0;
 var HOUSE_LOSS_KWH_DAY_PER_C = 12.5;
 var BASE_INTERNAL_KWH_DAY = 42.0;
 var COOL_MAX_SUPPLY_PCT = 75;
@@ -15,50 +14,72 @@ var THERMAL_TARGET_MAX_LIFT_C = 2.0;
 
 function r5(v) { return 5 * i(n(v, 0) / 5); }
 
+function calcHeatNeedKwhDay(ctx, houseC, avgOutC, solarKwh) {
+  var recovery = max2(0, ctx.sig.house_target_c - houseC) * HOUSE_RECOVERY_KWH_PER_C;
+  var balance = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (houseC - avgOutC) - BASE_INTERNAL_KWH_DAY - solarKwh);
+  return recovery + balance;
+}
+
+function calcCoolNeedKwhDay(ctx, houseC, avgOutC, solarKwh) {
+  var recovery = max2(0, houseC - ctx.sig.house_target_c) * HOUSE_RECOVERY_KWH_PER_C;
+  var balance = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (avgOutC - houseC) + BASE_INTERNAL_KWH_DAY + solarKwh);
+  return recovery + balance;
+}
+
+function supplyPctForEnergy(kwhDay, deltaC, maxPct) {
+  var d = n(deltaC, 0);
+  var p;
+  if (kwhDay <= 0) return 0;
+  if (d < 0.5) d = 0.5;
+  p = r5(kwhDay / (0.077 * d));
+  return clipPct(clip(p, THERMAL_MIN_SUPPLY_PCT, maxPct));
+}
+
+function heatTargetFromEnergy(houseC, kwhDay, supPct, maxTargetC) {
+  if (kwhDay <= 0 || supPct <= 0) return houseC;
+  return d1(clip(houseC + kwhDay / airKwhDayPerC(supPct), houseC, maxTargetC));
+}
+
+function coolTargetFromEnergy(houseC, kwhDay, supPct, minTargetC) {
+  if (kwhDay <= 0 || supPct <= 0) return houseC;
+  return d1(clip(houseC - kwhDay / airKwhDayPerC(supPct), minTargetC, houseC));
+}
+
 function calcThermal(ctx) {
   var h = n(ctx.inp.t_house_c, ctx.sig.house_target_c);
-  var o = n(ctx.inp.t_out_c, h);
+  var avgOut = n(ctx.weather.temp_avg_today_c, n(ctx.weather.temp_now_c, ctx.inp.t_out_c));
   var s = n(ctx.weather.solar_kwh_today, 0);
-  var cn = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (o - h) + BASE_INTERNAL_KWH_DAY + s);
-  var hn = max2(0, HOUSE_LOSS_KWH_DAY_PER_C * (h - o) - BASE_INTERNAL_KWH_DAY - s);
-  var sup = 0;
-  var baseTrg = ctx.sig.target_to_house_c;
-  var maxHeatTrg = min2(TARGET_TO_HOUSE_MAX_C, baseTrg + THERMAL_TARGET_MAX_LIFT_C);
-  var trg = baseTrg;
-  var d = 0;
+  var heatNeed = calcHeatNeedKwhDay(ctx, h, avgOut, s);
+  var coolNeed = calcCoolNeedKwhDay(ctx, h, avgOut, s);
+  var maxHeatTarget = min2(TARGET_TO_HOUSE_MAX_C, max2(ctx.sig.target_to_house_c, h) + THERMAL_TARGET_MAX_LIFT_C);
+  var minCoolTarget = ctx.sig.min_supply_temp_c;
+  var requiredSup = 0;
+  var finalSup = 0;
+  var target = ctx.sig.target_to_house_c;
   var e = 0;
 
-  ctx.sig.cool_need_kwh_day = d1(cn);
-  ctx.sig.heat_need_kwh_day = d1(hn);
+  ctx.sig.cool_need_kwh_day = d1(coolNeed);
+  ctx.sig.heat_need_kwh_day = d1(heatNeed);
   ctx.sig.cool_candidate_pct = 0;
   ctx.sig.heat_candidate_pct = 0;
   ctx.sig.thermal_sup_pct = 0;
   ctx.sig.thermal_mode = "NEU";
 
-  if (h > ctx.sig.house_target_c + OVER_TEMP_RECOVERY_C) {
-    ctx.sig.thermal_mode = "CREC";
-    sup = COOL_MAX_SUPPLY_PCT;
-    trg = ctx.sig.min_supply_temp_c;
-  } else if (h < ctx.sig.house_target_c - UNDER_TEMP_RECOVERY_C) {
-    ctx.sig.thermal_mode = "HREC";
-    sup = HEAT_MAX_SUPPLY_PCT;
-    trg = maxHeatTrg;
-  } else if (cn > COOL_ON_DB_C) {
-    ctx.sig.thermal_mode = "CBAL";
-    d = h - ctx.sig.min_supply_temp_c;
-    if (d < 0.5) d = 0.5;
-    sup = clip(r5(cn / (0.077 * d)), THERMAL_MIN_SUPPLY_PCT, COOL_MAX_SUPPLY_PCT);
-    trg = max2(ctx.sig.min_supply_temp_c, h - cn / airKwhDayPerC(sup));
-  } else if (hn > HEAT_ON_DB_C) {
-    ctx.sig.thermal_mode = "HBAL";
-    d = maxHeatTrg - h;
-    if (d < 0.5) d = 0.5;
-    sup = clip(r5(hn / (0.077 * d)), THERMAL_MIN_SUPPLY_PCT, HEAT_MAX_SUPPLY_PCT);
-    trg = min2(maxHeatTrg, h + hn / airKwhDayPerC(sup));
+  if (coolNeed > COOL_ON_KWH_DAY && coolNeed >= heatNeed) {
+    ctx.sig.thermal_mode = (h > ctx.sig.house_target_c) ? "CREC" : "CBAL";
+    requiredSup = supplyPctForEnergy(coolNeed, h - minCoolTarget, COOL_MAX_SUPPLY_PCT);
+    finalSup = max2(ctx.sig.std_sup_pct || 0, requiredSup);
+    target = coolTargetFromEnergy(h, coolNeed, finalSup, minCoolTarget);
+    ctx.sig.thermal_sup_pct = requiredSup;
+  } else if (heatNeed > HEAT_ON_KWH_DAY) {
+    ctx.sig.thermal_mode = (h < ctx.sig.house_target_c) ? "HREC" : "HBAL";
+    requiredSup = supplyPctForEnergy(heatNeed, maxHeatTarget - h, HEAT_MAX_SUPPLY_PCT);
+    finalSup = max2(ctx.sig.std_sup_pct || 0, requiredSup);
+    target = heatTargetFromEnergy(h, heatNeed, finalSup, maxHeatTarget);
+    ctx.sig.thermal_sup_pct = requiredSup;
   }
 
-  ctx.sig.thermal_sup_pct = clipPct(sup);
-  ctx.sig.target_to_house_c = d1(clip(trg, ctx.sig.min_supply_temp_c, maxHeatTrg));
+  ctx.sig.target_to_house_c = d1(clip(target, minCoolTarget, maxHeatTarget));
 
   if (ctx.sig.thermal_mode === "CREC" || ctx.sig.thermal_mode === "CBAL") {
     e = ctx.inp.t_to_house_c - ctx.sig.target_to_house_c;
