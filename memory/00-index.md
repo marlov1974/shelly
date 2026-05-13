@@ -1,67 +1,200 @@
 # Project Memory Index
 
-This folder is the canonical long-term memory for the FTX and house-control work. It is intended to be read by ChatGPT or another AI before making design or code changes.
+This repository is the canonical long-term memory for the Smart Home platform.
 
-## AI start here
+The repository itself is designed to function as:
 
-For a fresh AI/project session, read these first:
+- architecture memory
+- runtime memory
+- deployment memory
+- governance memory
+- AI bootstrap memory
 
-1. `memory/00-index.md`
-2. `memory/01-current-state.md`
-3. `memory/ftx-digitalt/00-index.md`
-4. `memory/ftx-digitalt/00-file-map.md`
+---
 
-Then continue into the relevant domain-specific folder.
+# AI Bootstrap
 
-## Current active runtime devices
+A new ChatGPT or AI session should begin here.
 
-There are currently two active device manifests in `rt/devices/`.
+Primary bootstrap sequence:
 
-- `rt/devices/8813bfdaa0c0.json` — VVX device; primary FTX runtime host.
-- `rt/devices/80f3dac8bfec.json` — dampers / heat-pump optimizer runtime; separate optimizer/control track.
+1. `README.md`
+2. `memory/00-index.md`
+3. `memory/02-chatgpt-bootstrap.md`
+4. `memory/01-current-state.md`
+5. `memory/ftx-digitalt/00-index.md`
+6. `memory/ftx-digitalt/00-file-map.md`
 
-Do not assume the two devices use the same architecture or KVS namespace.
+Then continue into the relevant domain.
 
-## Scope
+---
 
-- `ftx-digitalt/` is authoritative for the primary Shelly FTX runtime, installer, scripts, KVS, virtual components, GitHub deployment and coding standards.
-- `optimizer-dampers/` is authoritative for the separate dampers / heat-pump optimizer runtime using `hp.*` KVS keys.
-- `ftx-fysiskt/` is authoritative for the physical ventilation unit, airflow, pressure, VVX rotor, filters, temperature measurement, condensate risk and commissioning.
-- `house-control/` is authoritative for heat pumps, brine loop, floor heating/cooling, pumps, valves and whole-house thermal control.
-- `components/` is reusable technical reference for Shelly devices, networking, sensors and actuators.
+# Runtime Truth Hierarchy
 
-## Read order for FTX Digital code changes
+Trust order for understanding actual runtime behavior:
 
-Before changing primary FTX runtime code, read:
+1. Runtime scripts/chunks
+2. Recipes
+3. Device manifests
+4. Memory files
+5. Historical discussion
 
-1. `ftx-digitalt/00-index.md`
-2. `ftx-digitalt/00-file-map.md`
-3. `ftx-digitalt/03-runtime-model.md`
-4. `ftx-digitalt/04-installer-bootstrap.md`
-5. `ftx-digitalt/05-script-contracts.md`
-6. `ftx-digitalt/06-kvs-and-components.md`
-7. `ftx-digitalt/10-coding-standards.md`
+Memory files describe intended architecture.
 
-## Read order for optimizer / dampers changes
+Runtime files describe actual implementation.
 
-Before changing dampers / heat-pump optimizer code, read:
+When they differ:
 
-1. `optimizer-dampers/00-index.md`
-2. `optimizer-dampers/01-runtime-model.md`
-3. `optimizer-dampers/02-kvs-contracts.md`
-4. `optimizer-dampers/03-price-weather-model.md`
-5. `optimizer-dampers/04-heat-pump-library.md`
+- implementation is normally newer
+- memory should later be updated
 
-## Read order for physical FTX reasoning
+---
 
-Before reasoning about airflow, temperature, pressure, VVX or commissioning, read:
+# Active Runtime Devices
 
-1. `ftx-fysiskt/00-index.md`
-2. `ftx-fysiskt/01-system-overview.md`
-3. `ftx-fysiskt/03-airflow-and-pressure-model.md`
-4. `ftx-fysiskt/04-fans-and-flow-calibration.md`
-5. `ftx-fysiskt/09-measurement-methods.md`
+## Primary FTX runtime
 
-## Governance rule
+- `rt/devices/8813bfdaa0c0.json`
 
-GitHub memory is the primary project memory. ChatGPT memory is secondary and may be incomplete. When code and memory disagree, code describes the implemented behavior, but the memory should be updated to explain the intended design.
+Responsibilities:
+
+- FTX runtime orchestration
+- ventilation logic
+- thermal control coordination
+- VVX control
+- actuator sequencing
+- telemetry aggregation
+
+Namespace:
+
+- `ftx.*`
+
+## Optimizer / dampers runtime
+
+- `rt/devices/80f3dac8bfec.json`
+
+Separate optimizer/control architecture.
+
+Namespace:
+
+- `hp.*`
+
+Important:
+
+Do not assume the two runtimes share:
+
+- contracts
+- ownership
+- KVS structure
+- sequencing
+- deployment model
+
+---
+
+# Domain Structure
+
+## ftx-digitalt/
+
+Primary digital runtime architecture.
+
+Contains:
+
+- installer
+- dispatcher runtime
+- KVS contracts
+- recipes
+- runtime ownership
+- deployment model
+- coding standards
+
+## optimizer-dampers/
+
+Heat-pump and damper optimization runtime.
+
+## ftx-fysiskt/
+
+Physical airflow and ventilation engineering.
+
+## house-control/
+
+Whole-house thermal and energy control.
+
+## components/
+
+Reusable Shelly and hardware references.
+
+---
+
+# Runtime Architecture Summary
+
+The primary FTX runtime uses:
+
+- one long-lived dispatcher (`master`)
+- multiple one-shot workers
+- deterministic sequencing
+- KVS state propagation
+- explicit ownership boundaries
+
+Normal runtime cycle:
+
+```text
+poll -> state -> brain -> driver
+```
+
+Weather is periodic.
+
+Installer and reboot are takeover flows.
+
+---
+
+# Ownership Model
+
+## poll
+
+Owns physical telemetry reads.
+
+## state
+
+Owns derived runtime state.
+
+## brain
+
+Owns desired control logic.
+
+Brain must not directly control hardware.
+
+## driver
+
+Owns physical actuator application.
+
+Driver is the only apply layer.
+
+---
+
+# Architectural Invariants
+
+The repository strongly prefers:
+
+- deterministic systems
+- explicit contracts
+- fixed ids
+- inspectable runtime behavior
+- bounded ownership
+- versioned runtime units
+- low hidden state
+
+Avoid:
+
+- implicit coupling
+- mixed ownership
+- hidden runtime magic
+- uncontrolled dynamic behavior
+- direct actuator writes outside driver
+
+---
+
+# Governance Rule
+
+GitHub repository memory is primary.
+
+ChatGPT memory is secondary and potentially incomplete.
