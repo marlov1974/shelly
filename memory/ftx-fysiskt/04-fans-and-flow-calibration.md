@@ -2,13 +2,19 @@
 
 ## Current control relationship
 
-The current normal-operation supply fan rule is:
+The current normal-operation control relationship is supply-primary:
+
+```text
+extract_pct = round((supply_pct + 1) / 0.9)
+```
+
+Equivalent reference relation:
 
 ```text
 supply_pct = round(0.9 * extract_pct - 1)
 ```
 
-This replaces an earlier relationship and is the current governing normal-drift rule for deriving supply from extract.
+Supply percentage is selected first because ventilation is part of the house heating/cooling energy model. Extract follows supply during normal automatic operation.
 
 Explicit overpressure modes such as fireplace/kitchen may override normal mapping.
 
@@ -20,7 +26,7 @@ An earlier observed relationship was approximately:
 supply_pct = 1.0333 * extract_pct - 3.667
 ```
 
-This is superseded by the current locked rule above.
+This is superseded and should not be used as current control logic.
 
 ## Runtime telemetry
 
