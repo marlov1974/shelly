@@ -2,12 +2,49 @@
 
 Shelly script repository for Smart Home runtime systems.
 
+---
+
+# Mandatory AI Bootstrap
+
+This repository is the primary source of truth for the Smart Home runtime systems.
+
+For every new AI/chat session:
+
+1. Read this `README.md` first.
+2. Read `memory/bootstrap-manifest.json`.
+3. Read every file listed in `memory/bootstrap-manifest.json` `read_order`, in order.
+4. Do not answer, greet, ask clarifying questions, provide advice, or produce any other user-facing response before all mandatory bootstrap files have been read.
+5. If any mandatory bootstrap step or file read fails, stop and report:
+
+```text
+BOOTSTRAP FAILED
+```
+
+Include the missing step or file path and the reason.
+
+Do not continue with partial bootstrap context.
+
+Runtime truth hierarchy:
+
+1. runtime scripts/chunks
+2. recipes
+3. device manifests
+4. memory files
+5. historical discussion
+
+After bootstrap, claims about actual runtime behavior must be grounded in the relevant implementation files. If a user asks about an area outside the bootstrap manifest, read the relevant repo files before making claims.
+
+---
+
+# Repository Contents
+
 The repository contains:
 
 - runtime scripts for Shelly devices
 - deployment/install logic
 - architectural memory
 - runtime contracts
+- physical FTX inventory and measurement memory
 - Home Assistant / FTX orchestration logic
 
 ---
@@ -18,9 +55,11 @@ Long-term project memory is stored directly in the repository.
 
 Primary memory entry points:
 
+- `memory/bootstrap-manifest.json`
 - `memory/00-index.md`
 - `memory/02-chatgpt-bootstrap.md`
 - `memory/ftx-digitalt/00-index.md`
+- `memory/ftx-fysiskt/00-index.md`
 
 These files explain:
 
@@ -30,6 +69,7 @@ These files explain:
 - KVS contracts
 - coding standards
 - current system structure
+- physical hardware inventory
 
 ---
 
