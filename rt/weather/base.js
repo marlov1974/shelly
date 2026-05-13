@@ -1,4 +1,4 @@
-// weather base 1.0.1-fixed-id
+// weather base 1.1.0-daily-mean-temp
 var SCRIPT_NAME = "weather";
 var SCRIPT_ID = 6;
 
@@ -12,7 +12,7 @@ var API_DAILY_BASE =
   "https://api.open-meteo.com/v1/forecast" +
   "?latitude=" + LAT +
   "&longitude=" + LON +
-  "&daily=shortwave_radiation_sum" +
+  "&daily=shortwave_radiation_sum,temperature_2m_mean" +
   "&timezone=auto";
 
 var API_HOURLY_BASE =
@@ -28,6 +28,6 @@ function createWeatherCtx() {
     today: "",
     daily_url: "",
     hourly_url: "",
-    act: { solar_kwh_today: 0, temp_now: 0 }
+    act: { solar_kwh_today: 0, temp_now: 0, temp_avg_today: 0 }
   };
 }
