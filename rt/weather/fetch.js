@@ -1,14 +1,18 @@
-// weather fetch 1.0.0
+// weather fetch 1.1.0-daily-mean-temp
 function fetchDailySolar(ctx, cb) {
   log("HTTP DAILY GET");
   httpGet(ctx.daily_url, function (body) {
+    var d;
     if (!body) {
       ctx.act.solar_kwh_today = 0;
+      ctx.act.temp_avg_today = 0;
       cb(0);
       return;
     }
     log("HTTP DAILY OK len=" + lenOfString(body));
-    ctx.act.solar_kwh_today = parseDailySolar(body);
+    d = parseDailyWeather(body);
+    ctx.act.solar_kwh_today = d.solar_kwh_today;
+    ctx.act.temp_avg_today = d.temp_avg_today;
     cb(1);
   });
 }
