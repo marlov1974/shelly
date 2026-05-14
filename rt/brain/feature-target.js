@@ -1,53 +1,10 @@
-// brain feature-target 2.5.0-resolved-thermal-base
-var NIGHT_SETBACK_DELTA_C = 1.0;
-var NIGHT_SETBACK_START_HOUR = 19;
-var NIGHT_SETBACK_END_HOUR = 4;
-
-var WEATHER_BIAS_START_HOUR = 4;
-var WEATHER_BIAS_END_HOUR = 19;
-var WEATHER_SOLAR_NEUTRAL_KWH = 15;
-var WEATHER_TEMP_NEUTRAL_C = 5;
-var WEATHER_SOLAR_SLOPE_C_PER_KWH = 0.04;
-var WEATHER_TEMP_WARM_SLOPE_C_PER_C = 0.10;
-var WEATHER_TEMP_COLD_SLOPE_C_PER_C = 0.10;
-var WEATHER_BIAS_MIN_C = -3.0;
-var WEATHER_BIAS_MAX_C = 1.5;
-
+// brain feature-target 2.7.0-comfort-target-only
 var DP_A = 17.62;
 var DP_B = 243.12;
 
 var TARGET_TO_HOUSE_MIN_C = 14.0;
 var TARGET_TO_HOUSE_MAX_C = 30.0;
 var DEWPOINT_SUPPLY_MARGIN_C = 1.0;
-
-function isNightSetbackWindow() {
-  var hour = getHourNow();
-  return (hour >= NIGHT_SETBACK_START_HOUR || hour < NIGHT_SETBACK_END_HOUR) ? 1 : 0;
-}
-
-function isWeatherBiasWindow() {
-  var hour = getHourNow();
-  return (hour >= WEATHER_BIAS_START_HOUR && hour < WEATHER_BIAS_END_HOUR) ? 1 : 0;
-}
-
-function calcWeatherBiasC(solarKwh, tempC) {
-  var solarBias = 0;
-  var tempBias = 0;
-  var s = n(solarKwh, 0);
-  var t = n(tempC, WEATHER_TEMP_NEUTRAL_C);
-
-  if (s > WEATHER_SOLAR_NEUTRAL_KWH) {
-    solarBias = -WEATHER_SOLAR_SLOPE_C_PER_KWH * (s - WEATHER_SOLAR_NEUTRAL_KWH);
-  }
-
-  if (t > WEATHER_TEMP_NEUTRAL_C) {
-    tempBias = -WEATHER_TEMP_WARM_SLOPE_C_PER_C * (t - WEATHER_TEMP_NEUTRAL_C);
-  } else if (t < WEATHER_TEMP_NEUTRAL_C) {
-    tempBias = WEATHER_TEMP_COLD_SLOPE_C_PER_C * (WEATHER_TEMP_NEUTRAL_C - t);
-  }
-
-  return clip(solarBias + tempBias, WEATHER_BIAS_MIN_C, WEATHER_BIAS_MAX_C);
-}
 
 function calcDewPointC(tempC, rhPct) {
   var rh = clip(rhPct, 1, 100);
@@ -56,22 +13,11 @@ function calcDewPointC(tempC, rhPct) {
 }
 
 function calcTarget(ctx) {
-  var targetC = ctx.cmd.house_temp_c;
+  var targetC = n(ctx.cmd.house_temp_c, 20.0);
   var dewPointHouseC;
 
-  if (ctx.cmd.night_setback && isNightSetbackWindow()) {
-    targetC = targetC - NIGHT_SETBACK_DELTA_C;
-    ctx.sig.night_setback_active = 1;
-  } else {
-    ctx.sig.night_setback_active = 0;
-  }
-
-  if (isWeatherBiasWindow()) {
-    ctx.sig.weather_bias_c = calcWeatherBiasC(ctx.weather.solar_kwh_today, ctx.weather.temp_now_c);
-    targetC = targetC + ctx.sig.weather_bias_c;
-  } else {
-    ctx.sig.weather_bias_c = 0;
-  }
+  ctx.sig.night_setback_active = 0;
+  ctx.sig.weather_bias_c = 0;
 
   dewPointHouseC = calcDewPointC(ctx.inp.t_house_c, ctx.inp.rh_house_pct);
   ctx.sig.house_target_c = d1(targetC);
