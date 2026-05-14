@@ -1,5 +1,6 @@
-// brain intent 2.5.1-cool-supply-cap
+// brain intent 2.7.1-supply-ramp
 var FAN_START_SUP_PCT = 15;
+var FAN_RAMP_STEP_PCT = 5;
 var BST_SUP_PCT = 90;
 var BST_EXT_PCT = 90;
 var FIRE_SUP_PCT = 75;
@@ -27,36 +28,44 @@ function resolveDampersAndFansOn(ctx, intent) {
   intent.ext.on = 1;
 }
 
+function rampPct(currentPct, desiredPct) {
+  var cur = clipPct(currentPct);
+  var des = clipPct(desiredPct);
+  if (cur < des - FAN_RAMP_STEP_PCT) return clipPct(cur + FAN_RAMP_STEP_PCT);
+  if (cur > des + FAN_RAMP_STEP_PCT) return clipPct(cur - FAN_RAMP_STEP_PCT);
+  return des;
+}
+
 function resolveFanPct(ctx, intent) {
+  var desiredSupPct;
   var supPct;
   var extPct;
 
   if (!ctx.inp.dmp_run) {
-    supPct = FAN_START_SUP_PCT;
-    extPct = extractPctFromSupplyPct(supPct);
+    desiredSupPct = FAN_START_SUP_PCT;
   } else if (ctx.sig.freeze_guard_active) {
-    supPct = FAN_START_SUP_PCT;
-    extPct = extractPctFromSupplyPct(supPct);
+    desiredSupPct = FAN_START_SUP_PCT;
   } else {
-    supPct = max2(ctx.sig.std_sup_pct, ctx.sig.thermal_sup_pct || 0);
+    desiredSupPct = max2(ctx.sig.std_sup_pct, ctx.sig.thermal_sup_pct || 0);
 
     if (ctx.cmd.mode === MODE_STD && ctx.sig.cool_candidate_pct > 0) {
-      supPct = min2(supPct, COOL_MAX_SUPPLY_PCT);
+      desiredSupPct = min2(desiredSupPct, COOL_MAX_SUPPLY_PCT);
     }
 
     if (ctx.cmd.mode === MODE_STD && ctx.sig.failsafe_active) {
-      supPct = min2(supPct, supplyPctFromExtractPct(ctx.sig.failsafe_ext_cap_pct));
+      desiredSupPct = min2(desiredSupPct, supplyPctFromExtractPct(ctx.sig.failsafe_ext_cap_pct));
     }
+  }
 
-    if (ctx.cmd.mode === MODE_BST) {
-      supPct = BST_SUP_PCT;
-      extPct = BST_EXT_PCT;
-    } else if (ctx.cmd.mode === MODE_FIRE) {
-      supPct = FIRE_SUP_PCT;
-      extPct = FIRE_EXT_PCT;
-    } else {
-      extPct = extractPctFromSupplyPct(supPct);
-    }
+  if (ctx.cmd.mode === MODE_BST) {
+    supPct = BST_SUP_PCT;
+    extPct = BST_EXT_PCT;
+  } else if (ctx.cmd.mode === MODE_FIRE) {
+    supPct = FIRE_SUP_PCT;
+    extPct = FIRE_EXT_PCT;
+  } else {
+    supPct = rampPct(ctx.inp.sup_pct_actual, desiredSupPct);
+    extPct = extractPctFromSupplyPct(supPct);
   }
 
   intent.sup.pct = clipPct(supPct);
