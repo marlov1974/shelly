@@ -1,12 +1,12 @@
 {
-  "device_version": 24,
+  "device_version": 25,
   "scripts": [
     { "role": "boot", "id": 2, "version": "1.0.0", "name": "boot_v1_0_0", "recipe": "rt/recipes/boot.json", "boot": true },
     { "role": "master", "id": 3, "version": "1.4.0", "name": "master_v1_4_0", "recipe": "rt/recipes/master.json", "boot": false },
     { "role": "poll", "id": 4, "version": "3.4.1", "name": "poll_v3_4_1", "recipe": "rt/recipes/p.json", "boot": false },
     { "role": "state", "id": 5, "version": "1.6.3", "name": "state_v1_6_3", "recipe": "rt/recipes/state.json", "boot": false },
     { "role": "weather", "id": 6, "version": "1.1.0", "name": "weather_v1_1_0", "recipe": "rt/recipes/weather.json", "boot": false },
-    { "role": "brain", "id": 7, "version": "2.7.0", "name": "brain_v2_7_0", "recipe": "rt/recipes/brain.json", "boot": false },
+    { "role": "brain", "id": 7, "version": "2.7.1", "name": "brain_v2_7_1", "recipe": "rt/recipes/brain.json", "boot": false },
     { "role": "driver", "id": 8, "version": "1.0.1", "name": "driver_v1_0_1", "recipe": "rt/recipes/driver.json", "boot": false },
     { "role": "reboot", "id": 9, "version": "1.0.0", "name": "reboot_v1_0_0", "recipe": "rt/recipes/reboot.json", "boot": false }
   ]
