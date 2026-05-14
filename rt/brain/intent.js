@@ -1,4 +1,4 @@
-// brain intent 2.7.1-supply-ramp
+// brain intent 2.7.2-supply-primary-failsafe
 var FAN_START_SUP_PCT = 15;
 var FAN_RAMP_STEP_PCT = 5;
 var BST_SUP_PCT = 90;
@@ -53,7 +53,7 @@ function resolveFanPct(ctx, intent) {
     }
 
     if (ctx.cmd.mode === MODE_STD && ctx.sig.failsafe_active) {
-      desiredSupPct = min2(desiredSupPct, supplyPctFromExtractPct(ctx.sig.failsafe_ext_cap_pct));
+      desiredSupPct = min2(desiredSupPct, ctx.sig.failsafe_sup_pct || 25);
     }
   }
 
