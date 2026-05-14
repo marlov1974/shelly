@@ -1,8 +1,8 @@
-// brain feature-failsafe 2.7.1-heat-full-before-failsafe
+// brain feature-failsafe 2.7.2-supply-primary-failsafe
 var FREEZE_POST_VVX_MIN_C = 0.0;
 var FAILSAFE_WRONG_DIR_DB_C = 1.0;
-var FAILSAFE_COLD_EXT_PCT = 15;
-var FAILSAFE_MILD_EXT_PCT = 25;
+var FAILSAFE_COLD_SUP_PCT = 15;
+var FAILSAFE_MILD_SUP_PCT = 25;
 var FAILSAFE_HEAT_PCT_MIN = 100;
 
 function calcFailsafe(ctx) {
@@ -18,5 +18,5 @@ function calcFailsafe(ctx) {
 
   ctx.sig.freeze_guard_active = b(ctx.inp.t_post_vvx_c < FREEZE_POST_VVX_MIN_C);
   ctx.sig.failsafe_active = b(heatWrongDir || coolWrongDir);
-  ctx.sig.failsafe_ext_cap_pct = (ctx.inp.t_out_c < 0) ? FAILSAFE_COLD_EXT_PCT : FAILSAFE_MILD_EXT_PCT;
+  ctx.sig.failsafe_sup_pct = (ctx.inp.t_out_c < 0) ? FAILSAFE_COLD_SUP_PCT : FAILSAFE_MILD_SUP_PCT;
 }
