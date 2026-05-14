@@ -1,4 +1,4 @@
-// brain feature-thermal 2.6.1-target-first-energy-reversal
+// brain feature-thermal 2.6.2-no-cooling-below-target
 var HEAT_ON_KWH_DAY = 0.3;
 var COOL_ON_KWH_DAY = 0.3;
 var HOUSE_RECOVERY_KWH_PER_C = 100.0;
@@ -10,6 +10,7 @@ var THERMAL_MIN_SUPPLY_PCT = 20;
 var HEAT_STEP_PCT = 8;
 var COOL_STEP_PCT = 5;
 var THERMAL_HOLD_BAND_C = 0.2;
+var COOL_ALLOWED_DB_C = 0.2;
 
 function r5(v) { return 5 * i(n(v, 0) / 5); }
 
@@ -57,6 +58,8 @@ function calcThermal(ctx) {
   var target = ctx.sig.target_to_house_c;
   var rawTarget = target;
   var e = 0;
+
+  if (h < ctx.sig.house_target_c + COOL_ALLOWED_DB_C) coolNeed = 0;
 
   ctx.sig.cool_need_kwh_day = d1(coolNeed);
   ctx.sig.heat_need_kwh_day = d1(heatNeed);
