@@ -1,4 +1,4 @@
-// brain io-inputs 2.4.1-read-state-run
+// brain io-inputs 2.7.1-fan-pct-actual
 var KEY_TEL_M = "ftx.tel.m";
 var KEY_TEL_ACT = "ftx.tel.act";
 var KEY_STATE_RUN = "ftx.state.run";
@@ -37,6 +37,8 @@ function applyInputs(ctx, telM, telAct, stateRun) {
   ctx.inp.dmp_run = getRunValue(stateRun, "dmp", getTelActBoolValue(telAct, "dmp", "run", 0));
   ctx.inp.sup_run = getRunValue(stateRun, "sup", getTelActBoolValue(telAct, "sup", "run", 0));
   ctx.inp.ext_run = getRunValue(stateRun, "ext", getTelActBoolValue(telAct, "ext", "run", 0));
+  ctx.inp.sup_pct_actual = getTelActNumValue(telAct, "sup", "pct", 0);
+  ctx.inp.ext_pct_actual = getTelActNumValue(telAct, "ext", "pct", 0);
   ctx.inp.vvx_on_actual = getTelActBoolValue(telAct, "vvx", "on", 0);
   ctx.inp.heat_pct_actual = getTelActNumValue(telAct, "heat", "pct", 0);
   ctx.inp.cool_pct_actual = getTelActNumValue(telAct, "cool", "pct", 0);
