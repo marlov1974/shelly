@@ -26,6 +26,11 @@
     "memory/ftx-digitalt/10-coding-standards.md",
     "memory/ftx-digitalt/11-debugging-and-known-issues.md",
     "memory/ftx-digitalt/12-decisions-log.md",
+    "memory/ftx-digitalt/13-gen1-runtime-maintenance.md",
+
+    "memory/house-control/00-index.md",
+    "memory/house-control/02-heat-pump-operating-schedules.md",
+    "memory/house-control/03-gen2-needs-architecture.md",
 
     "memory/ftx-fysiskt/00-index.md",
     "memory/ftx-fysiskt/01-system-overview.md",
