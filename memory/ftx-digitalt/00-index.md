@@ -4,6 +4,23 @@ This folder is the canonical repo-based long-term memory for the Shelly-based di
 
 The documentation in this folder must be readable without any external project memory. Current code, device manifests and recipes in `main` are the source of truth. If historical design ideas are preserved, they must be marked as obsolete historical notes or future design candidates.
 
+## Generation boundary
+
+FTX documentation is now split between:
+
+```text
+Gen1 = current runtime maintenance
+Gen2 = future needs-based smart-home architecture
+```
+
+Gen1 is the currently running FTX runtime and is documented here:
+
+```text
+memory/ftx-digitalt/13-gen1-runtime-maintenance.md
+```
+
+Gen2 whole-house needs architecture belongs under `memory/house-control/` and must not be treated as current FTX runtime behavior.
+
 ## Primary runtime device
 
 Primary active runtime host:
@@ -80,8 +97,9 @@ Worker scripts are one-shot and should self-stop after completion. Runtime loggi
 7. `07-control-logic.md`
 8. `08-telemetry-model.md`
 9. `10-coding-standards.md`
-10. Relevant recipes in `rt/recipes/`
-11. Relevant runtime chunks in `rt/**/`
+10. `13-gen1-runtime-maintenance.md`
+11. Relevant recipes in `rt/recipes/`
+12. Relevant runtime chunks in `rt/**/`
 
 ## Current key design direction
 
@@ -93,4 +111,5 @@ The system minimizes concurrency and heap pressure by using one long-lived low-h
 - Installer: `rt/installer/installer.js`
 - Recipes: `rt/recipes/*.json`
 - Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/poll/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
-- Documentation: `memory/ftx-digitalt/`
+- Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`
+- Gen2 whole-house architecture: `memory/house-control/03-gen2-needs-architecture.md`
