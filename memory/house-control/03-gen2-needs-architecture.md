@@ -23,6 +23,32 @@ Gen2 coordinates multiple house subsystems:
 
 Gen2 should not be treated as current runtime behavior until implemented and activated explicitly.
 
+## Shared FTX hardware truth
+
+The physical FTX aggregate is shared between Gen1 and Gen2.
+
+Gen2 changes the control architecture, not the physical FTX hardware.
+
+Physical facts about the ventilation unit belong under:
+
+```text
+memory/ftx-fysiskt/
+```
+
+That documentation is canonical for both generations when discussing:
+
+```text
+- supply and extract fans
+- airflow and pressure calibration
+- VVX rotor and efficiency
+- heat battery behavior
+- cooling battery and condensate handling
+- sensor placement
+- measured baseline behavior
+```
+
+Gen2 may add new sensors or actuators, but until such changes are physically installed and documented, Gen2 must use the same FTX hardware model as Gen1.
+
 ## Existing Gen2 POC runtime
 
 There is already a Gen2 proof-of-concept runtime track in the repository:
