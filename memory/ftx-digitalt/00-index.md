@@ -27,7 +27,7 @@ Primary active runtime host:
 
 - `rt/devices/8813bfdaa0c0.json`
 
-This device runs the canonical FTX runtime:
+This device runs the canonical Gen1 FTX runtime:
 
 - installer
 - boot
@@ -39,20 +39,22 @@ This device runs the canonical FTX runtime:
 - driver
 - reboot
 
-## Important warning
+## Gen2 POC runtime warning
 
 There is currently another active runtime device in the repository:
 
 - `rt/devices/80f3dac8bfec.json`
 
-That runtime belongs to the separate dampers / heat-pump optimizer track.
+That runtime is a Gen2 proof-of-concept track for dampers / heat-pump / spot-price / optimizer work.
 
 It:
 
 - uses `hp.*` KVS keys
 - has separate architecture
-- uses separate recipes/chunks
-- is NOT part of the primary FTX runtime pipeline
+- uses separate recipes/chunks under `rt/recipes/dampers/`
+- uses runtime folders such as `rt/spotprice-dampers/`, `rt/weather-dampers/`, `rt/prep-dampers/`, `rt/optimize-dampers/` and `rt/scripts/dampers/`
+- is NOT part of the primary Gen1 FTX runtime pipeline
+- may inform Gen2 design, but must not be treated as finished Gen2 architecture
 
 Do not assume all runtime code in `rt/` belongs to the same architecture.
 
@@ -113,3 +115,4 @@ The system minimizes concurrency and heap pressure by using one long-lived low-h
 - Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/poll/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
 - Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`
 - Gen2 whole-house architecture: `memory/house-control/03-gen2-needs-architecture.md`
+- Gen2 POC runtime manifest: `rt/devices/80f3dac8bfec.json`
