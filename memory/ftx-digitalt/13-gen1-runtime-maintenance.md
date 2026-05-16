@@ -22,6 +22,24 @@ poll -> state -> weather/brain -> driver
 
 The current runtime is script/recipe based and uses KVS to propagate state between one-shot workers.
 
+## Shared FTX hardware truth
+
+The physical FTX aggregate is not generation-specific.
+
+Hardware documentation under `memory/ftx-fysiskt/` describes the physical system shared by both Gen1 and Gen2:
+
+```text
+- fans and airflow model
+- VVX rotor
+- heat battery
+- cooling battery and condensate handling
+- temperature and humidity sensor placement
+- pressure / airflow measurement assumptions
+- baseline physical measurements
+```
+
+Gen1 and Gen2 differ in control architecture, not in which physical FTX components exist. When discussing physical components, sensor placement, measured battery behavior or airflow calibration, use `memory/ftx-fysiskt/` as the shared hardware source for both generations.
+
 ## Current Gen1 character
 
 Gen1 is not a needs-resolver architecture.
