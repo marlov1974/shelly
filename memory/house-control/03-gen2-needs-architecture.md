@@ -23,6 +23,37 @@ Gen2 coordinates multiple house subsystems:
 
 Gen2 should not be treated as current runtime behavior until implemented and activated explicitly.
 
+## Existing Gen2 POC runtime
+
+There is already a Gen2 proof-of-concept runtime track in the repository:
+
+```text
+rt/devices/80f3dac8bfec.json
+```
+
+This device currently runs dampers / heat-pump / spot-price / optimizer experiments:
+
+```text
+boot      -> rt/recipes/dampers/boot.json
+master    -> rt/recipes/dampers/master.json
+spot      -> rt/recipes/dampers/spotprice.json
+weather   -> rt/recipes/dampers/w.json
+op/prep   -> rt/recipes/dampers/prep.json
+optimize  -> rt/recipes/dampers/optimize.json
+```
+
+Relevant POC runtime folders include:
+
+```text
+rt/scripts/dampers/
+rt/spotprice-dampers/
+rt/weather-dampers/
+rt/prep-dampers/
+rt/optimize-dampers/
+```
+
+This code may inform Gen2 implementation, but it is still POC/lab code. It must not be treated as the final Gen2 architecture, and it is not part of the Gen1 FTX runtime device.
+
 ## Core design principle
 
 Gen2 is needs-based.
