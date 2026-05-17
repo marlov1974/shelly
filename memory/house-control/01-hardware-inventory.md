@@ -90,6 +90,31 @@ Function:
 
 Each heat pump has its own control/measurement Uni.
 
+## Brine temperature behavior
+
+Current measurement interpretation:
+
+```text
+When brine is actively used, expected brine temperature before shunt/blending is approximately 8 °C.
+```
+
+Important measurement note:
+
+```text
+The brine sensor was moved farther away from the shunt valve because the previous placement was too close to the shunt and was influenced by return water from the cooling battery.
+The new placement gives a better reading of actual brine supply from the borehole side.
+```
+
+Design implication:
+
+```text
+BRINE_ACTIVE_EXPECTED_C = 8
+```
+
+This should be treated as a practical design baseline, not an absolute physical minimum.
+
+Gen2 cooling, Anti Damp, Anti Hot and floor-cooling logic should assume that available raw brine during active brine use is roughly 8 °C unless newer measurements revise this baseline.
+
 ## Heat pumps
 
 Installed heat pumps:
@@ -156,6 +181,7 @@ Gen2 must distinguish:
 - heat-pump availability
 - floor-water pump requirement when general floor is in cooling mode
 - shunt/brine control through analog 0-10 V outputs
+- raw active brine availability around 8 °C before shunt/blending
 ```
 
 Gen2 must not assume that all floor zones share the same mode.
