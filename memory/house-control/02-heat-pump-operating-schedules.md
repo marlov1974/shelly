@@ -197,6 +197,36 @@ L5      = aggressive recovery / boost
 
 ---
 
+## Brine / borehole temperature by load
+
+Observed practical planning model:
+
+```text
+Light heat-pump operation:
+  borehole/brine temperature ≈ 6–8 °C
+
+Medium heat-pump operation:
+  borehole/brine temperature ≈ 3–4 °C
+
+Hard heat-pump operation:
+  borehole/brine temperature ≈ 2–3 °C
+```
+
+Planning interpretation:
+
+```text
+Higher heat-pump load pulls the borehole/brine temperature down.
+Lower brine temperature reduces effective heat-pump efficiency.
+```
+
+The optimizer should therefore treat borehole/brine temperature as part of the cost/efficiency model, not only as raw telemetry.
+
+A very cheap price block is not automatically optimal if it requires heavy operation that depresses brine temperature and reduces efficiency across the period.
+
+These values are practical house-specific planning baselines and should be calibrated against measured VP power, brine inlet/outlet temperature and delivered heat.
+
+---
+
 ## Period-dependent efficiency model
 
 The level planning values above are base values. Gen2 optimization should also account for period-dependent efficiency.
