@@ -173,6 +173,47 @@ L5      = aggressive recovery / boost
 
 ---
 
+## Period-dependent efficiency model
+
+The level planning values above are base values. Gen2 optimization should also account for period-dependent efficiency.
+
+The reason is that heat-pump efficiency depends on the system's thermal context, not only the chosen level:
+
+```text
+22–02 / night-heavy operation:
+  The system may run heavier levels.
+  House and floors can be cold.
+  Boreholes may have rested before operation, but long heavy charging can reduce effective efficiency.
+  Treat as base efficiency unless calibrated otherwise.
+
+08–16 / daytime save period:
+  The house mostly lives on heat stored during the night.
+  The scheduler likely uses low levels or allows house temperature to fall.
+  Lower thermal lift and gentler operation make all levels slightly more efficient than during 00–08.
+
+16–00 / evening save plus limited charging:
+  The system still mostly saves, but may perform some corrective charging.
+  Levels are generally more efficient than the 00–08 charge period, unless heavy recovery is required.
+```
+
+Planning implication:
+
+```text
+Use the same logical levels, but apply a period efficiency factor to the level's COP / effective heat-per-kWh.
+```
+
+Initial conceptual factors, to be calibrated:
+
+```text
+00–08 charge period:       factor = 1.00
+08–16 save period:         factor > 1.00
+16–00 save/limited charge: factor > 1.00
+```
+
+The exact factors are not yet calibrated. They should be derived from measured VP power, delivered water temperature, house thermal response and borehole/brine behavior.
+
+---
+
 ## Scheduling resolution
 
 Planning resolution:
@@ -216,6 +257,25 @@ One day is divided into 12 blocks:
 11 = 20–22
 12 = 22–24
 ```
+
+---
+
+## Daily optimization periods
+
+For high-level planning, the day is grouped into three periods:
+
+```text
+00–08:
+  primary charging period
+
+08–16:
+  primary saving period
+
+16–00:
+  saving period with limited corrective charging
+```
+
+Each period may have a storage target. Period-level optimization chooses the lowest-cost block/level plan needed to reach the period target, while later periods are allowed to correct residual error.
 
 ---
 
