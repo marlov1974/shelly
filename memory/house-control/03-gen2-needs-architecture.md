@@ -80,6 +80,72 @@ rt/optimize-dampers/
 
 This code may inform Gen2 implementation, but it is still POC/lab code. It must not be treated as the final Gen2 architecture, and it is not part of the Gen1 FTX runtime device.
 
+## Runtime cadence and control planes
+
+Gen2 should be split across three runtime/control planes. The split is based on how often a subsystem should be controlled and what kind of decision it makes.
+
+```text
+1. Fast control plane
+   Controls things that may need frequent adjustment.
+
+   Examples:
+     FTX
+     floor cooling
+     shunts/pumps where quick comfort or condensation safety matters
+
+   Typical cadence:
+     seconds to minutes
+
+   Responsibility:
+     fast comfort, air quality, dewpoint, supply air, pressure direction,
+     and condensation guard behavior.
+```
+
+```text
+2. Slow actuator plane
+   Controls things that should change rarely.
+
+   Examples:
+     VP1 / VP2
+     VVB
+     VVC
+
+   Typical cadence:
+     15 minutes, 30 minutes, or current scheduler block decision
+
+   Responsibility:
+     apply already-decided operating level/mode without short-cycling
+     or constantly re-planning slow equipment.
+```
+
+```text
+3. Clock / planner plane
+   Runs on time, schedule, or when external planning inputs update.
+
+   Examples:
+     weather fetch
+     spot-price fetch
+     heat-pump optimizer
+     daily planning
+     2h block planning
+
+   Responsibility:
+     produce plans, forecasts, price classifications and block decisions.
+```
+
+Layering rules:
+
+```text
+- The planner plane makes daily/block decisions.
+- The slow actuator plane applies slow decisions.
+- The fast control plane handles rapid comfort and safety behavior.
+- The fast plane must not choose cheapest VP blocks.
+- The slow actuator plane must not recompute the whole daily plan.
+- The planner plane must not directly drive fast FTX/floor-cooling actuator loops.
+```
+
+This matches the heat-pump scheduling model: the optimizer selects 2h blocks and logical levels, while quarter-hour/runtime execution only applies the current block decision.
+
 ## Core design principle
 
 Gen2 is needs-based.
@@ -107,17 +173,52 @@ Needs must not mutate each other's outputs.
 
 ## Signal classes
 
-Needs may produce two kinds of signal:
+Needs and policies may produce three kinds of signal:
 
 ```text
 HARD:
   A boundary or requirement that constrains the valid operating region.
+  HARD must not be violated by ordinary WISH or BIAS signals.
 
 WISH:
   A preferred operating point inside the valid region.
+
+BIAS:
+  A modifier that changes the intensity of slow/non-critical WISH signals.
+  BIAS does not directly demand an actuator state and does not override HARD.
 ```
 
-HARD constraints override WISH targets.
+Examples:
+
+```text
+HARD:
+  Purge sets high minimum supply.
+  Moisture Safety sets pressure direction.
+  Anti Cold caps FTX supply if heating water is too cold.
+
+WISH:
+  Anti Stale wants more supply as air becomes stale.
+  Anti Hot wants cooler brine or more cooling assistance.
+  Anti Cold wants warmer water or VVX on.
+
+BIAS:
+  Cost Optimizer dampens slow ventilation during expensive periods.
+  Dryness Policy dampens ventilation wishes when outdoor air is very dry.
+  Dryness Policy blocks or penalizes condensing cooling wishes when the house is already dry.
+```
+
+Resolver order:
+
+```text
+1. Collect raw HARD, WISH and BIAS signals per need/policy.
+2. Apply HARD signals to form valid operating intervals and required modes.
+3. Apply BIAS only to eligible slow/non-critical WISH signals.
+4. Select final WISH targets according to priority and current mode.
+5. Clamp final WISH targets inside HARD constraints.
+6. Emit final subsystem intents.
+```
+
+Cost Optimizer and Dryness Policy are primarily BIAS/policy producers. They may also produce HARD constraints when there is real safety or building-risk justification, but ordinary cost or comfort optimization should not override HARD safety.
 
 Gen2 should avoid hiding bugs with broad defensive normalizers. Incorrect behavior should remain observable and be corrected at the source.
 
@@ -317,6 +418,8 @@ It may damp or boost:
 - Anti Hot assistance
 - Anti Cold assistance
 ```
+
+Cost Optimizer should normally express its effect as BIAS rather than HARD. It changes ambition level and timing; it does not make unsafe states safe.
 
 ## Heat pump operating context
 
