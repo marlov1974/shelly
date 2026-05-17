@@ -23,6 +23,32 @@ Gen2 coordinates multiple house subsystems:
 
 Gen2 should not be treated as current runtime behavior until implemented and activated explicitly.
 
+## Operational durability requirement
+
+Gen2 must be designed to run for several years without manual intervention.
+
+This is a primary architectural requirement, not a convenience feature.
+
+Design implications:
+
+```text
+- deterministic control loops
+- bounded runtime work per cycle
+- simple ownership of KVS keys and actuator authority
+- clear local responsibility for physical telemetry
+- central aggregation without JSON merge races
+- avoid hidden runtime magic and broad defensive normalizers
+- prefer observable wrong behavior over silently masking bugs
+- avoid unnecessary heap pressure and deep object trees
+- avoid frequent external polling when local push/reporting can be used
+- avoid short-cycling slow equipment
+- explicit separation of planning, slow actuation and fast control
+```
+
+Long-term unattended operation means Gen2 should tolerate normal device restarts, temporary missing telemetry and network interruptions through clear ownership and stale-state handling. It does not mean hiding design bugs with complex fallback code.
+
+Critical hardware failures may force affected systems off. Ordinary inability to satisfy a comfort need should be handled inside the relevant need/policy, not by global emergency logic.
+
 ## Shared FTX hardware truth
 
 The physical FTX aggregate is shared between Gen1 and Gen2.
