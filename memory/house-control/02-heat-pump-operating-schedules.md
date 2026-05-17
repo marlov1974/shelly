@@ -93,6 +93,28 @@ VP2 is primarily treated as:
 
 ---
 
+## Heat pump idle power
+
+Each heat pump draws approximately 50 W even when it is not actively producing heat, as long as it is powered/awake in a resting state.
+
+Planning value:
+
+```text
+VP_IDLE_W = 50 W per heat pump
+VP_IDLE_BOTH_W = 100 W for two heat pumps
+```
+
+Optimization implication:
+
+```text
+A heat pump that is active/available but resting is not electrically free.
+The planner should include idle consumption when comparing schedules, especially when keeping both heat pumps awake across long non-producing periods.
+```
+
+This is different from delivered-heat COP. It is a fixed parasitic/standby load that affects cost even when no useful heat is produced.
+
+---
+
 ## Logical winter operating levels
 
 The physical VP commands are abstracted into logical system levels for scheduling and optimization.
@@ -153,6 +175,8 @@ Summer L0 is a deliberately protected lowest level for the sacred hot-water bloc
 ## Approximate planning model
 
 The following values are planning values and must be calibrated against measured operation.
+
+The electrical input values below describe active operating levels and do not remove the need to account for heat-pump idle power during non-producing active/awake time.
 
 | Level | Label | Electrical input | COP | Heat output | Heat per 2h block |
 |---|---|---:|---:|---:|---:|
