@@ -88,6 +88,71 @@ Critical hardware failures may force affected systems off. Ordinary inability to
 
 Fallbacks should not become complex hidden secondary controllers. They should reduce ambition, reduce dependency on missing signals, and keep the house in a conservative operating mode until full telemetry returns.
 
+## Autonomous hardware default mode
+
+Every device that directly controls hardware should have an autonomous default mode after reboot.
+
+If the device restarts and no active supervisor/controller command arrives, it should move to a stable, conservative default that can run for years without damaging equipment or creating a bad house state.
+
+This default is not a hidden correction of bad control logic. It is the device's local unattended-power-up behavior.
+
+Default hardware state:
+
+```text
+FTX supply fan:
+  25 %
+
+FTX extract fan:
+  31 %
+
+FTX VVX:
+  ON
+
+FTX dampers:
+  ON
+
+FTX heat:
+  OFF
+
+FTX cool:
+  OFF
+
+VP1:
+  00
+
+VP2:
+  00
+
+Floor cooling / general floor three-way valve, Shelly Pro 2:
+  heat mode
+  sw0 = 1
+  sw1 = 0
+
+Floor cooling dimmer / shunt-brine control:
+  OFF / 0 %
+
+VVC:
+  ON
+
+VVB:
+  ON
+```
+
+Interpretation:
+
+```text
+- Ventilation continues at a low safe baseline.
+- Heat recovery is enabled.
+- Dampers are energized/open for normal air path.
+- Active FTX heating/cooling is disabled.
+- Heat pumps use their safe low/default physical command.
+- General floors return to heating-side connection, not cooling.
+- Floor-cooling analog output is off.
+- Domestic hot-water and circulation remain available.
+```
+
+Gen2 active control may override this default when valid commands are present. If active control disappears, local hardware controllers should eventually fall back to this default rather than remaining indefinitely in an aggressive or ambiguous state.
+
 ## Shared FTX hardware truth
 
 The physical FTX aggregate is shared between Gen1 and Gen2.
