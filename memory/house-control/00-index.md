@@ -4,6 +4,7 @@ This folder is for heat pumps, brine loop, floor heating/cooling, pumps, valves 
 
 ## Scope
 
+- House-control hardware inventory outside the physical FTX aggregate.
 - Mitsubishi heat pumps and their control constraints.
 - Brine side and floor side pumping.
 - Free cooling through heat exchanger.
@@ -37,6 +38,7 @@ Do not treat Gen2 documents as current runtime behavior until explicitly impleme
 
 ```text
 00-index.md
+01-hardware-inventory.md
 02-heat-pump-operating-schedules.md
 03-gen2-needs-architecture.md
 ```
