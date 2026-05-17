@@ -45,9 +45,48 @@ Design implications:
 - explicit separation of planning, slow actuation and fast control
 ```
 
-Long-term unattended operation means Gen2 should tolerate normal device restarts, temporary missing telemetry and network interruptions through clear ownership and stale-state handling. It does not mean hiding design bugs with complex fallback code.
+Long-term unattended operation means Gen2 should tolerate normal device restarts, temporary missing telemetry and network interruptions through clear ownership and stale-state handling.
+
+Important distinction:
+
+```text
+Bug masking:
+  broad generic correction that hides incorrect internal logic.
+  Avoid this.
+
+Fallback:
+  explicit degraded mode for missing external signal, failed service,
+  stale telemetry or unavailable device.
+  Use this extensively in final Gen2.
+```
+
+In final Gen2, as much as practical should have defined fallback behavior. Fallback should be domain-specific, simple, visible in state, and conservative.
+
+Examples:
+
+```text
+FTX Uni missing or stale:
+  FTX becomes simpler and more cautious.
+  It avoids aggressive heat/cool/dehumidification decisions that depend on the missing sensor.
+
+Open-Meteo unavailable:
+  VP, floor cooling and FTX use conservative weather assumptions or last valid forecast
+  within a defined validity window.
+
+Spot prices unavailable:
+  the planner uses a statistical/default price model instead of live spot optimization.
+
+Heat-pump or water temperature telemetry missing:
+  Anti Cold and slow heating coordination avoid aggressive assumptions about available heat.
+
+Cooling/brine telemetry missing:
+  floor cooling and Anti Hot/Anti Damp avoid aggressive cooling decisions that could
+  create comfort or condensation risk.
+```
 
 Critical hardware failures may force affected systems off. Ordinary inability to satisfy a comfort need should be handled inside the relevant need/policy, not by global emergency logic.
+
+Fallbacks should not become complex hidden secondary controllers. They should reduce ambition, reduce dependency on missing signals, and keep the house in a conservative operating mode until full telemetry returns.
 
 ## Shared FTX hardware truth
 
