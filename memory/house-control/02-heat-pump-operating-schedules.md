@@ -181,30 +181,29 @@ One day is divided into 12 blocks:
 
 ## Forced / sacred blocks
 
-The following blocks are always selected:
+Only one block is sacred:
 
 ```text
 Block 1 = 00–02
-Block 7 = 12–14
-```
-
-This gives:
-
-```text
-2 blocks/day
-4 h/day
-14 blocks/week
-28 h/week
 ```
 
 Purpose:
 
 ```text
-- ensure minimum daily thermal maintenance
-- guarantee domestic hot water recovery opportunity
-- maintain stable thermal reserves
-- use statistically favorable night and midday price periods
+- give VP1 a daily opportunity to restore / charge its domestic-hot-water tank
+- provide a stable night recovery opportunity independent of spot optimization
 ```
+
+This gives:
+
+```text
+1 block/day
+2 h/day
+7 blocks/week
+14 h/week
+```
+
+Block 7 / 12–14 is no longer sacred. It may still be selected by optimization when price, solar/midday behavior, domestic hot-water demand, pool demand or thermal-storage targets justify it, but it is not an always-selected block.
 
 ---
 
@@ -219,21 +218,19 @@ In summer, the heat pumps should primarily act as:
 
 They should normally not be used for house heating.
 
-Default summer forced schedule:
+Default sacred schedule:
 
 ```text
 00–02 active
-12–14 active
 ```
 
 Interpretation:
 
 ```text
-00–02 = recovery / domestic hot water opportunity
-12–14 = midday solar-price / pool-charging opportunity
+00–02 = VP1 domestic-hot-water recovery opportunity
 ```
 
-Extra runtime should only be added if domestic hot water and pool demand require more than the 28 h/week baseline.
+Extra runtime should be added by optimization if domestic hot water and pool demand require more than the 14 h/week sacred baseline.
 
 ---
 
