@@ -108,6 +108,46 @@ L5 = 36/36
 
 These are conceptual system levels for the combined VP1 + VP2 system. They do not always map one-to-one to one physical heat-pump command.
 
+Winter level interpretation:
+
+```text
+L1 / L2 = efficient low-power maintenance
+L3      = economy heating
+L4      = normal winter charging / recovery
+L5      = aggressive recovery / boost
+```
+
+---
+
+## Summer hot-water level offset trick
+
+In summer, the sacred 00–02 block still exists so VP1 can restore its domestic-hot-water tank. However, VP1 must not accidentally produce house heat during this hot-water recovery block.
+
+Therefore summer scheduling uses a shifted level model with a new lowest active level.
+
+Summer lowest active level:
+
+```text
+L0 = VP1 20/52 + VP2 28/52
+```
+
+Interpretation:
+
+```text
+VP1 20/52 = near domestic-hot-water-priority mode without meaningful house-heating intent
+VP2 28/52 = low/base hot-water capable support
+```
+
+The previous winter levels are shifted up by one step in the summer scheduler. This gives six usable scheduler levels while preserving an explicit low summer hot-water level.
+
+Important rule:
+
+```text
+Summer L0 must not be accidentally upgraded by the monotonic level-upgrade algorithm.
+```
+
+Summer L0 is a deliberately protected lowest level for the sacred hot-water block, not a normal heating baseline.
+
 ---
 
 ## Approximate planning model
@@ -207,6 +247,26 @@ Block 7 / 12–14 is no longer sacred. It may still be selected by optimization 
 
 ---
 
+## Initial schedule seeds
+
+The optimizer may seed blocks differently depending on season.
+
+Winter start schedule:
+
+```text
+L5, L1, L1, L1
+```
+
+Summer start schedule:
+
+```text
+L0, L1, L1, L1
+```
+
+The summer seed uses protected L0 for the sacred 00–02 VP1 hot-water recovery behavior. The optimizer must not treat that L0 as an ordinary low heat level that can be upgraded accidentally.
+
+---
+
 ## Summer operation concept
 
 In summer, the heat pumps should primarily act as:
@@ -227,7 +287,7 @@ Default sacred schedule:
 Interpretation:
 
 ```text
-00–02 = VP1 domestic-hot-water recovery opportunity
+00–02 = VP1 domestic-hot-water recovery opportunity using protected summer L0 / 20/52 behavior
 ```
 
 Extra runtime should be added by optimization if domestic hot water and pool demand require more than the 14 h/week sacred baseline.
@@ -274,6 +334,12 @@ Benefits:
 - stable thermal behavior
 - suitable for constrained Shelly script execution
 - easier debugging through KVS
+```
+
+Summer exception:
+
+```text
+Protected summer L0 must not be accidentally upgraded by this monotonic upward scheduling process.
 ```
 
 ---
