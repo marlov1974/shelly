@@ -1,4 +1,4 @@
-// poll output 3.4.0-damper-power
+// poll output 3.4.1-post-shunt-temps
 function buildTelM(ctx) {
   return {
     t: {
@@ -8,7 +8,9 @@ function buildTelM(ctx) {
       post_vvx: ctx.supply.temp_post_vvx,
       to_outdoor: ctx.supply.temp_to_outdoor,
       brine: ctx.extract.temp_brine,
-      hotwater: ctx.extract.temp_hotwater
+      brine_post_shunt: ctx.extract.temp_brine_post_shunt,
+      hotwater: ctx.extract.temp_hotwater,
+      hotwater_post_shunt: ctx.extract.temp_hotwater_post_shunt
     },
     rpm: {
       sup: ctx.supply.rpm,
