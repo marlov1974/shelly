@@ -1,4 +1,4 @@
-// poll feature-extract 3.2.1-direct-parse-low-memory
+// poll feature-extract 3.2.2-extract-uni-temp-remap
 var IP_EXTRACT_UNI = "192.168.77.21";
 var IP_EXTRACT_FAN = "192.168.77.11";
 
@@ -6,7 +6,9 @@ var EXTRACT_DP_ID = 100;
 var EXTRACT_RPM_ID = 2;
 var TEMP_TO_HOUSE_ID = 100;
 var TEMP_BRINE_ID = 101;
-var TEMP_HOTWATER_ID = 102;
+var TEMP_BRINE_POST_SHUNT_ID = 102;
+var TEMP_HOTWATER_ID = 103;
+var TEMP_HOTWATER_POST_SHUNT_ID = 104;
 
 var K_EXTRACT_FAN = 12.1;
 
@@ -23,7 +25,9 @@ function parseExtractUni(js) {
     rpm: n(num4(inRpm, "xfreq", "value", "rpm", "frequency"), 0),
     temp_to_house: tempValue(comp(js, "temperature:" + TEMP_TO_HOUSE_ID)),
     temp_brine: tempValue(comp(js, "temperature:" + TEMP_BRINE_ID)),
-    temp_hotwater: tempValue(comp(js, "temperature:" + TEMP_HOTWATER_ID))
+    temp_brine_post_shunt: tempValue(comp(js, "temperature:" + TEMP_BRINE_POST_SHUNT_ID)),
+    temp_hotwater: tempValue(comp(js, "temperature:" + TEMP_HOTWATER_ID)),
+    temp_hotwater_post_shunt: tempValue(comp(js, "temperature:" + TEMP_HOTWATER_POST_SHUNT_ID))
   };
 }
 
@@ -33,7 +37,9 @@ function applyExtractUni(ctx, js) {
   ctx.extract.rpm = x ? x.rpm : 0;
   ctx.extract.temp_to_house = x ? x.temp_to_house : 0;
   ctx.extract.temp_brine = x ? x.temp_brine : 0;
+  ctx.extract.temp_brine_post_shunt = x ? x.temp_brine_post_shunt : 0;
   ctx.extract.temp_hotwater = x ? x.temp_hotwater : 0;
+  ctx.extract.temp_hotwater_post_shunt = x ? x.temp_hotwater_post_shunt : 0;
 }
 
 function applyExtractFan(ctx, js) {
@@ -49,7 +55,9 @@ function deriveExtractTelemetry(ctx) {
   ctx.extract.ls = normLs(extractPaToLs(ctx.extract.pa));
   ctx.extract.temp_to_house = normTemp(ctx.extract.temp_to_house);
   ctx.extract.temp_brine = normTemp(ctx.extract.temp_brine);
+  ctx.extract.temp_brine_post_shunt = normTemp(ctx.extract.temp_brine_post_shunt);
   ctx.extract.temp_hotwater = normTemp(ctx.extract.temp_hotwater);
+  ctx.extract.temp_hotwater_post_shunt = normTemp(ctx.extract.temp_hotwater_post_shunt);
   ctx.extract.fan_pct = normPct(ctx.extract.fan_pct);
   ctx.extract.fan_w = normW(ctx.extract.fan_w);
 }
