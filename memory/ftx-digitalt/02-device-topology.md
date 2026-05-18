@@ -2,24 +2,72 @@
 
 ## Network principle
 
-Shelly devices communicate over the internal FTX network using `192.168.77.x` addresses.
+Shelly devices communicate over the internal FTX / technical network using `192.168.77.x` addresses.
 
-For manual browser testing from the house network, port-forwarding through `192.168.86.240:80xx` may be used, where `xx` is the last octet of the internal `192.168.77.xx` address.
+Code between Shelly devices should use internal `192.168.77.x` addresses. External NAT/port-forward addresses are for manual testing and operator access only.
+
+## Operator access principle
+
+The operator is normally not on the same network as the Shelly devices.
+
+The operator is outside the solution router, but NAT / port-forwarding rules exist in the firewall for the Shelly devices so they can still be reached from the operator side.
+
+When giving manual browser/RPC URLs to the user, prefer the NAT pattern unless the user explicitly asks for the internal device URL.
+
+External reachable base address when the operator is at home:
+
+```text
+192.168.86.240
+```
+
+Port-forwarding convention:
+
+```text
+external port = 80xx
+xx = last octet of the internal Shelly IP address
+```
+
+Example:
+
+```text
+ftx-vvx internal IP: 192.168.77.40
+operator URL:        http://192.168.86.240:8040/
+```
+
+Example KVS read through NAT:
+
+```text
+http://192.168.86.240:8040/rpc/KVS.Get?key=ftx.weather.act
+```
+
+Internal equivalent, only valid from inside the technical network:
+
+```text
+http://192.168.77.40/rpc/KVS.Get?key=ftx.weather.act
+```
 
 ## Known devices
 
-- `ftx-supply-fan`: `192.168.77.10`
-- `ftx-extract-fan`: `192.168.77.11`
-- `ftx-heat-dim`: `192.168.77.12`
-- `ftx-cool-dim`: `192.168.77.13`
-- `ftx-supply-uni`: `192.168.77.20`
-- `ftx-extract-uni`: `192.168.77.21`
-- `ftx-process-uni`: `192.168.77.22`
-- `ftx-vvx`: `192.168.77.40`
+The AI/project memory should treat known Shelly device IP addresses as available project context.
+
+- `ftx-supply-fan`: `192.168.77.10` → `http://192.168.86.240:8010/`
+- `ftx-extract-fan`: `192.168.77.11` → `http://192.168.86.240:8011/`
+- `ftx-heat-dim`: `192.168.77.12` → `http://192.168.86.240:8012/`
+- `ftx-cool-dim`: `192.168.77.13` → `http://192.168.86.240:8013/`
+- `ftx-supply-uni`: `192.168.77.20` → `http://192.168.86.240:8020/`
+- `ftx-extract-uni`: `192.168.77.21` → `http://192.168.86.240:8021/`
+- `ftx-process-uni`: `192.168.77.22` → `http://192.168.86.240:8022/`
+- `ftx-vvx`: `192.168.77.40` → `http://192.168.86.240:8040/`
 
 ## Runtime host
 
 The current runtime/installer architecture is being built and tested on the VVX device. The runtime model is generic enough to be moved, but current manifests and code paths should be checked before moving the runtime host.
+
+Manual access to the current G1 runtime host / VVX device should normally use:
+
+```text
+http://192.168.86.240:8040/
+```
 
 ## Network hardware
 
@@ -28,4 +76,12 @@ The current runtime/installer architecture is being built and tested on the VVX 
 
 ## Rule
 
-Code between Shelly devices should use internal `192.168.77.x` addresses. External port-forward addresses are for manual testing only.
+Runtime code should use internal `192.168.77.x` addresses.
+
+User-facing troubleshooting URLs should usually use the operator NAT endpoint:
+
+```text
+http://192.168.86.240:80xx/
+```
+
+because the user is normally outside the solution router even when physically at home.
