@@ -1,4 +1,6 @@
-// poll output 3.4.1-post-shunt-temps
+// poll output 3.4.2-split-extended-temps
+var KEY_TEL_X = "ftx.tel.x";
+
 function buildTelM(ctx) {
   return {
     t: {
@@ -8,9 +10,7 @@ function buildTelM(ctx) {
       post_vvx: ctx.supply.temp_post_vvx,
       to_outdoor: ctx.supply.temp_to_outdoor,
       brine: ctx.extract.temp_brine,
-      brine_post_shunt: ctx.extract.temp_brine_post_shunt,
-      hotwater: ctx.extract.temp_hotwater,
-      hotwater_post_shunt: ctx.extract.temp_hotwater_post_shunt
+      hotwater: ctx.extract.temp_hotwater
     },
     rpm: {
       sup: ctx.supply.rpm,
@@ -34,6 +34,15 @@ function buildTelM(ctx) {
   };
 }
 
+function buildTelX(ctx) {
+  return {
+    t: {
+      brine_post_shunt: ctx.extract.temp_brine_post_shunt,
+      hotwater_post_shunt: ctx.extract.temp_hotwater_post_shunt
+    }
+  };
+}
+
 function buildTelAct(ctx) {
   return {
     sup: { on: ctx.supply.fan_on, pct: ctx.supply.fan_pct, w: ctx.supply.fan_w },
@@ -46,6 +55,7 @@ function buildTelAct(ctx) {
 }
 
 function writeTelemetryM(ctx, cb) { kvsSet(KEY_TEL_M, buildTelM(ctx), cb); }
+function writeTelemetryX(ctx, cb) { kvsSet(KEY_TEL_X, buildTelX(ctx), cb); }
 function writeTelemetryAct(ctx, cb) { kvsSet(KEY_TEL_ACT, buildTelAct(ctx), cb); }
 
 function writePollStatus(ctx, cb) {
