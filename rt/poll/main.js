@@ -1,4 +1,4 @@
-// poll main 3.2.2-self-stop
+// poll main 3.4.2-self-stop-split-extended-temps
 function readAll(ctx, cb) {
   readSupply(ctx, function () {
     readExtract(ctx, function () {
@@ -21,10 +21,12 @@ function runPoll() {
 
   readAll(ctx, function () {
     writeTelemetryM(ctx, function () {
-      writeTelemetryAct(ctx, function () {
-        writePollStatus(ctx, function () {
-          log("DON");
-          selfStop();
+      writeTelemetryX(ctx, function () {
+        writeTelemetryAct(ctx, function () {
+          writePollStatus(ctx, function () {
+            log("DON");
+            selfStop();
+          });
         });
       });
     });
