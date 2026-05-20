@@ -184,11 +184,41 @@ tools/ChatGPT_Commit.yaml
 
 The GitHub Action `Commit ChatGPT changes` defaults to this plan path. The user should not need to paste a new plan path for each change.
 
-Use the YAML plan/action method for changes involving more than three files. Typical runtime changes touch at least:
+Use the YAML plan/action method for runtime changes that require an installer-visible deploy. Do not rely only on direct file commits when a runtime package version or device manifest must change.
 
-- one or more code chunks
-- recipe or manifest when versions change
-- device manifest
+Typical runtime change workflow:
+
+```text
+1. Commit the actual code chunk changes.
+2. Update tools/ChatGPT_Commit.yaml with an action that writes rt/devices/<device-id>.json.
+3. In that YAML content, bump device_version.
+4. Bump the changed script package version and versioned name.
+5. Keep unchanged script package versions as-is.
+6. Let the GitHub Action apply the YAML plan to write the generated device manifest.
+7. Then the Shelly installer can see the new device_version and deploy the changed package.
+```
+
+Example for a poll-only runtime change:
+
+```text
+- update rt/poll/*.js chunks
+- update tools/ChatGPT_Commit.yaml
+- set device_version to the next integer
+- set poll version/name, for example:
+    version: 3.4.3
+    name: poll_v3_4_3
+- leave boot/master/state/weather/brain/driver/reboot unchanged
+```
+
+Important rule:
+
+```text
+Changing only rt/poll/*.js is not enough for deployment.
+Installer deploys based on rt/devices/<device-id>.json device_version and package version/name.
+The YAML commit plan is the preferred way to produce that manifest bump.
+```
+
+For tiny documentation-only changes, direct file commit is fine. For runtime changes, prefer the YAML plan so the installer-visible manifest update is not forgotten.
 
 ## Raw GitHub cache note
 
