@@ -96,9 +96,11 @@ Examples:
 ```text
 master_v1_0_0
 poll_v3_3_0
-state_v1_4_0
-weather_v1_0_0
-brain_v2_3_0
+state_v1_4_1
+weather_v1_0_1
+brain_v2_4_2
+driver_v1_0_1
+reboot_v1_0_0
 ```
 
 ## Recipe structure
@@ -123,18 +125,72 @@ Do this in small batches to avoid SHA/synchronization issues.
 
 ## Multi-file change method
 
-For more than three file changes, prefer a planned GitHub Action flow rather than individual connector writes.
+Use two commit methods depending on change size.
+
+### Direct connector writes
+
+Use direct GitHub connector writes for:
+
+```text
+- one-off small changes
+- large individual runtime chunks
+- memory/documentation edits
+- any change set larger than the YAML batch rule below
+```
+
+### YAML batch plan
+
+For grouped deploy/runtime changes, prefer a planned GitHub Action flow when the change set is small enough.
+
+Standard plan file:
+
+```text
+tools/ChatGPT_Commit.yaml
+```
+
+Standard workflow:
+
+```text
+.github/workflows/commit-chatgpt-changes.yml
+```
+
+Rule of thumb:
+
+```text
+YAML batch plan may contain up to 5 changed files.
+More than 5 files should be handled with direct connector writes for the larger files,
+then YAML only for the remaining small files and/or manifest bump.
+```
+
+Reason:
+
+```text
+The YAML method was introduced to avoid many manual approvals for multi-file commits.
+However, ChatGPT/GitHub tool payloads have a practical size ceiling.
+Tests showed small YAML plans work, while larger inline payloads can be blocked by the tool layer.
+Use 5 files as the operational limit instead of trying to pack large commits into one YAML file.
+```
 
 Method:
 
-1. ChatGPT writes a YAML plan or update plan into the repository and gets user approval through the normal GitHub write flow.
+1. ChatGPT writes a YAML plan into the repository and gets user approval through the normal GitHub write flow.
 2. The user runs the manual GitHub Action from the GitHub app/web UI.
 3. The Action applies the planned changes, commits them and pushes them.
 
-Current example:
+For runtime deploys:
 
-- workflow: `.github/workflows/commit-chatgpt-changes.yml`
-- plan: `tools/move_to_old.yaml`
-- helper: `tools/move_to_old.py`
+```text
+- If the deploy change touches 5 files or fewer, YAML may carry the full change.
+- If the deploy change touches more than 5 files, direct-write large/runtime chunks first.
+- Use YAML for the final installer-visible manifest bump when needed.
+```
 
-This method is especially suitable for repository cleanup, file moves and larger mechanical changes. Smaller changes of one to three files can still be done directly through the GitHub connector.
+Important rule:
+
+```text
+Changing runtime chunks alone is not enough for deployment.
+Installer deploys based on rt/devices/<device-id>.json device_version and package version/name.
+When runtime code changes, remember the manifest bump, usually through tools/ChatGPT_Commit.yaml.
+```
+
+Smaller changes of one to three files can still be done directly through the GitHub connector when that is simpler.
