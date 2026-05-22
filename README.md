@@ -1,30 +1,28 @@
 # shelly
 
-Shelly script repository for Smart Home runtime systems.
+G1 Shelly runtime repository for the current Smart Home / FTX control system.
+
+This repository remains the source of truth for the currently running Shelly-based Gen1 FTX runtime and related Shelly maintenance code.
+
+G2 Smart Home development now lives in:
+
+```text
+marlov1974/smart-home
+```
 
 ---
 
 # Mandatory AI Bootstrap
 
-This repository is the primary source of truth for the Smart Home runtime systems.
-
-For every new AI/chat session:
+For work in this repository:
 
 1. Read this `README.md` first.
 2. Read `memory/bootstrap-manifest.json`.
 3. Read every file listed in `memory/bootstrap-manifest.json` `read_order`, in order.
-4. Do not answer, greet, ask clarifying questions, provide advice, or produce any other user-facing response before all mandatory bootstrap files have been read.
-5. If any mandatory bootstrap step or file read fails, stop and report:
+4. If a task crosses into G2 design or implementation, also bootstrap `marlov1974/smart-home`.
+5. If any mandatory bootstrap step or file read fails, stop and report `BOOTSTRAP FAILED` with the missing path and reason.
 
-```text
-BOOTSTRAP FAILED
-```
-
-Include the missing step or file path and the reason.
-
-Do not continue with partial bootstrap context.
-
-Runtime truth hierarchy:
+Runtime truth hierarchy for G1:
 
 1. runtime scripts/chunks
 2. recipes
@@ -32,65 +30,42 @@ Runtime truth hierarchy:
 4. memory files
 5. historical discussion
 
-After bootstrap, claims about actual runtime behavior must be grounded in the relevant implementation files. If a user asks about an area outside the bootstrap manifest, read the relevant repo files before making claims.
+After bootstrap, claims about actual Gen1 runtime behavior must be grounded in the relevant implementation files.
 
 ---
 
-# Repository Contents
+# Repository Boundary
 
-The repository contains:
+This repository owns:
 
-- runtime scripts for Shelly devices
-- deployment/install logic
-- architectural memory
-- runtime contracts
-- physical FTX inventory and measurement memory
-- Home Assistant / FTX orchestration logic
+- current Gen1 Shelly/FTX runtime
+- Gen1 deployment/install logic
+- Gen1 runtime contracts and KVS behavior
+- current Shelly device topology used by Gen1
+- physical FTX facts that are still used to maintain Gen1
+- Gen2 proof-of-concept Shelly experiments that still physically live here until migrated or retired
 
----
+This repository does not own new G2 solution design.
 
-# Canonical Long-Term Memory
+G2 owns:
 
-Long-term project memory is stored directly in the repository.
+- whole-house needs architecture
+- Mac + Home Assistant + Shelly package workflow
+- future VP/FTX/floor/VVB/VVC orchestration
+- Codex-first package structure
+- future G2 deploy artifacts
 
-Primary memory entry points:
-
-- `memory/bootstrap-manifest.json`
-- `memory/00-index.md`
-- `memory/02-chatgpt-bootstrap.md`
-- `memory/ftx-digitalt/00-index.md`
-- `memory/ftx-fysiskt/00-index.md`
-
-These files explain:
-
-- architecture
-- ownership
-- runtime model
-- KVS contracts
-- coding standards
-- current system structure
-- physical hardware inventory
-
----
-
-# Important Principle
-
-Memory files describe intended architecture.
-
-Actual runtime scripts and manifests describe the current implementation.
-
-When they differ:
-
-- runtime implementation is normally more current
-- memory files should later be updated to match
+G2 belongs in `marlov1974/smart-home`.
 
 ---
 
 # Current Primary Runtime
 
-Current primary FTX runtime device:
+Current primary Gen1 FTX runtime device:
 
-- `rt/devices/8813bfdaa0c0.json`
+```text
+rt/devices/8813bfdaa0c0.json
+```
 
 The device manifest defines:
 
@@ -104,7 +79,7 @@ The device manifest defines:
 
 # Runtime Model
 
-The runtime uses:
+The Gen1 runtime uses:
 
 - one long-lived dispatcher (`master`)
 - multiple one-shot workers
