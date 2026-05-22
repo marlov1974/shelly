@@ -1,16 +1,22 @@
 # FTX Digital Memory Index
 
-This folder is the canonical repo-based long-term memory for the Shelly-based digital control system for the FTX aggregate.
+This folder is the canonical repo-based long-term memory for the current Gen1 Shelly-based digital control system for the FTX aggregate.
 
-The documentation in this folder must be readable without any external project memory. Current code, device manifests and recipes in `main` are the source of truth. If historical design ideas are preserved, they must be marked as obsolete historical notes or future design candidates.
+Current code, device manifests and recipes in `main` are the source of truth for Gen1 runtime behavior.
+
+New G2 Smart Home architecture and implementation now belongs in:
+
+```text
+marlov1974/smart-home
+```
+
+Historical or proof-of-concept G2-related notes in this repository are retained only as migration/source material unless explicitly referenced by a current G1 maintenance task.
 
 ## Generation boundary
 
-FTX documentation is now split between:
-
 ```text
-Gen1 = current runtime maintenance
-Gen2 = future needs-based smart-home architecture
+Gen1 = current running Shelly/FTX runtime maintenance in this repo
+Gen2 = future Smart Home architecture and package workflow in marlov1974/smart-home
 ```
 
 Gen1 is the currently running FTX runtime and is documented here:
@@ -19,7 +25,7 @@ Gen1 is the currently running FTX runtime and is documented here:
 memory/ftx-digitalt/13-gen1-runtime-maintenance.md
 ```
 
-Gen2 whole-house needs architecture belongs under `memory/house-control/` and must not be treated as current FTX runtime behavior.
+Do not add new G2 whole-house design here. Add it to `marlov1974/smart-home`.
 
 ## Primary runtime device
 
@@ -41,11 +47,11 @@ This device runs the canonical Gen1 FTX runtime:
 
 ## Gen2 POC runtime warning
 
-There is currently another active runtime device in the repository:
+There is currently another active runtime device in this repository:
 
 - `rt/devices/80f3dac8bfec.json`
 
-That runtime is a Gen2 proof-of-concept track for dampers / heat-pump / spot-price / optimizer work.
+That runtime is a proof-of-concept track for dampers / heat-pump / spot-price / optimizer work.
 
 It:
 
@@ -54,7 +60,7 @@ It:
 - uses separate recipes/chunks under `rt/recipes/dampers/`
 - uses runtime folders such as `rt/spotprice-dampers/`, `rt/weather-dampers/`, `rt/prep-dampers/`, `rt/optimize-dampers/` and `rt/scripts/dampers/`
 - is NOT part of the primary Gen1 FTX runtime pipeline
-- may inform Gen2 design, but must not be treated as finished Gen2 architecture
+- may inform G2 migration, but must not be treated as final G2 architecture
 
 Do not assume all runtime code in `rt/` belongs to the same architecture.
 
@@ -88,7 +94,7 @@ Current roles:
 
 Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Installer state is stored in persistent `text:200`, not KVS.
 
-## Recommended read order
+## Recommended read order for Gen1 work
 
 1. `00-index.md`
 2. `00-file-map.md`
@@ -114,5 +120,4 @@ The system minimizes concurrency and heap pressure by using one long-lived low-h
 - Recipes: `rt/recipes/*.json`
 - Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/poll/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
 - Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`
-- Gen2 whole-house architecture: `memory/house-control/03-gen2-needs-architecture.md`
-- Gen2 POC runtime manifest: `rt/devices/80f3dac8bfec.json`
+- Gen2 source of truth: `marlov1974/smart-home`
