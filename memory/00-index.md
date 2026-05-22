@@ -1,37 +1,32 @@
 # Project Memory Index
 
-This repository is the canonical long-term memory for the Smart Home platform.
+This repository is the canonical long-term memory for the Gen1 Shelly/FTX runtime.
 
-The repository itself is designed to function as:
+G2 Smart Home development now lives in:
 
-- architecture memory
-- runtime memory
-- deployment memory
-- governance memory
-- AI bootstrap memory
+```text
+marlov1974/smart-home
+```
+
+Use this repository for current running Shelly runtime behavior and G1 maintenance. Use `smart-home` for new whole-house G2 architecture, requirements, package workflow and future Mac/Home Assistant/Shelly implementation.
 
 ---
 
 # AI Bootstrap
 
-A new ChatGPT or AI session should begin here.
-
-Primary bootstrap sequence:
+A new AI session working on this repository should begin with:
 
 1. `README.md`
-2. `memory/00-index.md`
-3. `memory/02-chatgpt-bootstrap.md`
-4. `memory/01-current-state.md`
-5. `memory/ftx-digitalt/00-index.md`
-6. `memory/ftx-digitalt/00-file-map.md`
+2. `memory/bootstrap-manifest.json`
+3. every file in the manifest `read_order`, in order
 
-Then continue into the relevant domain.
+If the task crosses into G2, also bootstrap `marlov1974/smart-home`.
 
 ---
 
 # Runtime Truth Hierarchy
 
-Trust order for understanding actual runtime behavior:
+Trust order for understanding actual Gen1 runtime behavior:
 
 1. Runtime scripts/chunks
 2. Recipes
@@ -69,11 +64,11 @@ Namespace:
 
 - `ftx.*`
 
-## Optimizer / dampers runtime
+## Optimizer / dampers POC runtime
 
 - `rt/devices/80f3dac8bfec.json`
 
-Separate optimizer/control architecture.
+Separate optimizer/control proof-of-concept architecture.
 
 Namespace:
 
@@ -89,13 +84,15 @@ Do not assume the two runtimes share:
 - sequencing
 - deployment model
 
+The optimizer/dampers runtime may inform G2, but new G2 design and implementation belongs in `marlov1974/smart-home`.
+
 ---
 
 # Domain Structure
 
 ## ftx-digitalt/
 
-Primary digital runtime architecture.
+Primary Gen1 digital runtime architecture.
 
 Contains:
 
@@ -109,15 +106,15 @@ Contains:
 
 ## optimizer-dampers/
 
-Heat-pump and damper optimization runtime.
+Existing heat-pump and damper optimization proof-of-concept runtime.
 
 ## ftx-fysiskt/
 
-Physical airflow and ventilation engineering.
+Physical airflow and ventilation engineering used by current Gen1 and as source material for G2 migration.
 
 ## house-control/
 
-Whole-house thermal and energy control.
+Legacy/pre-split whole-house and heat-pump notes retained as source material. New G2 whole-house architecture belongs in `marlov1974/smart-home`.
 
 ## components/
 
@@ -127,7 +124,7 @@ Reusable Shelly and hardware references.
 
 # Runtime Architecture Summary
 
-The primary FTX runtime uses:
+The primary Gen1 FTX runtime uses:
 
 - one long-lived dispatcher (`master`)
 - multiple one-shot workers
@@ -195,6 +192,8 @@ Avoid:
 
 # Governance Rule
 
-GitHub repository memory is primary.
+GitHub repository memory is primary for Gen1 runtime maintenance.
 
 ChatGPT memory is secondary and potentially incomplete.
+
+G2 decisions should be recorded in `marlov1974/smart-home`, not duplicated here unless needed for a Gen1 boundary note.
