@@ -1,40 +1,45 @@
 # House Control Memory Index
 
-This folder is for heat pumps, brine loop, floor heating/cooling, pumps, valves and future whole-house thermal control.
+This folder is now legacy/source material after the G2 repository split.
 
-## Scope
+New G2 whole-house architecture, requirements, package workflow and implementation belong in:
 
-- House-control hardware inventory outside the physical FTX aggregate.
-- Mitsubishi heat pumps and their control constraints.
-- Brine side and floor side pumping.
-- Free cooling through heat exchanger.
-- Dew point and condensation safety.
-- Integration principles with the FTX Digital control model.
-- Gen2 whole-house needs-based architecture.
+```text
+marlov1974/smart-home
+```
 
-## Generation boundary
+## Current role of this folder
 
-Current FTX runtime maintenance belongs to Gen1 and is documented under:
+The files in this folder are retained because they contain useful pre-split knowledge, especially:
+
+- heat pump physical command mappings
+- heat-pump operating schedules
+- early Gen2 needs-based architecture discussion
+- brine/floor/cooling notes that may need migration
+
+They should be treated as source material for migration, not as the active G2 source of truth.
+
+## Boundary
+
+Current Gen1 FTX runtime maintenance belongs under:
 
 ```text
 memory/ftx-digitalt/13-gen1-runtime-maintenance.md
 ```
 
-Future whole-house needs-based coordination belongs to Gen2 and is documented here:
+Physical FTX aggregate facts belong under:
 
 ```text
-memory/house-control/03-gen2-needs-architecture.md
+memory/ftx-fysiskt/
 ```
 
-Gen2 introduces needs-based coordination across:
+New G2 Smart Home decisions belong under:
 
 ```text
-FTX, VP1/VP2, floor heating, floor cooling, VVB, VVC and spot-price optimization
+marlov1974/smart-home
 ```
 
-Do not treat Gen2 documents as current runtime behavior until explicitly implemented and activated.
-
-## Key documents
+## Key legacy documents
 
 ```text
 00-index.md
@@ -43,9 +48,8 @@ Do not treat Gen2 documents as current runtime behavior until explicitly impleme
 03-gen2-needs-architecture.md
 ```
 
-## Boundary
+## Rule
 
-- Ventilation aggregate facts belong in `../ftx-fysiskt/`.
-- Current Shelly FTX runtime and KVS contracts belong in `../ftx-digitalt/`.
-- Future whole-house coordination and heat-pump/floor/VVB/VVC integration belong here.
-- Reusable pump, valve, sensor and networking facts belong in `../components/`.
+Do not add new G2 design decisions here.
+
+If a fact from this folder is still valid for G2, migrate or copy it into `marlov1974/smart-home` through an ordered G2 package.
