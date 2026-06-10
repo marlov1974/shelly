@@ -1,4 +1,4 @@
-// reboot main 1.0.0-daily-device-reboot
+// reboot main 1.1.0-daily-device-reboot-no-uni
 function httpGet(url, tag, cb) {
   Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
     if (err || !res) log("ERR " + tag);
@@ -38,17 +38,11 @@ function stopLocalWorkers(cb) {
 
 function rebootRemotes(cb) {
   log("RB remote");
-  rebootIp(IP_SUPPLY_UNI, function () {
-    rebootIp(IP_EXTRACT_UNI, function () {
-      rebootIp(IP_PROCESS_UNI, function () {
-        rebootIp(IP_SUPPLY_FAN, function () {
-          rebootIp(IP_EXTRACT_FAN, function () {
-            rebootIp(IP_HEAT, function () {
-              rebootIp(IP_COOL, function () {
-                rebootIp(IP_DAMPERS, cb);
-              });
-            });
-          });
+  rebootIp(IP_SUPPLY_FAN, function () {
+    rebootIp(IP_EXTRACT_FAN, function () {
+      rebootIp(IP_HEAT, function () {
+        rebootIp(IP_COOL, function () {
+          rebootIp(IP_DAMPERS, cb);
         });
       });
     });

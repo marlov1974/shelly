@@ -32,34 +32,47 @@ Observed water temperature can be distorted if the thermometer is not insulated 
 
 The supply-side pre-VVX temperature acts as outdoor-air proxy when properly placed.
 
-## Extract UNI temperature mapping
+## Current Sensor Add-on temperature mapping
 
-Current G1 extract UNI temperature mapping:
+Current G1 runtime mapping after migration to fan Sensor Add-ons:
 
 ```text
+ftx-supply-fan Sensor Add-on:
+
 temperature:100 = t.to_house
-  unchanged; supply air to house after battery
+  supply air to house after heating/cooling battery
 
-temperature:101 = t.brine
-  unchanged; brine reference before shunt/blending
+temperature:101 = t.post_vvx
+  supply air after VVX, before heating/cooling battery
 
-temperature:102 = t.brine_post_shunt
+temperature:102 = t.out
+  outdoor / supply air before VVX proxy
+
+temperature:103 = t.brine
+  brine reference
+
+temperature:104 = t.brine_post_shunt
   brine after cooling shunt / chunt toward cooling battery
 
-temperature:103 = t.hotwater
-  hot water / heating water reference before shunt/blending
+temperature:105 = t.hotwater
+  hot water / heating water reference
 
-temperature:104 = t.hotwater_post_shunt
+temperature:106 = t.hotwater_post_shunt
   hot water after heating shunt / chunt toward heating battery
+
+ftx-extract-fan Sensor Add-on:
+
+temperature:100 = t.to_outdoor
+  exhaust air after VVX toward outdoor
+
+temperature:105 = t.house
+  house/extract proxy, currently may read N/A
+
+humidity:105 = rh.house
+  house RH proxy, currently may read N/A
 ```
 
-Notes:
-
-```text
-- temperature:102 used to be interpreted as hotwater in older G1 poll code.
-- after the sensor move/install, hotwater is now temperature:103.
-- post-shunt/chunt temperatures are available for diagnostics and later control logic.
-```
+When extract `temperature:105` or `humidity:105` reads N/A/error, Gen1 poll uses safe placeholders: `t.house=20.0 C` and `rh.house=60%`.
 
 ## Design principle
 

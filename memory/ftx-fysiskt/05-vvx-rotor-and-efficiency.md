@@ -61,8 +61,10 @@ Supply-side and extract-side efficiency are averaged and clipped to a practical 
 Canonical run semantics:
 
 ```text
-vvx.run = 1 iff switch = 1 and rpm > 4
+vvx.run = 1 iff switch = 1 and measured power >= 10 W
 ```
+
+`rpm.vvx` remains in `ftx.tel.m` only as an intentional schema-compatible zero placeholder. Runtime does not use Sensor Add-on tach inputs for VVX RPM because script-based event counting was tested and rejected for stability at tach event rates.
 
 ## Recent observation
 

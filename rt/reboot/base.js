@@ -1,4 +1,4 @@
-// reboot base 1.0.0-daily-device-reboot
+// reboot base 1.1.0-daily-device-reboot-no-uni
 var SCRIPT_NAME = "reboot";
 var SCRIPT_ID = 9;
 
@@ -14,9 +14,6 @@ var DRIVER_ID = 8;
 var LOCAL_SETTLE_MS = 300000;
 var REMOTE_SETTLE_MS = 300000;
 
-var IP_SUPPLY_UNI = "192.168.77.20";
-var IP_EXTRACT_UNI = "192.168.77.21";
-var IP_PROCESS_UNI = "192.168.77.22";
 var IP_SUPPLY_FAN = "192.168.77.10";
 var IP_EXTRACT_FAN = "192.168.77.11";
 var IP_HEAT = "192.168.77.12";

@@ -1,4 +1,4 @@
-// poll output 3.4.2-split-extended-temps
+// poll output 3.5.0-sensor-addon-telemetry
 var KEY_TEL_X = "ftx.tel.x";
 
 function buildTelM(ctx) {
@@ -6,11 +6,11 @@ function buildTelM(ctx) {
     t: {
       house: ctx.process.temp_house,
       out: ctx.supply.temp_outdoor,
-      to_house: ctx.extract.temp_to_house,
+      to_house: ctx.supply.temp_to_house,
       post_vvx: ctx.supply.temp_post_vvx,
-      to_outdoor: ctx.supply.temp_to_outdoor,
-      brine: ctx.extract.temp_brine,
-      hotwater: ctx.extract.temp_hotwater
+      to_outdoor: ctx.extract.temp_to_outdoor,
+      brine: ctx.supply.temp_brine,
+      hotwater: ctx.supply.temp_hotwater
     },
     rpm: {
       sup: ctx.supply.rpm,
@@ -37,8 +37,8 @@ function buildTelM(ctx) {
 function buildTelX(ctx) {
   return {
     t: {
-      brine_post_shunt: ctx.extract.temp_brine_post_shunt,
-      hotwater_post_shunt: ctx.extract.temp_hotwater_post_shunt
+      brine_post_shunt: ctx.supply.temp_brine_post_shunt,
+      hotwater_post_shunt: ctx.supply.temp_hotwater_post_shunt
     }
   };
 }

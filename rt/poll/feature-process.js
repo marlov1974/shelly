@@ -1,44 +1,52 @@
-// poll feature-process 3.2.1
-var IP_PROCESS_UNI = "192.168.77.22";
+// poll feature-process 3.5.0-extract-sensor-addon
+var IP_EXTRACT_FAN = "192.168.77.11";
 
-var CO2_VM_ID = 100;
-var VVX_RPM_ID = 2;
-var TEMP_HOUSE_ID = 100;
-var RH_HOUSE_ID = 100;
+var HOUSE_PPM_ID = 101;
+var TEMP_HOUSE_ID = 105;
+var RH_HOUSE_ID = 105;
 
-function parseProcessUni(js) {
-  var vm = comp(js, "voltmeter:" + CO2_VM_ID);
-  var inRpm = comp(js, "input:" + VVX_RPM_ID);
+function tempValueOr(c, fallback) {
+  var v;
+  if (!c || (c.errors && c.errors.length)) return fallback;
+  v = num4(c, "tC", "tc", "value", "temp");
+  return (typeof v === "number") ? v : fallback;
+}
+
+function rhValueOr(c, fallback) {
+  var v;
+  if (!c || (c.errors && c.errors.length)) return fallback;
+  v = num3(c, "rh", "value", "percent");
+  return (typeof v === "number") ? v : fallback;
+}
+
+function parseProcessFromExtractAddon(js) {
+  var ppm = comp(js, "input:" + HOUSE_PPM_ID);
   var rh = comp(js, "humidity:" + RH_HOUSE_ID);
   var t = comp(js, "temperature:" + TEMP_HOUSE_ID);
-  var tempRaw = n(num4(t, "tC", "tc", "value", "temp"), 0);
-  var rhRaw = n(num3(rh, "rh", "value", "percent"), -1);
-  var tempErr = !!(t && t.errors && t.errors.length);
-  var rhErr = !!(rh && rh.errors && rh.errors.length);
   return {
-    co2_ppm: n(num4(vm, "xvoltage", "value", "ppm", "co2"), 0),
-    rpm_vvx: n(num4(inRpm, "xfreq", "value", "rpm", "frequency"), 0),
-    temp_house: (!tempErr && tempRaw !== 0) ? tempRaw : 20.0,
-    rh_house: (!rhErr && rhRaw >= 0) ? rhRaw : 60
+    co2_ppm: n(num4(ppm, "xpercent", "ppm", "co2", "value"), 0),
+    rpm_vvx: 0,
+    temp_house: tempValueOr(t, 20.0),
+    rh_house: rhValueOr(rh, 60)
   };
 }
 
-function applyProcessUni(ctx, js) {
-  var x = js ? parseProcessUni(js) : null;
-  ctx.process.rpm_vvx = x ? x.rpm_vvx : 0;
+function applyProcessFromExtractAddon(ctx, js) {
+  var x = js ? parseProcessFromExtractAddon(js) : null;
+  ctx.process.rpm_vvx = 0;
   ctx.process.co2_ppm = x ? x.co2_ppm : 0;
   ctx.process.temp_house = x ? x.temp_house : 20.0;
   ctx.process.rh_house = x ? x.rh_house : 60;
 
-  ctx.process.rpm_vvx = normVvxRpm(ctx.process.rpm_vvx);
+  ctx.process.rpm_vvx = 0;
   ctx.process.co2_ppm = normPpm(ctx.process.co2_ppm);
   ctx.process.temp_house = normTemp(ctx.process.temp_house);
   ctx.process.rh_house = normRh(ctx.process.rh_house);
 }
 
 function readProcess(ctx, cb) {
-  httpGetStatus(IP_PROCESS_UNI, function (js) {
-    applyProcessUni(ctx, js);
+  httpGetStatus(IP_EXTRACT_FAN, function (js) {
+    applyProcessFromExtractAddon(ctx, js);
     cb();
   });
 }

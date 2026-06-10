@@ -1,16 +1,14 @@
-// state run-process 1.3.0-classic
-var VVX_RUN_RPM_MIN = 4;
+// state run-process 1.7.0-no-rpm
+var VVX_RUN_W_MIN = 10;
 var HEAT_RUN_PCT_MIN = 0;
 var HEAT_RUN_DT_MIN_C = 0.5;
 var COOL_RUN_PCT_MIN = 0;
 var COOL_RUN_DT_MIN_C = 0.5;
 
 function applyVvxRun(ctx) {
-  var m = ctx.telM || {};
   var a = ctx.telAct || {};
   var vvx = a.vvx || {};
-  var rpm = m.rpm || {};
-  ctx.run.vvx = b(on(vvx) && sget(rpm, "vvx", 0) > VVX_RUN_RPM_MIN);
+  ctx.run.vvx = b(on(vvx) && w(vvx) >= VVX_RUN_W_MIN);
 }
 
 function applyHeatRun(ctx) {

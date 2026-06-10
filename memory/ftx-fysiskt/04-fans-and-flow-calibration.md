@@ -33,8 +33,8 @@ This is superseded and should not be used as current control logic.
 Fan telemetry includes:
 
 ```text
-rpm.sup
-rpm.ext
+rpm.sup = 0 intentional placeholder
+rpm.ext = 0 intentional placeholder
 pa.sup
 pa.ext
 ls.sup
@@ -53,10 +53,12 @@ ext.on / ext.pct / ext.w
 Canonical digital run semantics saved for fan run status:
 
 ```text
-fan.run = 1 iff switch = 1 and pct > 10 and rpm > 250
+fan.run = 1 iff fan on = 1 and pct > 10 and pressure >= 5 Pa and fan power >= 5 W
 ```
 
 The current state script derives run booleans from telemetry/actuals.
+
+RPM is intentionally not used for runtime. Sensor Add-on script-based tach counters were live-tested and rejected because fan tach event rates are too fast for stable Shelly script handling; the physical input path may also include filtering/debounce/capacitance that suppresses or distorts pulses. Future RPM requires firmware counter support or a different hardware path.
 
 ## Calibration caution
 

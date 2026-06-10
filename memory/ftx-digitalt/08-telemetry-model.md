@@ -2,7 +2,7 @@
 
 ## Source
 
-`poll` reads Shelly device statuses and writes normalized telemetry to KVS. Sensor conversion is generally performed on edge UNI devices where possible, so poll reads engineering values rather than raw volts/Hz when available.
+`poll` reads Shelly device statuses and writes normalized telemetry to KVS. Current Gen1 FTX telemetry comes from Shelly Pro Sensor Add-ons on the supply and extract fan dimmers, not from the retired UNI devices.
 
 ## Measured telemetry: `ftx.tel.m`
 
@@ -18,9 +18,9 @@
     "hotwater": 19.7
   },
   "rpm": {
-    "sup": 1548,
-    "ext": 1560,
-    "vvx": 16
+    "sup": 0,
+    "ext": 0,
+    "vvx": 0
   },
   "pa": {
     "sup": 158,
@@ -79,6 +79,18 @@ Total power includes measured and estimated components, including idle and dampe
 }
 ```
 
+Current run detection does not use RPM. Fan run uses:
+
+```text
+fan on + pct > 10 + pressure >= 5 Pa + measured fan power >= 5 W
+```
+
+VVX run uses:
+
+```text
+vvx on + measured power >= 10 W
+```
+
 ## Normalization
 
 Typical normalization targets:
@@ -88,16 +100,16 @@ Typical normalization targets:
 - CO2/VOC ppm: integer
 - pressure Pa: integer
 - flow l/s: integer
-- fan RPM: integer
-- VVX RPM: integer
+- fan RPM: integer, currently schema-compatible placeholder `0`
+- VVX RPM: integer, currently schema-compatible placeholder `0`
 - power W: integer
 
-## Edge conversions
+## Sensor Add-on conversions
 
-Shelly Plus UNI devices should perform onboard conversions where configured:
+Sensor Add-on analog inputs currently expose engineering values through `input:<id>.xpercent`:
 
-- 0–10V to Pa for pressure
-- Hz to RPM for fan/VVX rotational signals
-- 0–10V to CO2/VOC ppm
+- supply fan `input:100` / `Supply Pa 100` = supply Pa
+- extract fan `input:100` / `Extract pa 100` = extract Pa
+- extract fan `input:101` / `House ppm 101` = house CO2/VOC ppm-equivalent
 
-Poll should not duplicate these conversions unless edge conversion is unavailable.
+RPM script-counter testing was rejected: tach events are too fast for stable Shelly script handling at fan rates, and the physical input path may filter or distort fast pulses. Runtime keeps `rpm.sup`, `rpm.ext` and `rpm.vvx` as intentional zero placeholders until firmware counter support or a different hardware solution exists.

@@ -54,10 +54,37 @@ The AI/project memory should treat known Shelly device IP addresses as available
 - `ftx-extract-fan`: `192.168.77.11` → `http://192.168.86.240:8011/`
 - `ftx-heat-dim`: `192.168.77.12` → `http://192.168.86.240:8012/`
 - `ftx-cool-dim`: `192.168.77.13` → `http://192.168.86.240:8013/`
-- `ftx-supply-uni`: `192.168.77.20` → `http://192.168.86.240:8020/`
-- `ftx-extract-uni`: `192.168.77.21` → `http://192.168.86.240:8021/`
-- `ftx-process-uni`: `192.168.77.22` → `http://192.168.86.240:8022/`
+- `ftx-supply-uni`: `192.168.77.20` → retired as Gen1 runtime telemetry source
+- `ftx-extract-uni`: `192.168.77.21` → retired as Gen1 runtime telemetry source
+- `ftx-process-uni`: `192.168.77.22` → retired as Gen1 runtime telemetry source
 - `ftx-vvx`: `192.168.77.40` → `http://192.168.86.240:8040/`
+
+## Current FTX telemetry source split
+
+Gen1 runtime telemetry now comes from Shelly Pro Sensor Add-ons installed on the fan dimmers:
+
+```text
+192.168.77.10 ftx-supply-fan:
+- light:0 = supply fan actual on/pct/power
+- temperature:100 = t.to_house
+- temperature:101 = t.post_vvx
+- temperature:102 = t.out
+- temperature:103 = t.brine
+- temperature:104 = t.brine_post_shunt
+- temperature:105 = t.hotwater
+- temperature:106 = t.hotwater_post_shunt
+- input:100 "Supply Pa 100" xpercent = supply pressure Pa
+
+192.168.77.11 ftx-extract-fan:
+- light:0 = extract fan actual on/pct/power
+- temperature:100 = t.to_outdoor
+- temperature:105 = t.house, may currently read N/A
+- humidity:105 = rh.house, may currently read N/A
+- input:100 "Extract pa 100" xpercent = extract pressure Pa
+- input:101 "House ppm 101" xpercent = house CO2/VOC ppm-equivalent
+```
+
+Old UNI devices are no longer polled or rebooted by Gen1 runtime maintenance scripts.
 
 ## Runtime host
 

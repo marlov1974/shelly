@@ -1,14 +1,8 @@
-// poll feature-extract 3.2.2-extract-uni-temp-remap
-var IP_EXTRACT_UNI = "192.168.77.21";
+// poll feature-extract 3.5.0-sensor-addon
 var IP_EXTRACT_FAN = "192.168.77.11";
 
-var EXTRACT_DP_ID = 100;
-var EXTRACT_RPM_ID = 2;
-var TEMP_TO_HOUSE_ID = 100;
-var TEMP_BRINE_ID = 101;
-var TEMP_BRINE_POST_SHUNT_ID = 102;
-var TEMP_HOTWATER_ID = 103;
-var TEMP_HOTWATER_POST_SHUNT_ID = 104;
+var EXTRACT_PA_ID = 100;
+var TEMP_TO_OUTDOOR_ID = 100;
 
 var K_EXTRACT_FAN = 12.1;
 
@@ -17,33 +11,21 @@ function extractPaToLs(pa) {
   return Math.round(K_EXTRACT_FAN * Math.sqrt(pa));
 }
 
-function parseExtractUni(js) {
-  var vm = comp(js, "voltmeter:" + EXTRACT_DP_ID);
-  var inRpm = comp(js, "input:" + EXTRACT_RPM_ID);
+function parseExtractSensorAddon(js) {
+  var pa = comp(js, "input:" + EXTRACT_PA_ID);
   return {
-    pa: n(num4(vm, "xvoltage", "value", "pa", "pressure"), 0),
-    rpm: n(num4(inRpm, "xfreq", "value", "rpm", "frequency"), 0),
-    temp_to_house: tempValue(comp(js, "temperature:" + TEMP_TO_HOUSE_ID)),
-    temp_brine: tempValue(comp(js, "temperature:" + TEMP_BRINE_ID)),
-    temp_brine_post_shunt: tempValue(comp(js, "temperature:" + TEMP_BRINE_POST_SHUNT_ID)),
-    temp_hotwater: tempValue(comp(js, "temperature:" + TEMP_HOTWATER_ID)),
-    temp_hotwater_post_shunt: tempValue(comp(js, "temperature:" + TEMP_HOTWATER_POST_SHUNT_ID))
+    pa: n(num4(pa, "xpercent", "pa", "pressure", "value"), 0),
+    rpm: 0,
+    temp_to_outdoor: tempValue(comp(js, "temperature:" + TEMP_TO_OUTDOOR_ID))
   };
 }
 
-function applyExtractUni(ctx, js) {
-  var x = js ? parseExtractUni(js) : null;
-  ctx.extract.pa = x ? x.pa : 0;
-  ctx.extract.rpm = x ? x.rpm : 0;
-  ctx.extract.temp_to_house = x ? x.temp_to_house : 0;
-  ctx.extract.temp_brine = x ? x.temp_brine : 0;
-  ctx.extract.temp_brine_post_shunt = x ? x.temp_brine_post_shunt : 0;
-  ctx.extract.temp_hotwater = x ? x.temp_hotwater : 0;
-  ctx.extract.temp_hotwater_post_shunt = x ? x.temp_hotwater_post_shunt : 0;
-}
-
 function applyExtractFan(ctx, js) {
+  var x = js ? parseExtractSensorAddon(js) : null;
   var y = js ? parseLight0(js) : null;
+  ctx.extract.pa = x ? x.pa : 0;
+  ctx.extract.rpm = 0;
+  ctx.extract.temp_to_outdoor = x ? x.temp_to_outdoor : 0;
   ctx.extract.fan_on = y ? y.on : 0;
   ctx.extract.fan_pct = y ? y.pct : 0;
   ctx.extract.fan_w = y ? y.w : 0;
@@ -51,24 +33,17 @@ function applyExtractFan(ctx, js) {
 
 function deriveExtractTelemetry(ctx) {
   ctx.extract.pa = normPa(ctx.extract.pa);
-  ctx.extract.rpm = normFanRpm(ctx.extract.rpm);
+  ctx.extract.rpm = 0;
   ctx.extract.ls = normLs(extractPaToLs(ctx.extract.pa));
-  ctx.extract.temp_to_house = normTemp(ctx.extract.temp_to_house);
-  ctx.extract.temp_brine = normTemp(ctx.extract.temp_brine);
-  ctx.extract.temp_brine_post_shunt = normTemp(ctx.extract.temp_brine_post_shunt);
-  ctx.extract.temp_hotwater = normTemp(ctx.extract.temp_hotwater);
-  ctx.extract.temp_hotwater_post_shunt = normTemp(ctx.extract.temp_hotwater_post_shunt);
+  ctx.extract.temp_to_outdoor = normTemp(ctx.extract.temp_to_outdoor);
   ctx.extract.fan_pct = normPct(ctx.extract.fan_pct);
   ctx.extract.fan_w = normW(ctx.extract.fan_w);
 }
 
 function readExtract(ctx, cb) {
-  httpGetStatus(IP_EXTRACT_UNI, function (js) {
-    applyExtractUni(ctx, js);
-    httpGetStatus(IP_EXTRACT_FAN, function (js2) {
-      applyExtractFan(ctx, js2);
-      deriveExtractTelemetry(ctx);
-      cb();
-    });
+  httpGetStatus(IP_EXTRACT_FAN, function (js) {
+    applyExtractFan(ctx, js);
+    deriveExtractTelemetry(ctx);
+    cb();
   });
 }

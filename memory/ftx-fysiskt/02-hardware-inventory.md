@@ -255,14 +255,14 @@ Manufacturer: Siemens
 Model: QBM2030-5
 Quantity: 2
 Role: supply and extract differential pressure measurement
-Signal: 0-10 V pressure measurement to Shelly Plus UNI
+Signal: 0-10 V pressure measurement to fan Sensor Add-on analog input
 ```
 
 Known runtime usage:
 
-- supply pressure channel to `ftx-supply-uni`
-- extract pressure channel to `ftx-extract-uni`
-- converted to Pa and l/s in poll/runtime logic
+- supply pressure channel to supply fan Sensor Add-on `input:100` / `Supply Pa 100`
+- extract pressure channel to extract fan Sensor Add-on `input:100` / `Extract pa 100`
+- converted to Pa by Sensor Add-on `xpercent` expressions and to l/s in poll/runtime logic
 
 Open detail:
 
@@ -278,35 +278,37 @@ Known device roles/IPs:
 192.168.77.11  ftx-extract-fan
 192.168.77.12  heat
 192.168.77.13  cool
-192.168.77.20  ftx-supply-uni
-192.168.77.21  ftx-extract-uni
-192.168.77.22  ftx-process-uni
+192.168.77.20  ftx-supply-uni, retired as Gen1 runtime telemetry source
+192.168.77.21  ftx-extract-uni, retired as Gen1 runtime telemetry source
+192.168.77.22  ftx-process-uni, retired as Gen1 runtime telemetry source
 192.168.77.30  ftx-dampers / hub
 192.168.77.40  VVX control
 ```
 
-Shelly Plus UNI usage:
+Current Sensor Add-on runtime usage:
 
 ```text
-ftx-supply-uni:
-- 0-10 V Pa supply
-- supply air temperature before VVX / outdoor proxy
-- supply air temperature after VVX
-- supply fan RPM
+ftx-supply-fan Sensor Add-on:
+- temperature:100 = supply air to house after battery
+- temperature:101 = supply air after VVX before battery
+- temperature:102 = outdoor / supply air before VVX proxy
+- temperature:103 = brine
+- temperature:104 = brine post shunt/chunt
+- temperature:105 = hotwater
+- temperature:106 = hotwater post shunt/chunt
+- input:100 = supply pressure Pa
 
-ftx-extract-uni:
-- 0-10 V Pa extract
-- extract/house air temperature before VVX
-- exhaust/to-outdoor temperature after VVX
-- extract fan RPM
-
-ftx-process-uni:
-- 0-10 V future/current CO2/VOC input
-- hotwater temperature
-- brine temperature
-- temperature after battery / to-house proxy
-- VVX RPM
+ftx-extract-fan Sensor Add-on:
+- temperature:100 = exhaust air after VVX toward outdoor
+- temperature:105 = house temperature, may currently read N/A
+- humidity:105 = house RH, may currently read N/A
+- input:100 = extract pressure Pa
+- input:101 = house CO2/VOC ppm-equivalent
 ```
+
+The old `ftx-supply-uni`, `ftx-extract-uni` and `ftx-process-uni` devices are no longer Gen1 runtime telemetry sources.
+
+RPM telemetry is intentionally unavailable. Script-based tach counters were tested and rejected because event rates are too high for stable Shelly script handling and may also be distorted by physical input filtering/debounce/capacitance.
 
 ## Network hardware
 
