@@ -78,13 +78,19 @@ Gen1 runtime telemetry now comes from Shelly Pro Sensor Add-ons installed on the
 192.168.77.11 ftx-extract-fan:
 - light:0 = extract fan actual on/pct/power
 - temperature:100 = t.to_outdoor
-- temperature:105 = t.house, may currently read N/A
-- humidity:105 = rh.house, may currently read N/A
+- temperature:105 = t.house
+- humidity:105 = rh.house
 - input:100 "Extract pa 100" xpercent = extract pressure Pa
 - input:101 "House ppm 101" xpercent = house CO2/VOC ppm-equivalent
+- switch:100 = power feed for the house temp/RH sensor
 ```
 
 Old UNI devices are no longer polled or rebooted by Gen1 runtime maintenance scripts.
+
+The extract fan runs local script `house_air_sensor_watchdog_v0_1_0` to power-cycle
+`switch:100` for 10 seconds if `temperature:105` or `humidity:105` is missing,
+`null`, `n/a` or exactly zero. The script is local to the extract fan and does not
+change primary VVX runtime actuator ownership.
 
 ## Runtime host
 
