@@ -36,7 +36,7 @@ Architecture:
 - Mac-side direct deploy
 - boot
 - master
-- poll
+- edge telemetry publishers on physical devices
 - state
 - weather
 - brain
@@ -48,7 +48,7 @@ Characteristics:
 - Uses `ftx.*` KVS namespace.
 - Uses Mac-installed scripts generated locally from recipes/chunks.
 - Uses orchestration through `master`.
-- Uses telemetry snapshots and intent-based control.
+- Uses per-device telemetry snapshots in VVX KVS and intent-based control.
 - Uses GitHub as source of truth for runtime assembly.
 
 Primary memory location:
@@ -86,7 +86,7 @@ Current primary design assumptions:
 
 - Single master tick orchestration.
 - Stateless worker scripts.
-- Poll -> State -> Weather -> Brain -> Driver pipeline.
+- Edge telemetry publishers -> State -> Weather -> Brain -> Driver pipeline.
 - Driver owns all physical output ordering.
 - Intent model is canonical actuator contract.
 

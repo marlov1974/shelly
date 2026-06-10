@@ -20,7 +20,7 @@ Current canonical ids from the manifest:
 ```text
 2 boot
 3 master
-4 poll
+4 retired legacy poll slot
 5 state
 6 weather
 7 brain
@@ -44,6 +44,12 @@ Responsibilities:
 - writes persistent deploy state to `text:200`
 - can stop/delete obsolete live `Installer` script id 1
 - starts `master` after a successful deploy when requested
+
+### `tools/g1_edge_script_deploy.py`
+
+Mac-side deploy tool for standalone edge publisher scripts on non-VVX devices.
+It creates or updates one named script, sets its enable flag, uploads bounded
+chunks and optionally starts it.
 
 ## Recipes
 
@@ -76,9 +82,12 @@ rt/common/wrapper.end.js
 
 Inconsistency to be aware of: this recipe contains `"boot": true`, but Mac direct deploy sets script boot config from the device manifest package entry, not from recipe `boot`. The current manifest sets master `boot: false`, so master is not the intended autostart script.
 
-### `rt/recipes/p.json`
+### `rt/recipes/p.json` legacy
 
-Builds poll from:
+Legacy central poll recipe. Central poll is retired from the active manifest and
+is not scheduled by `master_v1_6_0`.
+
+Builds old poll from:
 
 ```text
 rt/common/wrapper.start.js
@@ -110,6 +119,7 @@ rt/state/base.js
 rt/common/script.js
 rt/common/helpers.js
 rt/common/kvs.js
+rt/state/input-devices.js
 rt/state/run-air.js
 rt/state/run-process.js
 rt/state/perf-power.js
@@ -272,6 +282,9 @@ Minimal worker stop/start helpers, score decrement and worker selection.
 
 ## Poll chunks
 
+The `rt/poll/` folder is legacy source. It is not part of the active
+`rt/devices/8813bfdaa0c0.json` manifest after device_version 32.
+
 ### `rt/poll/base.js`
 
 Poll constants, target device IPs, calibration constants and poll context shape.
@@ -321,6 +334,11 @@ Runs poll read sequence, writes telemetry, logs and self-stops.
 ### `rt/state/base.js`
 
 State constants and context shape.
+
+### `rt/state/input-devices.js`
+
+Reads `ftx.tel.dev.*`, composes compatibility `ftx.tel.m`, `ftx.tel.x` and
+`ftx.tel.act`, and applies house temp/RH fallbacks before run/perf calculation.
 
 ### `rt/state/run-air.js`
 

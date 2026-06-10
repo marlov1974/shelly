@@ -1,4 +1,4 @@
-// master main 1.5.0-no-installer
+// master main 1.6.0-no-poll
 function tick() {
   if (runningTick) {
     log("SKIP");

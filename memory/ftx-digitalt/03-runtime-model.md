@@ -14,7 +14,6 @@ Autostart:
 
 One-shot/self-stopping workers:
 
-- `poll`
 - `state`
 - `weather`
 - `brain`
@@ -49,7 +48,8 @@ Master handles:
 
 ## Current master design: score dispatcher
 
-Master v1.5 uses a score-based dispatcher without an installer worker.
+Master v1.6 uses a score-based dispatcher without an installer worker and
+without central poll.
 
 Every 15-second tick:
 
@@ -68,7 +68,7 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 poll
+4 retired legacy poll slot
 5 state
 6 weather
 7 brain
@@ -83,18 +83,17 @@ Fixed ids are used to reduce heap pressure. Workers self-stop through `Script.St
 Because master decrements scores at the beginning of each tick, initial scores are:
 
 ```text
-poll      = 1
-state     = 2
-weather   = 3
-brain     = 4
-driver    = 5
+state     = 1
+weather   = 2
+brain     = 3
+driver    = 4
 reboot    = 5760
 ```
 
 Expected first startup sequence:
 
 ```text
-poll → state → weather → brain → driver
+state → weather → brain → driver
 ```
 
 Weather is intentionally run during startup before the first brain run, so brain can use fresh weather data.
@@ -102,7 +101,7 @@ Weather is intentionally run during startup before the first brain run, so brain
 ## Reset scores
 
 ```text
-poll/state/brain/driver = 4
+state/brain/driver = 4
 weather                = 240
 reboot                 = 5760
 ```
@@ -121,10 +120,10 @@ Reboot is no longer tied to a specific wall-clock time window. It is score based
 After startup, the normal control rhythm becomes:
 
 ```text
-poll → state → brain → driver
+state → brain → driver
 ```
 
-Weather is inserted as an extra worker before the next relevant control cycle when its score becomes lowest. Weather does not replace poll/state; it just runs as an additional step and the normal poll/state/brain/driver flow continues.
+Weather is inserted as an extra worker before the next relevant control cycle when its score becomes lowest. Weather does not replace state; it just runs as an additional step and the normal state/brain/driver flow continues.
 
 Mac deploy and reboot are different:
 
@@ -154,7 +153,7 @@ When selected by master:
 4. It waits 5 minutes for those devices to stabilize.
 5. It reboots the local device.
 
-After the local device reboots, only `boot` autostarts. Boot waits, starts master, and master begins again with poll as first selected worker.
+After the local device reboots, only `boot` autostarts. Boot waits, starts master, and master begins again with state as first selected worker.
 
 ## Missing scripts during bootstrap
 
@@ -162,4 +161,12 @@ During incomplete bootstrap, Mac/Codex direct deploy is responsible for installi
 
 ## Current implementation note
 
-The current active design is `master_v1_5_0-no-installer`. Earlier 60-second chained master designs and Shelly-side installer scheduling are obsolete and kept only as historical context in old notes or commit history.
+Telemetry source model:
+
+- Central `poll` is retired from the active dispatcher.
+- Physical devices run low-rate edge publisher scripts.
+- Each edge publisher samples local status every 60 seconds.
+- If any sampled value changes beyond its delta threshold, the publisher writes its complete per-device telemetry object to VVX KVS.
+- A 10-minute heartbeat republish keeps VVX KVS populated after VVX reboot even if values are otherwise stable.
+
+The current active design is `master_v1_6_0-no-poll`. Earlier 60-second chained master designs, Shelly-side installer scheduling and central poll are obsolete and kept only as historical context in old notes or commit history.

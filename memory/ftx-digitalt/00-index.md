@@ -38,7 +38,7 @@ This device runs the canonical Gen1 FTX runtime:
 - Mac-side direct deploy
 - boot
 - master
-- poll
+- edge telemetry publishers
 - state
 - weather
 - brain
@@ -71,7 +71,7 @@ Canonical fixed script ids:
 ```text
 2 boot
 3 master
-4 poll
+4 retired legacy poll slot
 5 state
 6 weather
 7 brain
@@ -83,7 +83,8 @@ Current roles:
 
 - `boot`: only autostart script, script id 2. It waits for stabilization, starts master and self-stops.
 - `master`: long-lived 15-second score dispatcher, script id 3.
-- `poll`: one-shot telemetry reader, script id 4.
+- Edge telemetry publishers: long-running scripts on physical devices that publish `ftx.tel.dev.*` to VVX KVS.
+- `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master.
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.
@@ -116,6 +117,7 @@ The system minimizes concurrency and heap pressure by using one long-lived low-h
 - Device manifest: `rt/devices/8813bfdaa0c0.json`
 - Mac direct deploy tool: `tools/g1_vvx_deploy.py`
 - Recipes: `rt/recipes/*.json`
-- Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/poll/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
+- Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
+- Edge publisher sources: `rt/scripts/supply-fan/`, `rt/scripts/extract-fan/`, `rt/scripts/heat-dimmer/`, `rt/scripts/cool-dimmer/`, `rt/scripts/dampers/`, `rt/scripts/vvx/`
 - Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`
 - Gen2 source of truth: `marlov1974/smart-home`

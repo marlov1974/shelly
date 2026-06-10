@@ -50,7 +50,6 @@
 
     "rt/recipes/boot.json",
     "rt/recipes/master.json",
-    "rt/recipes/p.json",
     "rt/recipes/state.json",
     "rt/recipes/weather.json",
     "rt/recipes/brain.json",
@@ -71,19 +70,8 @@
     "rt/master/run.js",
     "rt/master/main.js",
 
-    "rt/poll/base.js",
-    "rt/poll/numbers.js",
-    "rt/poll/feature-supply.js",
-    "rt/poll/feature-extract.js",
-    "rt/poll/feature-process.js",
-    "rt/poll/feature-heat.js",
-    "rt/poll/feature-cool.js",
-    "rt/poll/feature-vvx.js",
-    "rt/poll/feature-dampers.js",
-    "rt/poll/output.js",
-    "rt/poll/main.js",
-
     "rt/state/base.js",
+    "rt/state/input-devices.js",
     "rt/state/run-air.js",
     "rt/state/run-process.js",
     "rt/state/perf-power.js",
@@ -130,7 +118,15 @@
     "rt/reboot/base.js",
     "rt/reboot/main.js",
 
-    "tools/g1_vvx_deploy.py"
+    "rt/scripts/supply-fan/telemetry_publisher_supply_fan_v0_1_0.js",
+    "rt/scripts/extract-fan/telemetry_publisher_extract_fan_v0_1_0.js",
+    "rt/scripts/heat-dimmer/telemetry_publisher_heat_dimmer_v0_1_0.js",
+    "rt/scripts/cool-dimmer/telemetry_publisher_cool_dimmer_v0_1_0.js",
+    "rt/scripts/dampers/telemetry_publisher_dampers_v0_1_0.js",
+    "rt/scripts/vvx/telemetry_publisher_vvx_v0_1_0.js",
+
+    "tools/g1_vvx_deploy.py",
+    "tools/g1_edge_script_deploy.py"
   ],
   "governance": {
     "runtime_truth_hierarchy": [

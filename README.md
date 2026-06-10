@@ -91,7 +91,7 @@ The Gen1 runtime uses:
 Normal runtime flow:
 
 ```text
-poll -> state -> brain -> driver
+edge telemetry publishers -> state -> brain -> driver
 ```
 
 Weather runs periodically.
@@ -102,13 +102,16 @@ Mac deploy and reboot are takeover flows.
 
 # Runtime Ownership
 
-## poll
+## edge telemetry publishers
 
-Reads physical telemetry and actuator states.
+Each physical Shelly device samples its own local telemetry once per minute and
+publishes a per-device KVS key to the VVX runtime host when any value crosses
+its configured delta threshold.
 
 ## state
 
-Builds derived runtime state and performance metrics.
+Reads per-device telemetry from VVX KVS, builds derived runtime state and
+performance metrics, and writes compatibility aggregate telemetry.
 
 ## brain
 

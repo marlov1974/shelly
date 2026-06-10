@@ -1,4 +1,4 @@
-// master run 1.5.0-no-installer
+// master run 1.6.0-no-poll
 function stopWorker(id, cb) {
   if (!id || id === MASTER_ID) {
     cb();
@@ -17,7 +17,6 @@ function startWorker(id, name) {
 }
 
 function decScores() {
-  scorePoll = scorePoll - 1;
   scoreState = scoreState - 1;
   scoreWeather = scoreWeather - 1;
   scoreBrain = scoreBrain - 1;
@@ -34,14 +33,12 @@ function chooseBest() {
   if (scoreDriver < score) { id = DRIVER_ID; name = "driver"; score = scoreDriver; }
   if (scoreBrain < score) { id = BRAIN_ID; name = "brain"; score = scoreBrain; }
   if (scoreState < score) { id = STATE_ID; name = "state"; score = scoreState; }
-  if (scorePoll < score) { id = POLL_ID; name = "poll"; score = scorePoll; }
 
   return { id: id, name: name };
 }
 
 function resetScore(id) {
-  if (id === POLL_ID) scorePoll = RESET_POLL;
-  else if (id === STATE_ID) scoreState = RESET_STATE;
+  if (id === STATE_ID) scoreState = RESET_STATE;
   else if (id === WEATHER_ID) scoreWeather = RESET_WEATHER;
   else if (id === BRAIN_ID) scoreBrain = RESET_BRAIN;
   else if (id === DRIVER_ID) scoreDriver = RESET_DRIVER;

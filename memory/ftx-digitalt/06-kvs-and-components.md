@@ -10,9 +10,43 @@ Runtime logs are print-only via `log()`/`print()`. Text components are not used 
 
 ## KVS keys
 
+### `ftx.tel.dev.*`
+
+Primary current telemetry. Edge devices publish one key per device to the VVX
+runtime host:
+
+```text
+ftx.tel.dev.sup
+ftx.tel.dev.ext
+ftx.tel.dev.heat
+ftx.tel.dev.cool
+ftx.tel.dev.dmp
+ftx.tel.dev.vvx
+```
+
+Each key has `v`, `device`, `uptime_s`, and device-specific telemetry. Fan and
+dimmer devices include `act`; fan devices include pressure/temperature fields;
+VVX and dampers include switch actuals. RPM is intentionally `0` where present.
+
+Edge publish thresholds:
+
+```text
+pressure Pa  >= 10
+temperature  >= 0.2 C
+power W      >= 2
+ppm          >= 20
+RH           >= 2 percentage points
+act pct      >= 1 percentage point
+act on       exact change
+```
+
+If any field crosses threshold, the publisher writes the complete device
+payload. Publishers also republish every 10 minutes as a low-rate heartbeat.
+
 ### `ftx.tel.m`
 
-Measured/normalized telemetry from `poll`.
+Compatibility aggregate measured/normalized telemetry built by `state` from
+`ftx.tel.dev.*`.
 
 Shape:
 
@@ -51,7 +85,8 @@ Shape:
 
 ### `ftx.tel.act`
 
-Actual actuator states from `poll`.
+Compatibility aggregate actual actuator states built by `state` from
+`ftx.tel.dev.*`.
 
 ```json
 {

@@ -11,6 +11,7 @@
     "rt/common/script.js",
     "rt/common/helpers.js",
     "rt/common/kvs.js",
+    "rt/state/input-devices.js",
     "rt/state/run-air.js",
     "rt/state/run-process.js",
     "rt/state/perf-power.js",

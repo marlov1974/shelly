@@ -13,12 +13,15 @@ Examples:
 ```text
 boot_v1_0_0
 master_v1_5_0
-poll_v3_3_2
+master_v1_6_0
 state_v1_4_1
+state_v1_8_0
 weather_v1_0_1
 brain_v2_4_2
+brain_v2_8_0
 driver_v1_0_1
 reboot_v1_0_0
+reboot_v1_3_0
 ```
 
 ## Fixed script ids
@@ -28,7 +31,7 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 poll
+4 retired legacy poll slot
 5 state
 6 weather
 7 brain
@@ -82,36 +85,36 @@ Restrictions:
 - Must not use `Script.List` during normal runtime.
 - Must remain low-heap and avoid long nested callback chains.
 
-## poll
+## edge telemetry publishers
 
 Role:
-- Reads physical/edge device statuses and writes normalized telemetry.
-
-Script id:
-- Fixed id 4.
+- Long-running low-rate scripts on physical Shelly devices.
 
 Lifecycle:
-- One-shot.
-- Self-stops after writing telemetry.
+- Run on startup enabled on each physical edge device.
+- Sample local `Shelly.GetStatus` every 60 seconds.
+- Publish the complete per-device payload to VVX KVS when any value crosses its delta threshold.
+- Republish every 10 minutes as a heartbeat.
+
+Active script names:
+- `telemetry_publisher_supply_fan_v0_1_0`
+- `telemetry_publisher_extract_fan_v0_1_0`
+- `telemetry_publisher_heat_dimmer_v0_1_0`
+- `telemetry_publisher_cool_dimmer_v0_1_0`
+- `telemetry_publisher_dampers_v0_1_0`
+- `telemetry_publisher_vvx_v0_1_0`
 
 Inputs:
-- Shelly status from edge devices:
-  - supply UNI
-  - supply fan
-  - extract UNI
-  - extract fan
-  - process UNI
-  - heat dimmer
-  - cool dimmer
-  - VVX switch
-  - dampers switch/device
-
 Outputs:
-- `ftx.tel.m`
-- `ftx.tel.act`
+- `ftx.tel.dev.sup`
+- `ftx.tel.dev.ext`
+- `ftx.tel.dev.heat`
+- `ftx.tel.dev.cool`
+- `ftx.tel.dev.dmp`
+- `ftx.tel.dev.vvx`
 
 Implementation note:
-- `createPollCtx()` must expose object names used by features: `supply`, `extract`, `process`, `heat`, `cool`, `vvx`, `dmp`.
+- Central `poll` code remains in the repository as legacy source but is not in the active device manifest and is not scheduled by `master_v1_6_0`.
 
 ## state
 
@@ -126,13 +129,18 @@ Lifecycle:
 - Self-stops after writing outputs.
 
 Inputs:
-- `ftx.tel.m`
-- `ftx.tel.act`
+- `ftx.tel.dev.sup`
+- `ftx.tel.dev.ext`
+- `ftx.tel.dev.heat`
+- `ftx.tel.dev.cool`
+- `ftx.tel.dev.dmp`
+- `ftx.tel.dev.vvx`
 - `ftx.state.hist` for VVX efficiency smoothing/history.
 
 Outputs:
 - `ftx.state.run`
 - `ftx.state.hist`
+- compatibility telemetry: `ftx.tel.m`, `ftx.tel.x`, `ftx.tel.act`
 - `number:201` Total power, W
 - `number:202` VVX efficiency, %
 - `number:203` Fan avg pct, %
@@ -176,8 +184,12 @@ Inputs:
   - `enum:200` Mode
   - `number:200` Temp
 - KVS:
-  - `ftx.tel.m`
-  - `ftx.tel.act`
+  - `ftx.tel.dev.sup`
+  - `ftx.tel.dev.ext`
+  - `ftx.tel.dev.heat`
+  - `ftx.tel.dev.cool`
+  - `ftx.tel.dev.dmp`
+  - `ftx.tel.dev.vvx`
   - `ftx.state.run`
   - `ftx.weather.act`
   - `ftx.mode_forced_state`

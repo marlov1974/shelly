@@ -1,10 +1,9 @@
-// reboot base 1.2.0-daily-device-reboot-no-installer
+// reboot base 1.3.0-no-poll
 var SCRIPT_NAME = "reboot";
 var SCRIPT_ID = 9;
 
 var BOOT_ID = 2;
 var MASTER_ID = 3;
-var POLL_ID = 4;
 var STATE_ID = 5;
 var WEATHER_ID = 6;
 var BRAIN_ID = 7;

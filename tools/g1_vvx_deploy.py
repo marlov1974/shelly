@@ -312,10 +312,19 @@ def verify_after(base_url: str, expected: list[BuiltScript], installer_deleted: 
             "enable": bool(entry.get("enable", False)),
             "running": bool(entry.get("running", False)),
         }
-    installer = script_by_id(live, INSTALLER_SCRIPT_ID)
-    if installer_deleted and installer is not None:
+    script_id_1 = script_by_id(live, INSTALLER_SCRIPT_ID)
+    script_id_1_name = str(script_id_1.get("name") or "") if script_id_1 else ""
+    installer_present = script_id_1 is not None and "installer" in script_id_1_name.lower()
+    if installer_deleted and installer_present:
         raise DeployError("installer script id 1 still exists after delete")
-    return {"scripts": seen, "installer_present": installer is not None}
+    return {
+        "scripts": seen,
+        "installer_present": installer_present,
+        "script_id_1": {
+            "present": script_id_1 is not None,
+            "name": script_id_1_name or None,
+        },
+    }
 
 
 def parse_roles(raw_roles: list[str] | None) -> set[str] | None:

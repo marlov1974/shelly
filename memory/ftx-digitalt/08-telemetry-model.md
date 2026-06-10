@@ -2,9 +2,65 @@
 
 ## Source
 
-`poll` reads Shelly device statuses and writes normalized telemetry to KVS. Current Gen1 FTX telemetry comes from Shelly Pro Sensor Add-ons on the supply and extract fan dimmers, not from the retired UNI devices.
+Physical Shelly devices publish their own telemetry to the VVX runtime host.
+Central `poll` is retired from the active master schedule.
 
-## Measured telemetry: `ftx.tel.m`
+Current primary telemetry keys:
+
+```text
+ftx.tel.dev.sup
+ftx.tel.dev.ext
+ftx.tel.dev.heat
+ftx.tel.dev.cool
+ftx.tel.dev.dmp
+ftx.tel.dev.vvx
+```
+
+The `state` worker reads those per-device keys, derives run/performance state,
+and writes compatibility aggregate telemetry to `ftx.tel.m`, `ftx.tel.x` and
+`ftx.tel.act`.
+
+## Per-device telemetry examples
+
+Supply fan:
+
+```json
+{
+  "v": 1,
+  "device": "sup",
+  "uptime_s": 123,
+  "act": { "on": 1, "pct": 50, "w": 47 },
+  "pa": 158,
+  "rpm": 0,
+  "temp": {
+    "to_house": 18.3,
+    "post_vvx": 17.8,
+    "out": 8.8,
+    "brine": 12.4,
+    "brine_post_shunt": 13.1,
+    "hotwater": 19.7,
+    "hotwater_post_shunt": 20.1
+  }
+}
+```
+
+Extract fan:
+
+```json
+{
+  "v": 1,
+  "device": "ext",
+  "uptime_s": 123,
+  "act": { "on": 1, "pct": 57, "w": 48 },
+  "pa": 148,
+  "rpm": 0,
+  "temp": { "to_outdoor": 11.3, "house": 19.9 },
+  "rh": { "house": 42 },
+  "ppm": { "house": 658 }
+}
+```
+
+## Compatibility measured telemetry: `ftx.tel.m`
 
 ```json
 {

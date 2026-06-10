@@ -1,12 +1,6 @@
-// state main 1.3.2-self-stop
+// state main 1.8.0-device-telemetry
 function readInput(ctx, cb) {
-  kvsGet(KEY_TEL_M, function (telM) {
-    ctx.telM = telM || {};
-    kvsGet(KEY_TEL_ACT, function (telAct) {
-      ctx.telAct = telAct || {};
-      cb();
-    });
-  });
+  readDeviceTelemetry(ctx, cb);
 }
 
 function applyRunCalculations(ctx) {
@@ -33,13 +27,15 @@ function runState() {
     readVvxEfficiencyHist(function (hist) {
       applyRunCalculations(ctx);
       applyPerfCalculations(ctx, hist || {});
-      writeStateOutput(ctx, function () {
-        writePowerFeature(ctx, function () {
-          writeVvxEfficiencyFeature(ctx, function () {
-            writeFanAverageFeature(ctx, function () {
-              writeStateStatus(ctx, function () {
-                log("DON");
-                selfStop();
+      writeTelemetryCompat(ctx, function () {
+        writeStateOutput(ctx, function () {
+          writePowerFeature(ctx, function () {
+            writeVvxEfficiencyFeature(ctx, function () {
+              writeFanAverageFeature(ctx, function () {
+                writeStateStatus(ctx, function () {
+                  log("DON");
+                  selfStop();
+                });
               });
             });
           });

@@ -1,4 +1,12 @@
-// state output 1.4.0-print-only
+// state output 1.8.0-device-telemetry
+function writeTelemetryCompat(ctx, cb) {
+  kvsSet(KEY_TEL_M, ctx.telM || {}, function () {
+    kvsSet(KEY_TEL_X, ctx.telX || {}, function () {
+      kvsSet(KEY_TEL_ACT, ctx.telAct || {}, cb);
+    });
+  });
+}
+
 function writeStateOutput(ctx, cb) {
   kvsSet(KEY_STATE_RUN, ctx.run || {}, cb);
 }
