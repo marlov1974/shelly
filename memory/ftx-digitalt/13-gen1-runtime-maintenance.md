@@ -22,6 +22,14 @@ poll -> state -> weather/brain -> driver
 
 The current runtime is script/recipe based and uses KVS to propagate state between one-shot workers.
 
+Code deployment is Mac-side direct RPC deploy:
+
+```text
+tools/g1_vvx_deploy.py
+```
+
+The active VVX runtime host does not run a resident Shelly-side installer.
+
 ## Shared FTX hardware truth
 
 The physical FTX aggregate is not generation-specific.

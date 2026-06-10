@@ -14,7 +14,7 @@ Virtual components are used for UI, command input, durable small values and user
 - `number:202` VVX efficiency, %
 - `number:203` Fan avg pct, %
 - `number:204` Target to house, C
-- `text:200` Installer state
+- `text:200` Deploy state
 
 ## Rule
 

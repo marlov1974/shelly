@@ -2,12 +2,12 @@
 
 ## KVS persistence
 
-KVS has shown unreliable persistence across reboot. Do not use KVS as durable installer version state. Use persistent virtual components for durable bootstrap state.
+KVS has shown unreliable persistence across reboot. Do not use KVS as durable deploy version state. Use persistent virtual components for durable bootstrap/deploy state.
 
-Current installer state:
+Current deploy state:
 
 ```text
-text:200 = Installer state
+text:200 = Deploy state
 ```
 
 ## Text logging removed
@@ -44,7 +44,7 @@ Mitigations:
 
 ## GitHub raw polling
 
-Do not poll GitHub raw files too frequently. Installer is run by master on ticks `1, 6, 11, ...`, normally every five minutes after startup. Installer quickly self-stops if the local device version matches the remote manifest.
+The active VVX runtime no longer polls GitHub raw files to install code. Mac/Codex reads local repo files and uploads scripts directly with bounded Shelly RPC chunks.
 
 ## Script move/cleanup in GitHub
 
@@ -52,7 +52,7 @@ The GitHub tool cannot atomically rename/move files via `update_file`. Use fetch
 
 ## Component drift
 
-Installer currently should create missing virtual components but should not aggressively mutate or delete existing ones. This avoids breaking Homey/UI/manual configuration unexpectedly.
+Direct deploy should not aggressively mutate or delete existing virtual components unless the change is explicitly in scope. This avoids breaking Homey/UI/manual configuration unexpectedly.
 
 ## number:201 correction
 
@@ -60,4 +60,4 @@ Installer currently should create missing virtual components but should not aggr
 
 ## Bootstrap behavior
 
-Master must survive missing worker scripts and continue ticking. During bootstrap it is expected to log `NO poll`, `NO state`, `NO weather` or `NO brain` until installer has created the missing versioned scripts.
+Master no longer creates or repairs missing worker scripts. During bootstrap/repair, Mac direct deploy is responsible for installing the expected versioned scripts before master is expected to run normally.

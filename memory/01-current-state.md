@@ -33,7 +33,7 @@ This is the primary production-style runtime.
 
 Architecture:
 
-- installer
+- Mac-side direct deploy
 - boot
 - master
 - poll
@@ -46,7 +46,7 @@ Architecture:
 Characteristics:
 
 - Uses `ftx.*` KVS namespace.
-- Uses installer-generated scripts from recipes/chunks.
+- Uses Mac-installed scripts generated locally from recipes/chunks.
 - Uses orchestration through `master`.
 - Uses telemetry snapshots and intent-based control.
 - Uses GitHub as source of truth for runtime assembly.

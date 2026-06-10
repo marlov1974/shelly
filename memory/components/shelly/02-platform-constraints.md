@@ -16,7 +16,7 @@ Known constraints/principles:
 
 ## KVS persistence caution
 
-KVS is useful for runtime state exchange but has shown unreliable persistence across reboot. Do not use KVS as the only durable installer/version state.
+KVS is useful for runtime state exchange but has shown unreliable persistence across reboot. Do not use KVS as the only durable deploy/version state.
 
 ## Logging
 

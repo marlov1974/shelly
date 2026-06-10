@@ -1,8 +1,7 @@
-// master base 1.4.0-score-dispatcher
+// master base 1.5.0-no-installer
 var SCRIPT_NAME = "master";
 var SCRIPT_ID = 3;
 
-var INSTALLER_ID = 1;
 var BOOT_ID = 2;
 var MASTER_ID = 3;
 var POLL_ID = 4;
@@ -18,16 +17,14 @@ var RESET_POLL = 4;
 var RESET_STATE = 4;
 var RESET_BRAIN = 4;
 var RESET_DRIVER = 4;
-var RESET_INSTALLER = 20;
 var RESET_WEATHER = 240;
 var RESET_REBOOT = 5760;
 
-var scoreInstaller = 1;
-var scorePoll = 2;
-var scoreState = 3;
-var scoreWeather = 4;
-var scoreBrain = 5;
-var scoreDriver = 6;
+var scorePoll = 1;
+var scoreState = 2;
+var scoreWeather = 3;
+var scoreBrain = 4;
+var scoreDriver = 5;
 var scoreReboot = 5760;
 
 var tickCount = 0;

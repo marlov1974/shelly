@@ -1,8 +1,7 @@
-// reboot base 1.1.0-daily-device-reboot-no-uni
+// reboot base 1.2.0-daily-device-reboot-no-installer
 var SCRIPT_NAME = "reboot";
 var SCRIPT_ID = 9;
 
-var INSTALLER_ID = 1;
 var BOOT_ID = 2;
 var MASTER_ID = 3;
 var POLL_ID = 4;

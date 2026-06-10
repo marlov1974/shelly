@@ -84,7 +84,7 @@ KVS is primarily:
 - inter-script communication
 - current-state sharing
 
-KVS is not intended as durable installer state.
+KVS is not intended as durable deploy state.
 
 ---
 

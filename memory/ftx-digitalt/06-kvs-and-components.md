@@ -2,9 +2,9 @@
 
 ## KVS principles
 
-KVS is used for runtime data sharing between one-shot scripts. It is not used as durable installer-version storage because KVS has shown unreliable persistence across reboot.
+KVS is used for runtime data sharing between one-shot scripts. It is not used as durable deploy-version storage because KVS has shown unreliable persistence across reboot.
 
-Installer device-version state is stored in persistent `text:200`.
+Mac direct-deploy device-version state is stored in persistent `text:200`.
 
 Runtime logs are print-only via `log()`/`print()`. Text components are not used for runtime logs.
 
@@ -139,12 +139,12 @@ Typical shape:
 
 ## Virtual components
 
-### Installer/device owned
+### Mac deploy/device owned
 
-Defined in the device manifest:
+Updated by `tools/g1_vvx_deploy.py` after a verified deploy:
 
 ```text
-text:200 Installer state
+text:200 Deploy state
 ```
 
 Example value:
@@ -183,6 +183,6 @@ Average l/s is not currently a virtual component. Flow values remain in `ftx.tel
 
 ## Component drift principle
 
-Installer should create missing virtual components required by the manifest/recipes. It should not aggressively mutate, rename or delete existing components during normal deployment because component names/settings may be visible in Homey/UI/manual workflows.
+Mac direct deploy should not aggressively mutate, rename or delete existing virtual components during normal deployment because component names/settings may be visible in Homey/UI/manual workflows.
 
-If a component was created earlier with an obsolete name, the current installer may not automatically rename it. The code-level semantic contract in this file and in the recipes is the source of truth.
+If a component was created earlier with an obsolete name, direct deploy should not automatically rename it unless the change is explicitly in scope. The code-level semantic contract in this file and in the recipes is the source of truth.

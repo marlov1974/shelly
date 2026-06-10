@@ -14,7 +14,6 @@ Autostart:
 
 One-shot/self-stopping workers:
 
-- `installer`
 - `poll`
 - `state`
 - `weather`
@@ -50,7 +49,7 @@ Master handles:
 
 ## Current master design: score dispatcher
 
-Master v1.4 uses a score-based dispatcher.
+Master v1.5 uses a score-based dispatcher without an installer worker.
 
 Every 15-second tick:
 
@@ -67,7 +66,6 @@ This means master does not build a queue and does not wait for a full control ch
 Canonical fixed ids:
 
 ```text
-1 installer
 2 boot
 3 master
 4 poll
@@ -85,19 +83,18 @@ Fixed ids are used to reduce heap pressure. Workers self-stop through `Script.St
 Because master decrements scores at the beginning of each tick, initial scores are:
 
 ```text
-installer = 1
-poll      = 2
-state     = 3
-weather   = 4
-brain     = 5
-driver    = 6
+poll      = 1
+state     = 2
+weather   = 3
+brain     = 4
+driver    = 5
 reboot    = 5760
 ```
 
 Expected first startup sequence:
 
 ```text
-installer → poll → state → weather → brain → driver
+poll → state → weather → brain → driver
 ```
 
 Weather is intentionally run during startup before the first brain run, so brain can use fresh weather data.
@@ -106,7 +103,6 @@ Weather is intentionally run during startup before the first brain run, so brain
 
 ```text
 poll/state/brain/driver = 4
-installer              = 20
 weather                = 240
 reboot                 = 5760
 ```
@@ -114,7 +110,6 @@ reboot                 = 5760
 At 15-second cadence this means:
 
 ```text
-installer ≈ every 5 minutes
 weather   ≈ every 60 minutes
 reboot    ≈ every 24 hours
 ```
@@ -131,9 +126,9 @@ poll → state → brain → driver
 
 Weather is inserted as an extra worker before the next relevant control cycle when its score becomes lowest. Weather does not replace poll/state; it just runs as an additional step and the normal poll/state/brain/driver flow continues.
 
-Installer and reboot are different:
+Mac deploy and reboot are different:
 
-- Installer may reset/interrupt the flow. If it builds a package, it normally kills master and restarts the updated runtime.
+- Mac deploy may reset/interrupt the flow while it stops local scripts, uploads selected runtime code and restarts master.
 - Reboot takes over and kills master.
 
 ## Worker contracts
@@ -159,12 +154,12 @@ When selected by master:
 4. It waits 5 minutes for those devices to stabilize.
 5. It reboots the local device.
 
-After the local device reboots, only `boot` autostarts. Boot waits, starts master, and master begins again with installer as first selected worker.
+After the local device reboots, only `boot` autostarts. Boot waits, starts master, and master begins again with poll as first selected worker.
 
 ## Missing scripts during bootstrap
 
-During incomplete bootstrap, missing workers are expected. Installer builds one package per run. Once master exists, master's first tick runs installer, and installer continues creating missing packages until the device version is complete.
+During incomplete bootstrap, Mac/Codex direct deploy is responsible for installing or repairing scripts. Master does not create missing scripts.
 
 ## Current implementation note
 
-The current active design is `master_v1_4_0-score-dispatcher`. Earlier 60-second chained master designs are obsolete and kept only as historical context in old notes or commit history.
+The current active design is `master_v1_5_0-no-installer`. Earlier 60-second chained master designs and Shelly-side installer scheduling are obsolete and kept only as historical context in old notes or commit history.

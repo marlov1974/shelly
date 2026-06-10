@@ -96,7 +96,7 @@ Primary Gen1 digital runtime architecture.
 
 Contains:
 
-- installer
+- Mac-side direct deploy
 - dispatcher runtime
 - KVS contracts
 - recipes
@@ -140,7 +140,7 @@ poll -> state -> brain -> driver
 
 Weather is periodic.
 
-Installer and reboot are takeover flows.
+Mac deploy and reboot are takeover flows.
 
 ---
 

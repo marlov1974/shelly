@@ -86,6 +86,7 @@ The Gen1 runtime uses:
 - KVS-based runtime propagation
 - deterministic sequencing
 - explicit ownership boundaries
+- Mac-side direct RPC deploy for code installation
 
 Normal runtime flow:
 
@@ -95,7 +96,7 @@ poll -> state -> brain -> driver
 
 Weather runs periodically.
 
-Installer and reboot are takeover flows.
+Mac deploy and reboot are takeover flows.
 
 ---
 

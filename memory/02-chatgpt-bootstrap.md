@@ -79,7 +79,7 @@ poll -> state -> brain -> driver
 
 Weather is periodic.
 
-Installer and reboot are takeover flows.
+Mac deploy and reboot are takeover flows.
 
 ## Ownership model
 

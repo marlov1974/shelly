@@ -88,7 +88,7 @@ Old UNI devices are no longer polled or rebooted by Gen1 runtime maintenance scr
 
 ## Runtime host
 
-The current runtime/installer architecture is being built and tested on the VVX device. The runtime model is generic enough to be moved, but current manifests and code paths should be checked before moving the runtime host.
+The current runtime and Mac direct-deploy architecture is running on the VVX device. The runtime model is generic enough to be moved, but current manifests and code paths should be checked before moving the runtime host.
 
 Manual access to the current G1 runtime host / VVX device should normally use:
 

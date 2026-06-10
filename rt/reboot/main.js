@@ -1,4 +1,4 @@
-// reboot main 1.1.0-daily-device-reboot-no-uni
+// reboot main 1.2.0-daily-device-reboot-no-installer
 function httpGet(url, tag, cb) {
   Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
     if (err || !res) log("ERR " + tag);
@@ -19,15 +19,13 @@ function stopId(id, cb) {
 
 function stopLocalWorkers(cb) {
   log("KILL local");
-  stopId(INSTALLER_ID, function () {
-    stopId(BOOT_ID, function () {
-      stopId(MASTER_ID, function () {
-        stopId(POLL_ID, function () {
-          stopId(STATE_ID, function () {
-            stopId(WEATHER_ID, function () {
-              stopId(BRAIN_ID, function () {
-                stopId(DRIVER_ID, cb);
-              });
+  stopId(BOOT_ID, function () {
+    stopId(MASTER_ID, function () {
+      stopId(POLL_ID, function () {
+        stopId(STATE_ID, function () {
+          stopId(WEATHER_ID, function () {
+            stopId(BRAIN_ID, function () {
+              stopId(DRIVER_ID, cb);
             });
           });
         });

@@ -12,11 +12,12 @@ Worker scripts perform bounded work and then stop themselves:
 - `state`
 - `weather`
 - `brain`
-- `driver` later
+- `driver`
+- `reboot`
 
-## Installer as bootstrap root
+## Mac direct deploy as bootstrap/install path
 
-`installer` is script id 1 and is not auto-updated. It can be started manually on an otherwise incomplete device. It creates scripts and components and starts `master` when enough runtime exists.
+The active VVX runtime no longer uses a resident Shelly-side installer. Mac/Codex installs or repairs runtime scripts with `tools/g1_vvx_deploy.py`, using local recipes and bounded Shelly RPC uploads.
 
 ## Callback vs classic functions
 
@@ -27,13 +28,13 @@ Worker scripts perform bounded work and then stop themselves:
 
 ## Print-only logging
 
-Use `print()` via common `log()` helper. Do not use `Text.Set` for logging. Virtual components are scarce and should be reserved for commands, installer state and selected UI values.
+Use `print()` via common `log()` helper. Do not use `Text.Set` for logging. Virtual components are scarce and should be reserved for commands, deploy state and selected UI values.
 
 ## KVS role
 
-KVS is runtime data sharing, not durable installer version state. Installer version state uses persistent virtual `text:200` because KVS has shown unreliable persistence across reboot.
+KVS is runtime data sharing, not durable deploy version state. Mac deploy state uses persistent virtual `text:200` because KVS has shown unreliable persistence across reboot.
 
-## GitHub as deployment and memory source
+## GitHub as source, Mac as deployer
 
 GitHub contains:
 
@@ -42,4 +43,4 @@ GitHub contains:
 - device manifests
 - project memory Markdown
 
-The Shelly device pulls raw GitHub files through the installer.
+The Mac pulls/reads repository files locally and installs scripts on Shelly through RPC. The active VVX runtime host does not fetch GitHub raw files to install code.

@@ -1,5 +1,22 @@
 # FTX Digital Decisions Log
 
+## 2026-06 — Remove Shelly-side installer from active VVX runtime
+
+Decision:
+- The active VVX runtime no longer uses script id 1 as a resident installer.
+- Mac/Codex installs code directly on the VVX runtime host with `tools/g1_vvx_deploy.py`.
+- `master_v1_5_0` no longer schedules installer.
+- `reboot_v1_2_0` no longer stops installer as an active runtime participant.
+- Obsolete live `Installer` script id 1 may be stopped and deleted after `master` no longer schedules it.
+
+Reason:
+- The G2 deploy direction is Mac-side source/build/deploy with bounded RPC upload chunks.
+- Shelly-side GitHub fetching adds cache, heap and recovery complexity to a runtime device that should focus on control.
+- The Mac has better observability and can verify identity, upload code and record evidence before restarting runtime.
+
+Status:
+- Active. Earlier 2026-04 installer decisions are historical for Gen1 recovery context only.
+
 ## 2026-04 — One long-lived master
 
 Decision:

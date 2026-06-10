@@ -2,15 +2,15 @@
 
 ## One-shot script
 
-A script that is started by another script, performs one bounded job, writes its outputs and then stops itself. In FTX Digital, `poll`, `state`, `weather`, `brain`, `driver` and `installer` are one-shot scripts, except that `installer` is also the permanent bootstrap script at id 1.
+A script that is started by another script, performs one bounded job, writes its outputs and then stops itself. In FTX Digital, `poll`, `state`, `weather`, `brain`, `driver` and `reboot` are one-shot scripts.
 
 ## Master
 
 The only long-lived runtime orchestrator. It owns the 60-second cadence and starts worker scripts sequentially. It must not contain thermal, ventilation or business control logic.
 
-## Installer / bootstrap
+## Mac direct deploy / bootstrap
 
-The permanent script at id 1. It is manually installed and not auto-updated. It can run on an otherwise empty device, create missing scripts and components, build one package at a time, and start master.
+The active VVX runtime no longer uses a permanent Shelly-side installer. The Mac/Codex deploy tool reads the local manifest and recipes, uploads complete scripts through Shelly RPC, verifies the live device, updates deploy state and starts master.
 
 ## Recipe
 
@@ -18,15 +18,15 @@ A JSON build description for a script. It contains the boot flag, the virtual co
 
 ## Device manifest
 
-A JSON file per Shelly device. It contains the target `device_version`, installer-state component definition, and expected versioned script packages for that device.
+A JSON file per Shelly device. It contains the target `device_version` and expected versioned script packages for that device.
 
 ## Versioned script name
 
-Runtime scripts include their version in the script name, e.g. `brain_v2_3_0`. Installer checks presence of the expected versioned name rather than relying on KVS version keys.
+Runtime scripts include their version in the script name, e.g. `brain_v2_3_0`. The Mac deploy tool checks expected fixed ids and versioned names rather than relying on KVS version keys.
 
 ## KVS
 
-Shelly key-value store. Used for runtime data sharing, not for durable installer version state. KVS has shown unreliable persistence across reboot.
+Shelly key-value store. Used for runtime data sharing, not for durable deploy version state. KVS has shown unreliable persistence across reboot.
 
 ## Virtual component
 

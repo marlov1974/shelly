@@ -4,7 +4,7 @@ This repository intentionally separates:
 
 - architectural memory
 - runtime implementation
-- deployment manifests
+- deployment manifests and Mac deploy tooling
 - operational state
 
 Understanding the hierarchy is important.

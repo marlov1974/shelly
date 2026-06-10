@@ -71,7 +71,7 @@ Use common helpers where possible:
 - `rt/common/kvs.js` for KVS wrappers.
 - `rt/common/shelly.js` for Shelly status parsing helpers.
 
-Avoid duplicating helpers across scripts unless a script must be fully standalone, such as `installer`.
+Avoid duplicating helpers across runtime scripts unless a script must be fully standalone.
 
 ## Logging
 
@@ -81,7 +81,7 @@ Use:
 log("message");
 ```
 
-Do not use `Text.Set` for runtime logging. Virtual text components are reserved for durable state such as installer state.
+Do not use `Text.Set` for runtime logging. Virtual text components are reserved for durable state such as Mac deploy state and operator-visible values.
 
 ## Versioned names
 
@@ -182,15 +182,15 @@ For runtime deploys:
 ```text
 - If the deploy change touches 5 files or fewer, YAML may carry the full change.
 - If the deploy change touches more than 5 files, direct-write large/runtime chunks first.
-- Use YAML for the final installer-visible manifest bump when needed.
+- Use direct Mac deploy for the final verified live installation when runtime code changes.
 ```
 
 Important rule:
 
 ```text
 Changing runtime chunks alone is not enough for deployment.
-Installer deploys based on rt/devices/<device-id>.json device_version and package version/name.
-When runtime code changes, remember the manifest bump, usually through tools/ChatGPT_Commit.yaml.
+Mac direct deploy uses rt/devices/<device-id>.json device_version and package version/name.
+When runtime code changes, remember the manifest bump and deploy with tools/g1_vvx_deploy.py.
 ```
 
 Smaller changes of one to three files can still be done directly through the GitHub connector when that is simpler.

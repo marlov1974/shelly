@@ -1,4 +1,4 @@
-// master run 1.4.0-score-dispatcher
+// master run 1.5.0-no-installer
 function stopWorker(id, cb) {
   if (!id || id === MASTER_ID) {
     cb();
@@ -17,7 +17,6 @@ function startWorker(id, name) {
 }
 
 function decScores() {
-  scoreInstaller = scoreInstaller - 1;
   scorePoll = scorePoll - 1;
   scoreState = scoreState - 1;
   scoreWeather = scoreWeather - 1;
@@ -31,7 +30,6 @@ function chooseBest() {
   var name = "reboot";
   var score = scoreReboot;
 
-  if (scoreInstaller < score) { id = INSTALLER_ID; name = "installer"; score = scoreInstaller; }
   if (scoreWeather < score) { id = WEATHER_ID; name = "weather"; score = scoreWeather; }
   if (scoreDriver < score) { id = DRIVER_ID; name = "driver"; score = scoreDriver; }
   if (scoreBrain < score) { id = BRAIN_ID; name = "brain"; score = scoreBrain; }
@@ -42,8 +40,7 @@ function chooseBest() {
 }
 
 function resetScore(id) {
-  if (id === INSTALLER_ID) scoreInstaller = RESET_INSTALLER;
-  else if (id === POLL_ID) scorePoll = RESET_POLL;
+  if (id === POLL_ID) scorePoll = RESET_POLL;
   else if (id === STATE_ID) scoreState = RESET_STATE;
   else if (id === WEATHER_ID) scoreWeather = RESET_WEATHER;
   else if (id === BRAIN_ID) scoreBrain = RESET_BRAIN;

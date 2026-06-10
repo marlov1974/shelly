@@ -1,6 +1,6 @@
 # FTX Digital File Map
 
-This file maps the current repo structure needed to understand and continue FTX Digital development. The device manifest and recipes on `main` are the source of truth.
+This file maps the current repo structure needed to understand and continue FTX Digital development. The device manifest, recipes and Mac direct-deploy tool on `main` are the source of truth.
 
 ## Device manifest
 
@@ -9,17 +9,15 @@ This file maps the current repo structure needed to understand and continue FTX 
 Defines the deployable runtime for the VVX/FTX control device:
 
 - `device_version`
-- installer state component definition
 - expected runtime scripts
 - fixed script ids
 - script versions and names
 - recipe paths
-- boot flags used by installer when setting script config
+- boot flags used by Mac direct deploy when setting script config
 
 Current canonical ids from the manifest:
 
 ```text
-1 installer
 2 boot
 3 master
 4 poll
@@ -30,24 +28,22 @@ Current canonical ids from the manifest:
 9 reboot
 ```
 
-## Installer
+## Mac direct deploy
 
-### `rt/installer/installer.js`
+### `tools/g1_vvx_deploy.py`
 
-Permanent deployment/bootstrap script. It is script id 1 and is not auto-updated by the repo runtime.
+Mac-side deployment/bootstrap tool for the active VVX runtime host.
 
 Responsibilities:
 
-- fetches local Shelly device id
-- fetches `rt/devices/<device-id>.json` from GitHub raw
-- ensures installer state component exists
-- reads persistent installer state from `text:200`
-- compares local and remote `device_version`
-- ensures recipe-owned virtual components
-- creates or reuses fixed-id scripts
-- writes script code by concatenating chunks from recipes
-- builds exactly one missing package per run
-- marks device version complete only when all expected packages exist
+- verifies live Shelly device id before writes
+- reads `rt/devices/8813bfdaa0c0.json` locally
+- reads recipe chunks locally
+- writes selected fixed-id scripts with bounded RPC `Script.PutCode` chunks
+- sets script name and boot flag from the device manifest
+- writes persistent deploy state to `text:200`
+- can stop/delete obsolete live `Installer` script id 1
+- starts `master` after a successful deploy when requested
 
 ## Recipes
 
@@ -78,7 +74,7 @@ rt/master/main.js
 rt/common/wrapper.end.js
 ```
 
-Inconsistency to be aware of: this recipe contains `"boot": true`, but installer sets script boot config from the device manifest package entry, not from recipe `boot`. The current manifest sets master `boot: false`, so master is not the intended autostart script.
+Inconsistency to be aware of: this recipe contains `"boot": true`, but Mac direct deploy sets script boot config from the device manifest package entry, not from recipe `boot`. The current manifest sets master `boot: false`, so master is not the intended autostart script.
 
 ### `rt/recipes/p.json`
 
@@ -522,7 +518,7 @@ Runtime scheduling, boot/master/worker model and score dispatcher.
 
 ### `memory/ftx-digitalt/04-installer-bootstrap.md`
 
-Installer, boot and deployment model.
+Mac direct deploy, boot and deployment model.
 
 ### `memory/ftx-digitalt/05-script-contracts.md`
 

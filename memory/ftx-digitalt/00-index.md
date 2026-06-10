@@ -2,7 +2,7 @@
 
 This folder is the canonical repo-based long-term memory for the current Gen1 Shelly-based digital control system for the FTX aggregate.
 
-Current code, device manifests and recipes in `main` are the source of truth for Gen1 runtime behavior.
+Current code, device manifests, recipes and Mac deploy tooling in `main` are the source of truth for Gen1 runtime behavior.
 
 New G2 Smart Home architecture and implementation now belongs in:
 
@@ -35,7 +35,7 @@ Primary active runtime host:
 
 This device runs the canonical Gen1 FTX runtime:
 
-- installer
+- Mac-side direct deploy
 - boot
 - master
 - poll
@@ -69,7 +69,6 @@ Do not assume all runtime code in `rt/` belongs to the same architecture.
 Canonical fixed script ids:
 
 ```text
-1 installer
 2 boot
 3 master
 4 poll
@@ -82,7 +81,6 @@ Canonical fixed script ids:
 
 Current roles:
 
-- `installer`: permanent deployment/bootstrap script, script id 1. It is manually maintained and not auto-updated.
 - `boot`: only autostart script, script id 2. It waits for stabilization, starts master and self-stops.
 - `master`: long-lived 15-second score dispatcher, script id 3.
 - `poll`: one-shot telemetry reader, script id 4.
@@ -92,7 +90,7 @@ Current roles:
 - `driver`: one-shot actuator application script, script id 8.
 - `reboot`: one-shot reboot orchestrator, script id 9.
 
-Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Installer state is stored in persistent `text:200`, not KVS.
+Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Deploy state is stored in persistent `text:200`, not KVS.
 
 ## Recommended read order for Gen1 work
 
@@ -111,12 +109,12 @@ Worker scripts are one-shot and should self-stop after completion. Runtime loggi
 
 ## Current key design direction
 
-The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers. Master starts exactly one worker per 15-second tick. Installer builds one package per run and master selects installer periodically until the device is complete.
+The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers. Master starts exactly one worker per 15-second tick. Mac/Codex installs code directly on the VVX runtime host through bounded Shelly RPC uploads.
 
 ## Primary current files
 
 - Device manifest: `rt/devices/8813bfdaa0c0.json`
-- Installer: `rt/installer/installer.js`
+- Mac direct deploy tool: `tools/g1_vvx_deploy.py`
 - Recipes: `rt/recipes/*.json`
 - Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/poll/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
 - Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`

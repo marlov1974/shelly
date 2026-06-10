@@ -1,4 +1,4 @@
-// master main 1.4.0-score-dispatcher
+// master main 1.5.0-no-installer
 function tick() {
   if (runningTick) {
     log("SKIP");

@@ -130,7 +130,7 @@
     "rt/reboot/base.js",
     "rt/reboot/main.js",
 
-    "rt/installer/installer.js"
+    "tools/g1_vvx_deploy.py"
   ],
   "governance": {
     "runtime_truth_hierarchy": [

@@ -12,7 +12,7 @@ Examples:
 
 ```text
 boot_v1_0_0
-master_v1_4_0
+master_v1_5_0
 poll_v3_3_2
 state_v1_4_1
 weather_v1_0_1
@@ -26,7 +26,6 @@ reboot_v1_0_0
 Canonical fixed ids:
 
 ```text
-1 installer
 2 boot
 3 master
 4 poll
@@ -39,34 +38,7 @@ Canonical fixed ids:
 
 Each auto-managed worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()` from `rt/common/script.js`.
 
-## installer
-
-Role:
-- Permanent bootstrap and deployment installer.
-
-Script id:
-- Fixed id 1.
-
-Lifecycle:
-- One-shot when started manually or by master.
-- Self-stops after completion or no-op.
-- Not auto-updated.
-
-Inputs:
-- GitHub raw device manifest: `rt/devices/<device-id>.json`.
-- GitHub recipe and chunks for the package being built.
-- `text:200` installer state.
-
-Outputs:
-- Creates missing virtual components.
-- Creates or reuses missing scripts on fixed ids.
-- Writes script code from recipe chunks.
-- Starts `master` when done if possible.
-- Updates `text:200` only when the whole device version is complete.
-
-Restrictions:
-- Installer may use `Script.List` and more standalone code because deployment/discovery is its job.
-- Installer is the recovery path and should remain manually maintained.
+Script id 1 is intentionally unused by the active VVX runtime after the Mac direct-deploy migration.
 
 ## boot
 
@@ -95,7 +67,7 @@ Script id:
 - Fixed id 3.
 
 Lifecycle:
-- Started by boot or installer.
+- Started by boot or Mac direct deploy.
 - Runs a 15-second score-dispatch tick loop.
 
 Inputs:
