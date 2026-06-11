@@ -254,7 +254,7 @@ def put_script_code(base_url: str, script: BuiltScript, upload_chunk_bytes: int)
 
 
 def stop_runtime(base_url: str, include_installer: bool) -> None:
-    ids = [3, 4, 5, 6, 7, 8, 9, 2]
+    ids = [3, 5, 6, 7, 8, 9, 2]
     if include_installer:
         ids.insert(0, INSTALLER_SCRIPT_ID)
     for script_id in ids:

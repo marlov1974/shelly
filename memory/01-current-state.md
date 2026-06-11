@@ -41,6 +41,7 @@ Architecture:
 - weather
 - brain
 - driver
+- local device executors on physical actuator devices
 - reboot
 
 Characteristics:
@@ -49,6 +50,7 @@ Characteristics:
 - Uses Mac-installed scripts generated locally from recipes/chunks.
 - Uses orchestration through `master`.
 - Uses per-device telemetry snapshots in VVX KVS and intent-based control.
+- Uses per-device intent keys as the migration path toward local device drivers.
 - Uses GitHub as source of truth for runtime assembly.
 
 Primary memory location:

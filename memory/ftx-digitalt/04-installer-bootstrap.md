@@ -86,7 +86,7 @@ Canonical active ids:
 ```text
 2 boot
 3 master
-4 poll
+4 retired central poll slot; live VVX device reuses it for local VVX master
 5 state
 6 weather
 7 brain
@@ -94,13 +94,17 @@ Canonical active ids:
 9 reboot
 ```
 
-Script id 1 is no longer part of the active runtime model. If an obsolete
-`Installer` script remains on a live device, it should be stopped and deleted
-only after `master` no longer schedules installer.
+Script id 1 is outside the central manifest and is used by the local VVX
+telemetry publisher. If an obsolete `Installer` script remains on a live device,
+it should be stopped and deleted only after `master` no longer schedules
+installer.
 
 Fixed ids are used to reduce heap pressure and to avoid `Script.List` during
 normal runtime and worker self-stop. The Mac deploy tool may use `Script.List`
 because deployment/discovery is its job.
+
+Central VVX deploy must not stop slot 4. Slot 4 is no longer central poll; it is
+the local VVX master when the local-driver migration is active.
 
 ## Device manifest
 

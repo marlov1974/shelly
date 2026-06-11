@@ -47,14 +47,19 @@ Brain must never directly control hardware.
 
 ---
 
-## 1.4 driver owns physical application
+## 1.4 physical application is explicit
 
-Only `driver` may:
+Physical application may only happen in explicitly documented apply layers:
 
 - apply actuators
 - sequence hardware
 - normalize actuator output
 - resolve hardware conflicts
+
+Current allowed apply layers are:
+
+- central `driver`, using the aggregate `ftx.intent.act` compatibility key
+- local device executors, using their own `ftx.intent.dev.*` key
 
 No other script may directly apply hardware state.
 

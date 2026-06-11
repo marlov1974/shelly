@@ -143,7 +143,8 @@ Weather reference object from `weather`.
 
 ### `ftx.intent.act`
 
-Final full desired actuator state from `brain`, consumed by `driver`.
+Final full desired actuator state from `brain`, consumed by central `driver`
+as the legacy compatibility apply path.
 
 ```json
 {
@@ -158,6 +159,56 @@ Final full desired actuator state from `brain`, consumed by `driver`.
 ```
 
 This is a full desired state, not a delta.
+
+### `ftx.intent.dev.*`
+
+Per-device desired actuator state from `brain`, consumed by local device
+executors on each physical actuator device.
+
+Keys:
+
+```text
+ftx.intent.dev.sup
+ftx.intent.dev.ext
+ftx.intent.dev.heat
+ftx.intent.dev.cool
+ftx.intent.dev.dmp
+ftx.intent.dev.vvx
+```
+
+Typical fan/dimmer shape:
+
+```json
+{
+  "v": 1,
+  "source": "brain",
+  "ts": 1710000000,
+  "device": "sup",
+  "mode": "STD",
+  "driver_inhibit": 0,
+  "act": { "on": 1, "pct": 35 }
+}
+```
+
+Typical switch shape:
+
+```json
+{
+  "v": 1,
+  "source": "brain",
+  "ts": 1710000000,
+  "device": "dmp",
+  "mode": "STD",
+  "driver_inhibit": 0,
+  "act": { "on": 1 }
+}
+```
+
+The per-device intent is a full desired state for one physical device, not a
+delta. Local executors ignore missing, malformed, inhibited or stale intents.
+The `ts` field is Unix time in seconds. The initial stale TTL is 300 seconds.
+Executors read their current local output first and only call the local output
+RPC if the desired state differs.
 
 ### `ftx.mode_forced_state`
 

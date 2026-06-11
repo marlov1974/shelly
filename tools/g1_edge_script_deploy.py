@@ -95,6 +95,13 @@ def find_script_id(base_url: str, name: str) -> int:
     return script_id
 
 
+def get_script_by_id(base_url: str, script_id: int) -> dict[str, Any]:
+    for script in script_list(base_url):
+        if script.get("id") == script_id:
+            return script
+    raise DeployError(f"script id {script_id} does not exist")
+
+
 def split_upload_chunks(code: str, chunk_bytes: int) -> list[str]:
     if chunk_bytes < 1:
         raise DeployError("upload chunk bytes must be positive")
@@ -139,7 +146,11 @@ def command_deploy(args: argparse.Namespace) -> int:
         raise DeployError(f"missing script file: {script_path}")
     code = script_path.read_text(encoding="utf-8")
     info = verify_device(args.base_url, args.expect_device_id)
-    script_id = find_script_id(args.base_url, args.name)
+    if args.script_id is not None:
+        script_id = int(args.script_id)
+        get_script_by_id(args.base_url, script_id)
+    else:
+        script_id = find_script_id(args.base_url, args.name)
     stop_script(args.base_url, script_id)
     rpc_call(args.base_url, "Script.SetConfig", {"id": script_id, "config": {"name": args.name, "enable": bool(args.enable)}})
     chunk_count = put_script_code(args.base_url, script_id, code, args.upload_chunk_bytes)
@@ -176,6 +187,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--expect-device-id", required=True)
     parser.add_argument("--name", required=True)
     parser.add_argument("--script", required=True)
+    parser.add_argument("--script-id", type=int, default=None, help="Reuse an existing script id instead of creating/finding by name.")
     parser.add_argument("--upload-chunk-bytes", type=int, default=DEFAULT_UPLOAD_CHUNK_BYTES)
     parser.add_argument("--enable", action="store_true")
     parser.add_argument("--start", action="store_true")

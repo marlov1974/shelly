@@ -19,6 +19,7 @@ state_v1_8_0
 weather_v1_0_1
 brain_v2_4_2
 brain_v2_8_0
+brain_v2_9_0
 driver_v1_0_1
 reboot_v1_0_0
 reboot_v1_3_0
@@ -31,7 +32,7 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 retired legacy poll slot
+4 retired central poll slot; live VVX device reuses it for `master_vvx_v0_1_0`
 5 state
 6 weather
 7 brain
@@ -41,7 +42,7 @@ Canonical fixed ids:
 
 Each auto-managed worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()` from `rt/common/script.js`.
 
-Script id 1 is intentionally unused by the active VVX runtime after the Mac direct-deploy migration.
+Script id 1 is outside the central manifest and is used by the local VVX telemetry publisher.
 
 ## boot
 
@@ -115,6 +116,69 @@ Outputs:
 
 Implementation note:
 - Central `poll` code remains in the repository as legacy source but is not in the active device manifest and is not scheduled by `master_v1_6_0`.
+
+## edge local masters and executors
+
+Role:
+- Small local physical-device apply path for the Gen1-to-G2 migration.
+
+Lifecycle:
+- Local master is long-running and enabled on each physical actuator device.
+- Local executor is one-shot and started by the local master.
+- Local executor self-stops after reading intent and applying or skipping.
+
+Active script names:
+- `master_supply_fan_v0_1_0`
+- `executor_supply_fan_v0_1_0`
+- `master_extract_fan_v0_1_0`
+- `executor_extract_fan_v0_1_0`
+- `master_heat_dimmer_v0_1_0`
+- `executor_heat_dimmer_v0_1_0`
+- `master_cool_dimmer_v0_1_0`
+- `executor_cool_dimmer_v0_1_0`
+- `master_dampers_v0_1_0`
+- `executor_dampers_v0_1_0`
+- `master_vvx_v0_1_0`
+- `executor_vvx_v0_1_0`
+
+Live VVX id note:
+- The VVX Shelly has a 10-script storage limit. Since central `poll` is retired
+  and absent from the active manifest, live slot 4 is reused for
+  `master_vvx_v0_1_0`. The VVX executor remains on id 10.
+
+Schedules:
+
+```text
+supply fan:  executor 41s, publisher 601s
+extract fan: executor 43s, publisher 607s
+cool:        executor 47s, publisher 613s
+heat:        executor 53s, publisher 617s
+VVX:         executor 59s, publisher 619s
+dampers:     executor 61s, publisher 631s
+```
+
+Inputs:
+- `ftx.intent.dev.sup`
+- `ftx.intent.dev.ext`
+- `ftx.intent.dev.heat`
+- `ftx.intent.dev.cool`
+- `ftx.intent.dev.dmp`
+- `ftx.intent.dev.vvx`
+
+Outputs:
+- Local Shelly output RPC for exactly one physical device:
+  - supply fan `Light.Set id=0`
+  - extract fan `Light.Set id=0`
+  - heat dimmer `Light.Set id=0`
+  - cool dimmer `Light.Set id=0`
+  - dampers `Switch.Set id=0`
+  - VVX `Switch.Set id=0`
+
+Restrictions:
+- Executors must not apply any other device.
+- Executors must ignore missing, malformed, inhibited or stale intent.
+- Executors must read current local output and avoid redundant output RPC writes.
+- Executors must not change config, schedules, scripts, network, KVS unrelated to their read key or actuator behavior outside their one local output.
 
 ## state
 
@@ -197,6 +261,12 @@ Inputs:
 Outputs:
 - `number:204` Target to house, C
 - `ftx.intent.act`
+- `ftx.intent.dev.sup`
+- `ftx.intent.dev.ext`
+- `ftx.intent.dev.heat`
+- `ftx.intent.dev.cool`
+- `ftx.intent.dev.dmp`
+- `ftx.intent.dev.vvx`
 - `ftx.mode_forced_state`
 
 Internal architecture:
@@ -212,7 +282,7 @@ Restrictions:
 ## driver
 
 Role:
-- Applies `ftx.intent.act` to physical actuators.
+- Applies `ftx.intent.act` to physical actuators as the central compatibility path.
 
 Script id:
 - Fixed id 8.

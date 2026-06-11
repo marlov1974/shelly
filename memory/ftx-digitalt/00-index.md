@@ -71,12 +71,13 @@ Canonical fixed script ids:
 ```text
 2 boot
 3 master
-4 retired legacy poll slot
+4 retired central poll slot; live VVX device reuses it for local VVX master
 5 state
 6 weather
 7 brain
 8 driver
 9 reboot
+edge local masters/executors on physical actuator devices
 ```
 
 Current roles:
@@ -84,11 +85,12 @@ Current roles:
 - `boot`: only autostart script, script id 2. It waits for stabilization, starts master and self-stops.
 - `master`: long-lived 15-second score dispatcher, script id 3.
 - Edge telemetry publishers: long-running scripts on physical devices that publish `ftx.tel.dev.*` to VVX KVS.
-- `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master.
+- `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master. On the VVX Shelly, live slot 4 is reused by `master_vvx_v0_1_0` because the device has a 10-script storage limit.
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.
-- `driver`: one-shot actuator application script, script id 8.
+- `driver`: one-shot central compatibility actuator application script, script id 8.
+- Local device masters/executors: physical-device scripts that read per-device intent and apply only local outputs.
 - `reboot`: one-shot reboot orchestrator, script id 9.
 
 Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Deploy state is stored in persistent `text:200`, not KVS.
@@ -110,7 +112,7 @@ Worker scripts are one-shot and should self-stop after completion. Runtime loggi
 
 ## Current key design direction
 
-The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers. Master starts exactly one worker per 15-second tick. Mac/Codex installs code directly on the VVX runtime host through bounded Shelly RPC uploads.
+The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers on the VVX runtime host. Physical devices use small local masters with prime-based schedules to start local publishers and one-shot executors without synchronized request storms. Mac/Codex installs code directly through bounded Shelly RPC uploads.
 
 ## Primary current files
 

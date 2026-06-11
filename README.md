@@ -91,7 +91,7 @@ The Gen1 runtime uses:
 Normal runtime flow:
 
 ```text
-edge telemetry publishers -> state -> brain -> driver
+edge telemetry publishers -> state -> brain -> driver + local device executors
 ```
 
 Weather runs periodically.
@@ -115,15 +115,23 @@ performance metrics, and writes compatibility aggregate telemetry.
 
 ## brain
 
-Builds desired control intent.
+Builds desired control intent. During the Gen1-to-G2 migration, brain writes
+both the legacy aggregate intent and per-device intent keys.
 
 Brain must not directly control actuators.
 
 ## driver
 
-Applies physical actuator outputs.
+Applies physical actuator outputs from the legacy aggregate intent.
 
-Driver is the only physical apply layer.
+During the local-driver migration this remains a compatibility path while
+physical devices also run local executors against their own per-device intent.
+
+## local device executors
+
+Each physical actuator device runs a local master and one-shot executor. The
+local executor reads its own `ftx.intent.dev.*` key from VVX KVS and applies
+only that device's output if the desired state differs from current state.
 
 ---
 

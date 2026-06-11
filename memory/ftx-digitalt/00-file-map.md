@@ -20,12 +20,13 @@ Current canonical ids from the manifest:
 ```text
 2 boot
 3 master
-4 retired legacy poll slot
+4 retired central poll slot; live VVX device reuses it for local VVX master
 5 state
 6 weather
 7 brain
 8 driver
 9 reboot
+edge local masters/executors on physical actuator devices
 ```
 
 ## Mac direct deploy
@@ -44,12 +45,15 @@ Responsibilities:
 - writes persistent deploy state to `text:200`
 - can stop/delete obsolete live `Installer` script id 1
 - starts `master` after a successful deploy when requested
+- does not stop slot 4; central poll is retired and live VVX slot 4 is local VVX master
 
 ### `tools/g1_edge_script_deploy.py`
 
-Mac-side deploy tool for standalone edge publisher scripts on non-VVX devices.
+Mac-side deploy tool for standalone edge scripts on physical devices.
 It creates or updates one named script, sets its enable flag, uploads bounded
-chunks and optionally starts it.
+chunks and optionally starts it. It can also reuse a known existing script id
+with `--script-id` when a device has no free script slots and an inactive slot
+has intentionally been retired.
 
 ## Recipes
 
@@ -283,7 +287,7 @@ Minimal worker stop/start helpers, score decrement and worker selection.
 ## Poll chunks
 
 The `rt/poll/` folder is legacy source. It is not part of the active
-`rt/devices/8813bfdaa0c0.json` manifest after device_version 32.
+`rt/devices/8813bfdaa0c0.json` manifest since device_version 32.
 
 ### `rt/poll/base.js`
 
@@ -454,7 +458,15 @@ Resolves signals into final full desired `ftx.intent.act`.
 
 ### `rt/brain/output.js`
 
-Writes target and intent.
+Writes target, aggregate intent and per-device intents:
+
+- `ftx.intent.act`
+- `ftx.intent.dev.sup`
+- `ftx.intent.dev.ext`
+- `ftx.intent.dev.heat`
+- `ftx.intent.dev.cool`
+- `ftx.intent.dev.dmp`
+- `ftx.intent.dev.vvx`
 
 ### `rt/brain/main.js`
 
@@ -501,6 +513,56 @@ Defines on/off actuator application sequence.
 ### `rt/driver/main.js`
 
 Reads, normalizes and applies intent, respects inhibit, logs and self-stops.
+
+## Edge local driver scripts
+
+### `rt/scripts/supply-fan/master_supply_fan_v0_1_0.js`
+
+Local long-running scheduler for supply fan publisher and executor.
+
+### `rt/scripts/supply-fan/executor_supply_fan_v0_1_0.js`
+
+Reads `ftx.intent.dev.sup` and applies supply fan `Light.Set id=0` if needed.
+
+### `rt/scripts/extract-fan/master_extract_fan_v0_1_0.js`
+
+Local long-running scheduler for extract fan publisher and executor.
+
+### `rt/scripts/extract-fan/executor_extract_fan_v0_1_0.js`
+
+Reads `ftx.intent.dev.ext` and applies extract fan `Light.Set id=0` if needed.
+
+### `rt/scripts/heat-dimmer/master_heat_dimmer_v0_1_0.js`
+
+Local long-running scheduler for heat publisher and executor.
+
+### `rt/scripts/heat-dimmer/executor_heat_dimmer_v0_1_0.js`
+
+Reads `ftx.intent.dev.heat` and applies heat dimmer `Light.Set id=0` if needed.
+
+### `rt/scripts/cool-dimmer/master_cool_dimmer_v0_1_0.js`
+
+Local long-running scheduler for cool publisher and executor.
+
+### `rt/scripts/cool-dimmer/executor_cool_dimmer_v0_1_0.js`
+
+Reads `ftx.intent.dev.cool` and applies cool dimmer `Light.Set id=0` if needed.
+
+### `rt/scripts/dampers/master_dampers_v0_1_0.js`
+
+Local long-running scheduler for dampers publisher and executor.
+
+### `rt/scripts/dampers/executor_dampers_v0_1_0.js`
+
+Reads `ftx.intent.dev.dmp` and applies dampers `Switch.Set id=0` if needed.
+
+### `rt/scripts/vvx/master_vvx_v0_1_0.js`
+
+Local long-running scheduler for VVX publisher and executor.
+
+### `rt/scripts/vvx/executor_vvx_v0_1_0.js`
+
+Reads `ftx.intent.dev.vvx` and applies VVX `Switch.Set id=0` if needed.
 
 ## Reboot chunks
 

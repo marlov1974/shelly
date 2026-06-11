@@ -169,7 +169,9 @@ Constraints are applied in the intent layer, not directly in feature calculation
 
 ## Intent resolution
 
-Brain writes a full desired state in `ftx.intent.act`, not a delta.
+Brain writes a full desired aggregate state in `ftx.intent.act`, not a delta.
+During the local-driver migration, brain also writes per-device intent keys
+under `ftx.intent.dev.*`.
 
 Output shape:
 
@@ -196,16 +198,35 @@ Priority principles in current intent code:
 - `FIRE` overrides fan pct to positive-pressure relation.
 - VVX, heat and cool are written from candidates.
 
+Per-device intent keys carry the same resolved actuator state split by device:
+
+- `ftx.intent.dev.sup`
+- `ftx.intent.dev.ext`
+- `ftx.intent.dev.heat`
+- `ftx.intent.dev.cool`
+- `ftx.intent.dev.dmp`
+- `ftx.intent.dev.vvx`
+
 ## Driver responsibility
 
-Brain does not apply actuator RPCs. Driver reads `ftx.intent.act`, normalizes it and applies the desired actuator state.
+Brain does not apply actuator RPCs. The central driver reads `ftx.intent.act`,
+normalizes it and applies the desired actuator state as the compatibility path.
+Local device executors read only their own `ftx.intent.dev.*` key and apply
+only their local output when the desired state differs from current local state.
 
-Driver responsibilities include:
+Central driver responsibilities include:
 
 - respecting `driver_inhibit`
 - treating `on=0` as dominant over non-zero `pct`
 - preventing simultaneous heat and cool
 - applying dampers, fans, VVX, heat and cool through RPC
+
+Local executor responsibilities include:
+
+- respecting `driver_inhibit`
+- rejecting stale intents
+- applying only one physical device
+- avoiding redundant RPC writes when current state already matches desired state
 
 ## Future design candidate: VVX optimization
 

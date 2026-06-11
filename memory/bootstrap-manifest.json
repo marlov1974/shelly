@@ -119,11 +119,23 @@
     "rt/reboot/main.js",
 
     "rt/scripts/supply-fan/telemetry_publisher_supply_fan_v0_1_0.js",
+    "rt/scripts/supply-fan/executor_supply_fan_v0_1_0.js",
+    "rt/scripts/supply-fan/master_supply_fan_v0_1_0.js",
     "rt/scripts/extract-fan/telemetry_publisher_extract_fan_v0_1_0.js",
+    "rt/scripts/extract-fan/executor_extract_fan_v0_1_0.js",
+    "rt/scripts/extract-fan/master_extract_fan_v0_1_0.js",
     "rt/scripts/heat-dimmer/telemetry_publisher_heat_dimmer_v0_1_0.js",
+    "rt/scripts/heat-dimmer/executor_heat_dimmer_v0_1_0.js",
+    "rt/scripts/heat-dimmer/master_heat_dimmer_v0_1_0.js",
     "rt/scripts/cool-dimmer/telemetry_publisher_cool_dimmer_v0_1_0.js",
+    "rt/scripts/cool-dimmer/executor_cool_dimmer_v0_1_0.js",
+    "rt/scripts/cool-dimmer/master_cool_dimmer_v0_1_0.js",
     "rt/scripts/dampers/telemetry_publisher_dampers_v0_1_0.js",
+    "rt/scripts/dampers/executor_dampers_v0_1_0.js",
+    "rt/scripts/dampers/master_dampers_v0_1_0.js",
     "rt/scripts/vvx/telemetry_publisher_vvx_v0_1_0.js",
+    "rt/scripts/vvx/executor_vvx_v0_1_0.js",
+    "rt/scripts/vvx/master_vvx_v0_1_0.js",
 
     "tools/g1_vvx_deploy.py",
     "tools/g1_edge_script_deploy.py"
