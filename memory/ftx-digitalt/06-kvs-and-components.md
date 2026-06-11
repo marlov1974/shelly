@@ -217,6 +217,27 @@ locally:
 }
 ```
 
+VVX intent treats `act.on` as permission to run, not as final switch state. Brain
+also sends the target and temperature snapshot used by the local VVX executor:
+
+```json
+{
+  "v": 1,
+  "source": "brain",
+  "ts": 1710000000,
+  "device": "vvx",
+  "mode": "STD",
+  "driver_inhibit": 0,
+  "target_to_house_c": 18.0,
+  "temp": { "out_c": 5.0, "house_c": 21.0 },
+  "act": { "on": 1, "target_to_house_c": 18.0 }
+}
+```
+
+The local VVX executor turns VVX on only when it can help the target: for cooling
+need it requires outdoor air warmer than house air, and for heating need it
+requires outdoor air colder than house air.
+
 The per-device intent is a full desired state for one physical device, not a
 delta. Local executors ignore missing, malformed, inhibited or stale intents.
 The `ts` field is Unix time in seconds. The initial stale TTL is 300 seconds.

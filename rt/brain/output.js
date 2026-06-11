@@ -1,4 +1,4 @@
-// brain output 2.11.0-remote-device-intents
+// brain output 2.12.0-vvx-local-thermal-intent
 var KEY_INTENT_DEV_SUP = "ftx.intent.dev.sup";
 var KEY_INTENT_DEV_EXT = "ftx.intent.dev.ext";
 var KEY_INTENT_DEV_HEAT = "ftx.intent.dev.heat";
@@ -46,9 +46,15 @@ function buildDeviceIntent(ctx, device, act, ts) {
     driver_inhibit: intent.driver_inhibit ? 1 : 0,
     act: act || {}
   };
-  if (device === "heat" || device === "cool") {
+  if (device === "heat" || device === "cool" || device === "vvx") {
     out.target_to_house_c = d1(ctx.sig ? ctx.sig.target_to_house_c : 0);
     out.act.target_to_house_c = out.target_to_house_c;
+  }
+  if (device === "vvx") {
+    out.temp = {
+      out_c: d1(ctx.inp ? ctx.inp.t_out_c : 0),
+      house_c: d1(ctx.inp ? ctx.inp.t_house_c : 0)
+    };
   }
   return out;
 }

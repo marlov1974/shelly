@@ -141,6 +141,9 @@ Lifecycle:
 - VVX uses `master_vvx_v0_2_0` as its local scheduler.
 - Local executor is one-shot and started by its device-specific scheduler.
 - Local executor self-stops after reading intent and applying or skipping.
+- VVX executor interprets `ftx.intent.dev.vvx.act.on` as run permission and
+  decides the actual switch state locally from target, outdoor and house
+  temperatures.
 
 Active script names:
 - `master_supply_fan_v0_1_0`
@@ -198,6 +201,8 @@ Restrictions:
 - Executors must not apply any other device.
 - Executors must ignore missing, malformed, inhibited or stale intent.
 - Executors must read current local output and avoid redundant output RPC writes.
+- VVX must not run just because permission is true; it must only run when local
+  temperature comparison says VVX helps move supply air toward the target.
 - Executors must not change config, schedules, scripts, network, KVS unrelated to their read key or actuator behavior outside their one local output.
 
 ## state

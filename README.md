@@ -134,6 +134,9 @@ its scheduler. Each executor reads its own local `ftx.intent.dev.*` key and
 applies only that device's output if the desired state differs from current
 state.
 
+VVX is local-thermal: brain sends permission plus target/temperature context,
+and the VVX executor decides whether heat recovery helps before switching VVX.
+
 The old central driver and aggregate `ftx.intent.act` compatibility path are
 retired.
 
