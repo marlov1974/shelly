@@ -225,7 +225,7 @@ Outputs:
 - `ftx.state.run`
 - `ftx.state.hist`
 - compatibility telemetry: `ftx.tel.m`, `ftx.tel.x`, `ftx.tel.act`
-- `number:201` Total power, W
+- `number:201` Base power, W
 - `number:202` VVX efficiency, %
 - `number:203` Fan avg pct, %
 
@@ -262,7 +262,7 @@ Lifecycle:
 - Self-stops after writing target and intent.
 
 Inputs:
-- Command virtual components:
+- Local dampers-hub command virtual components:
   - `boolean:200` On
   - `boolean:201` Nightmode
   - `enum:200` Mode

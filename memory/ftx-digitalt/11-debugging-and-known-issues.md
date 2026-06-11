@@ -56,7 +56,7 @@ Direct deploy should not aggressively mutate or delete existing virtual componen
 
 ## number:201 correction
 
-`number:201` is Total power. It is not fan flow average. Average l/s is not currently a virtual component.
+`number:201` is Base power. It is not fan flow average. Average l/s is not currently a virtual component.
 
 ## Bootstrap behavior
 

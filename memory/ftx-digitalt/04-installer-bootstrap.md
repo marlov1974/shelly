@@ -66,7 +66,7 @@ text:200
 Compact JSON format when the target device has `text:200`:
 
 ```json
-{"dv":2,"ok":1}
+{"dv":3,"ok":1}
 ```
 
 Meaning:
@@ -125,7 +125,7 @@ Example shape:
 
 ```json
 {
-  "device_version": 2,
+  "device_version": 3,
   "scripts": [
     {
       "role": "boot",

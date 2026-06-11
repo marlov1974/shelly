@@ -21,14 +21,14 @@ This repository should not be used as the primary source for new G2 design decis
 | Device id | Physical role | Runtime role | Manifest | Status |
 |---|---|---|---|---|
 | `8813bfd99f54` | Dampers / FTX runtime hub | Primary Gen1 FTX runtime | `rt/devices/8813bfd99f54.json` | Active |
-| `8813bfdaa0c0` | VVX | Local Gen1 executor/publisher device | edge scripts | Active |
+| `8813bfdaa0c0` | VVX | Local Gen1 executor/publisher device, no FTX command virtual components | edge scripts | Active |
 | `80f3dac8bfec` | Dampers / optimizer device | Heat-pump optimizer POC runtime | `rt/devices/80f3dac8bfec.json` | Active / experimental |
 
 ## Important architectural distinction
 
 The two devices do NOT run the same architecture.
 
-### 8813bfdaa0c0 — canonical Gen1 FTX runtime
+### 8813bfd99f54 — canonical Gen1 FTX runtime
 
 This is the primary production-style runtime.
 
@@ -51,6 +51,7 @@ Characteristics:
 - Uses orchestration through `master`.
 - Uses per-device telemetry snapshots in dampers-hub KVS and local-device intent KVS.
 - Uses per-device intent keys as the migration path toward local device drivers.
+- Owns the command virtual components on the dampers hub.
 - Uses GitHub as source of truth for runtime assembly.
 
 Primary memory location:

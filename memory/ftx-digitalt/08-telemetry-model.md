@@ -116,9 +116,9 @@ Note: `pct` can remain non-zero even when `on=0`. Consumers must treat `on=0` as
 
 ## Power values
 
-State computes total power and writes it to `number:201`. It is not a flow value.
+State writes base power to `number:201`. It is not a flow value.
 
-Total power includes measured and estimated components, including idle and damper estimates when applicable.
+Base power is the fixed runtime base load value currently used by `state_v1_8_0`.
 
 ## Run state
 

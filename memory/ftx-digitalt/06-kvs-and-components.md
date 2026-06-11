@@ -249,12 +249,12 @@ text:200 Deploy state
 Example value:
 
 ```json
-{"dv":11,"ok":1}
+{"dv":3,"ok":1}
 ```
 
 ### Brain owned
 
-Defined in `rt/recipes/brain.json`:
+Defined in `rt/recipes/brain.json` and hosted on the dampers hub:
 
 ```text
 boolean:200 On
@@ -264,19 +264,22 @@ number:200  Temp, C
 number:204  Target to house, C
 ```
 
+The old copies of these command/output virtual components on VVX
+`8813bfdaa0c0` were removed when the dampers hub became the component host.
+
 ### State owned
 
-Defined in `rt/recipes/state.json`:
+Defined in `rt/recipes/state.json` and hosted on the dampers hub:
 
 ```text
-number:201 Total power, W
+number:201 Base power, W
 number:202 VVX efficiency, %
 number:203 Fan avg pct, %
 ```
 
 ## Explicit corrections
 
-`number:201` is Total power. It is not fan average, fan flow average or l/s.
+`number:201` is Base power. It is not fan average, fan flow average or l/s.
 
 Average l/s is not currently a virtual component. Flow values remain in `ftx.tel.m.ls.sup` and `ftx.tel.m.ls.ext` unless a new component is explicitly added later.
 

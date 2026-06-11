@@ -122,6 +122,8 @@ performance metrics, and writes compatibility aggregate telemetry.
 Builds desired control intent. During the Gen1-to-G2 migration, brain writes
 per-device intent keys directly to each local device KVS.
 
+Command virtual components are local on the dampers hub.
+
 Brain must not directly control actuators.
 
 ## local device executors

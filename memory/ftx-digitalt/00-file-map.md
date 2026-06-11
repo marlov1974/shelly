@@ -137,7 +137,7 @@ rt/common/wrapper.end.js
 Owns these virtual number components:
 
 ```text
-number:201 Total power, W
+number:201 Base power, W
 number:202 VVX efficiency, %
 number:203 Fan avg pct, %
 ```
