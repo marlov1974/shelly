@@ -143,8 +143,9 @@ Weather reference object from `weather`.
 
 ### `ftx.intent.act`
 
-Final full desired actuator state from `brain`, consumed by central `driver`
-as the legacy compatibility apply path.
+Final full desired actuator state from `brain`. In the local-driver canary it is
+kept as a legacy compatibility and rollback contract; central `driver` is
+installed but not scheduled.
 
 ```json
 {

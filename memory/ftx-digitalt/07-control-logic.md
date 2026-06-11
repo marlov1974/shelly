@@ -209,10 +209,11 @@ Per-device intent keys carry the same resolved actuator state split by device:
 
 ## Driver responsibility
 
-Brain does not apply actuator RPCs. The central driver reads `ftx.intent.act`,
-normalizes it and applies the desired actuator state as the compatibility path.
-Local device executors read only their own `ftx.intent.dev.*` key and apply
-only their local output when the desired state differs from current local state.
+Brain does not apply actuator RPCs. In the local-driver canary, local device
+executors read only their own `ftx.intent.dev.*` key and apply only their local
+output when the desired state differs from current local state. The central
+driver remains installed for rollback and compatibility but is not scheduled by
+`master_v1_7_0`.
 
 Central driver responsibilities include:
 

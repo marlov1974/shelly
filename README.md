@@ -91,7 +91,7 @@ The Gen1 runtime uses:
 Normal runtime flow:
 
 ```text
-edge telemetry publishers -> state -> brain -> driver + local device executors
+edge telemetry publishers -> state -> brain -> local device executors
 ```
 
 Weather runs periodically.
@@ -124,14 +124,21 @@ Brain must not directly control actuators.
 
 Applies physical actuator outputs from the legacy aggregate intent.
 
-During the local-driver migration this remains a compatibility path while
-physical devices also run local executors against their own per-device intent.
+During the local-driver canary this script remains installed as rollback and
+compatibility source, but central `master` does not schedule it.
 
 ## local device executors
 
-Each physical actuator device runs a local master and one-shot executor. The
-local executor reads its own `ftx.intent.dev.*` key from VVX KVS and applies
-only that device's output if the desired state differs from current state.
+Each physical actuator device runs a one-shot executor. Supply, heat, cool and
+dampers also run a local master. Extract uses the existing house-air watchdog as
+its scheduler, and VVX uses central `master_v1_7_0`, because Shelly allows only
+three running scripts per device. Each executor reads its own
+`ftx.intent.dev.*` key from VVX KVS and applies only that device's output if the
+desired state differs from current state.
+
+Executor-health KVS keys are intentionally not added in this phase because
+Shelly KVS has a 50-key limit. Verification uses existing intent keys, live
+output status, `ftx.tel.act` and script status.
 
 ---
 

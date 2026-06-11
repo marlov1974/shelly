@@ -89,7 +89,7 @@ Inconsistency to be aware of: this recipe contains `"boot": true`, but Mac direc
 ### `rt/recipes/p.json` legacy
 
 Legacy central poll recipe. Central poll is retired from the active manifest and
-is not scheduled by `master_v1_6_0`.
+is not scheduled by `master_v1_7_0`.
 
 Builds old poll from:
 
@@ -526,7 +526,16 @@ Reads `ftx.intent.dev.sup` and applies supply fan `Light.Set id=0` if needed.
 
 ### `rt/scripts/extract-fan/master_extract_fan_v0_1_0.js`
 
-Local long-running scheduler for extract fan publisher and executor.
+Stored but disabled local long-running scheduler for extract fan publisher and
+executor. Do not run this together with extract watchdog and telemetry
+publisher; the extract fan has a three-running-script limit and the executor
+will fail to start.
+
+### `rt/scripts/extract-fan/house_air_sensor_watchdog_v0_2_0.js`
+
+Long-running extract fan watchdog for house temperature/RH sensor power cycling.
+Also starts `executor_extract_fan_v0_1_0` every 43 seconds in the local-driver
+canary.
 
 ### `rt/scripts/extract-fan/executor_extract_fan_v0_1_0.js`
 
@@ -558,11 +567,15 @@ Reads `ftx.intent.dev.dmp` and applies dampers `Switch.Set id=0` if needed.
 
 ### `rt/scripts/vvx/master_vvx_v0_1_0.js`
 
-Local long-running scheduler for VVX publisher and executor.
+Stored but disabled local scheduler for VVX publisher and executor. Do not run
+this together with central master and VVX telemetry publisher; the VVX runtime
+host has a three-running-script limit and workers will fail to start.
 
 ### `rt/scripts/vvx/executor_vvx_v0_1_0.js`
 
-Reads `ftx.intent.dev.vvx` and applies VVX `Switch.Set id=0` if needed.
+Reads `ftx.intent.dev.vvx` and applies VVX `Switch.Set id=0` if needed. In the
+local-driver canary this one-shot script is scheduled by central
+`master_v1_7_0`.
 
 ## Reboot chunks
 

@@ -14,6 +14,7 @@ Examples:
 boot_v1_0_0
 master_v1_5_0
 master_v1_6_0
+master_v1_7_0
 state_v1_4_1
 state_v1_8_0
 weather_v1_0_1
@@ -86,6 +87,15 @@ Restrictions:
 - Must not use `Script.List` during normal runtime.
 - Must remain low-heap and avoid long nested callback chains.
 
+Canary note:
+- `master_v1_7_0` does not schedule central `driver`.
+- Physical application is handled by local device executors reading
+  `ftx.intent.dev.*`.
+- `master_v1_7_0` does schedule local VVX executor id 10 because VVX cannot run
+  a separate local master without exhausting the three-running-script limit.
+- `driver_v1_0_1` remains installed for rollback but should normally stay
+  stopped in this phase.
+
 ## edge telemetry publishers
 
 Role:
@@ -115,7 +125,7 @@ Outputs:
 - `ftx.tel.dev.vvx`
 
 Implementation note:
-- Central `poll` code remains in the repository as legacy source but is not in the active device manifest and is not scheduled by `master_v1_6_0`.
+- Central `poll` code remains in the repository as legacy source but is not in the active device manifest and is not scheduled by `master_v1_7_0`.
 
 ## edge local masters and executors
 
@@ -123,14 +133,16 @@ Role:
 - Small local physical-device apply path for the Gen1-to-G2 migration.
 
 Lifecycle:
-- Local master is long-running and enabled on each physical actuator device.
-- Local executor is one-shot and started by the local master.
+- Supply, heat, cool and dampers use a long-running local master.
+- Extract uses `house_air_sensor_watchdog_v0_2_0` as the long-running scheduler because watchdog + publisher + local master would exhaust the three-running-script limit.
+- VVX uses central `master_v1_7_0` as the scheduler because central master + VVX publisher + local master would exhaust the three-running-script limit.
+- Local executor is one-shot and started by its device-specific scheduler.
 - Local executor self-stops after reading intent and applying or skipping.
 
 Active script names:
 - `master_supply_fan_v0_1_0`
 - `executor_supply_fan_v0_1_0`
-- `master_extract_fan_v0_1_0`
+- `house_air_sensor_watchdog_v0_2_0`
 - `executor_extract_fan_v0_1_0`
 - `master_heat_dimmer_v0_1_0`
 - `executor_heat_dimmer_v0_1_0`
@@ -138,22 +150,30 @@ Active script names:
 - `executor_cool_dimmer_v0_1_0`
 - `master_dampers_v0_1_0`
 - `executor_dampers_v0_1_0`
-- `master_vvx_v0_1_0`
 - `executor_vvx_v0_1_0`
 
 Live VVX id note:
 - The VVX Shelly has a 10-script storage limit. Since central `poll` is retired
   and absent from the active manifest, live slot 4 is reused for
-  `master_vvx_v0_1_0`. The VVX executor remains on id 10.
+  `master_vvx_v0_1_0` source/storage. That script must remain disabled/stopped
+  in the local-driver canary because the VVX runtime host has a three-running-
+  script limit. The VVX executor remains on id 10 and is scheduled by central
+  `master_v1_7_0`.
+
+Live extract id note:
+- Extract fan slot 4 stores `master_extract_fan_v0_1_0` but it must remain
+  disabled/stopped in the local-driver canary. Extract already runs the house
+  air sensor watchdog and telemetry publisher, so the watchdog v0.2 script owns
+  the 43-second executor schedule.
 
 Schedules:
 
 ```text
 supply fan:  executor 41s, publisher 601s
-extract fan: executor 43s, publisher 607s
+extract fan: executor 43s via watchdog, publisher self-samples
 cool:        executor 47s, publisher 613s
 heat:        executor 53s, publisher 617s
-VVX:         executor 59s, publisher 619s
+VVX:         executor about 60s via central master, publisher self-samples
 dampers:     executor 61s, publisher 631s
 ```
 
@@ -283,6 +303,8 @@ Restrictions:
 
 Role:
 - Applies `ftx.intent.act` to physical actuators as the central compatibility path.
+- In the local-driver canary it remains installed but is not scheduled by
+  `master_v1_7_0`.
 
 Script id:
 - Fixed id 8.

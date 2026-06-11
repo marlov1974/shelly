@@ -93,7 +93,7 @@ reboot    = 5760
 Expected first startup sequence:
 
 ```text
-state → weather → brain → driver
+state → weather → brain
 ```
 
 Weather is intentionally run during startup before the first brain run, so brain can use fresh weather data.
@@ -101,7 +101,7 @@ Weather is intentionally run during startup before the first brain run, so brain
 ## Reset scores
 
 ```text
-state/brain/driver = 4
+state/brain = 4
 weather                = 240
 reboot                 = 5760
 ```
@@ -120,10 +120,16 @@ Reboot is no longer tied to a specific wall-clock time window. It is score based
 After startup, the normal control rhythm becomes:
 
 ```text
-state → brain → driver
+state → brain → local device executors
 ```
 
-Weather is inserted as an extra worker before the next relevant control cycle when its score becomes lowest. Weather does not replace state; it just runs as an additional step and the normal state/brain/driver flow continues.
+Weather is inserted as an extra worker before the next relevant control cycle
+when its score becomes lowest. Weather does not replace state; it just runs as
+an additional step. In the local-driver canary, central `driver` remains
+installed but is not scheduled by master. Non-VVX device executors are started
+by local edge masters. The VVX executor is started by central `master_v1_7_0`
+because the VVX runtime host is limited to three running scripts and must keep
+central master plus the VVX telemetry publisher running.
 
 Mac deploy and reboot are different:
 
@@ -169,4 +175,7 @@ Telemetry source model:
 - If any sampled value changes beyond its delta threshold, the publisher writes its complete per-device telemetry object to VVX KVS.
 - A 10-minute heartbeat republish keeps VVX KVS populated after VVX reboot even if values are otherwise stable.
 
-The current active design is `master_v1_6_0-no-poll`. Earlier 60-second chained master designs, Shelly-side installer scheduling and central poll are obsolete and kept only as historical context in old notes or commit history.
+The current active design is `master_v1_7_0-local-driver-canary`. Earlier
+60-second chained master designs, Shelly-side installer scheduling, central
+poll and scheduled central driver are obsolete and kept only as historical
+context in old notes or commit history.

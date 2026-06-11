@@ -119,7 +119,7 @@ Avoid introducing:
 - hidden runtime state
 - implicit ownership
 - dynamic runtime discovery during normal operation
-- direct actuator writes outside driver
+- direct actuator writes outside documented apply layers
 - mixed telemetry and control ownership
 - uncontrolled async fanout
 - persistent timer forests

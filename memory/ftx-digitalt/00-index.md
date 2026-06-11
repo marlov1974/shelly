@@ -89,8 +89,8 @@ Current roles:
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.
-- `driver`: one-shot central compatibility actuator application script, script id 8.
-- Local device masters/executors: physical-device scripts that read per-device intent and apply only local outputs.
+- `driver`: one-shot central compatibility actuator application script, script id 8. It remains installed for rollback but is not scheduled by `master_v1_7_0`.
+- Local device masters/executors: physical-device scripts that read per-device intent and apply only local outputs. VVX has no separate running local master; central `master_v1_7_0` schedules the local VVX executor because the runtime host is limited to three running scripts.
 - `reboot`: one-shot reboot orchestrator, script id 9.
 
 Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Deploy state is stored in persistent `text:200`, not KVS.
