@@ -47,7 +47,7 @@ Current modes:
 - `STD`: normal automatic ventilation/control.
 - `BST`: boost mode.
 - `FIRE`: fireplace/positive-pressure mode.
-- `MAN`: manual/inhibit mode. Brain writes `driver_inhibit=1`, so driver does not apply automatic control.
+- `MAN`: manual/inhibit mode. Brain writes `driver_inhibit=1`, so local executors do not apply automatic control.
 
 ## Forced mode state
 
@@ -169,9 +169,7 @@ Constraints are applied in the intent layer, not directly in feature calculation
 
 ## Intent resolution
 
-Brain writes a full desired aggregate state in `ftx.intent.act`, not a delta.
-During the local-driver migration, brain also writes per-device intent keys
-under `ftx.intent.dev.*`.
+Brain writes per-device intent keys under `ftx.intent.dev.*`, not deltas.
 
 Output shape:
 
@@ -207,20 +205,12 @@ Per-device intent keys carry the same resolved actuator state split by device:
 - `ftx.intent.dev.dmp`
 - `ftx.intent.dev.vvx`
 
-## Driver responsibility
+## Local executor responsibility
 
-Brain does not apply actuator RPCs. In the local-driver canary, local device
+Brain does not apply actuator RPCs. Local device
 executors read only their own `ftx.intent.dev.*` key and apply only their local
-output when the desired state differs from current local state. The central
-driver remains installed for rollback and compatibility but is not scheduled by
-`master_v1_7_0`.
-
-Central driver responsibilities include:
-
-- respecting `driver_inhibit`
-- treating `on=0` as dominant over non-zero `pct`
-- preventing simultaneous heat and cool
-- applying dampers, fans, VVX, heat and cool through RPC
+output when the desired state differs from current local state. The old central
+driver and aggregate `ftx.intent.act` path are retired.
 
 Local executor responsibilities include:
 

@@ -141,26 +141,6 @@ Weather reference object from `weather`.
 }
 ```
 
-### `ftx.intent.act`
-
-Final full desired actuator state from `brain`. In the local-driver canary it is
-kept as a legacy compatibility and rollback contract; central `driver` is
-installed but not scheduled.
-
-```json
-{
-  "driver_inhibit": 0,
-  "sup":  { "on": 0, "pct": 0 },
-  "ext":  { "on": 0, "pct": 0 },
-  "vvx":  { "on": 0 },
-  "heat": { "on": 0, "pct": 0 },
-  "cool": { "on": 0, "pct": 0 },
-  "dmp":  { "on": 0 }
-}
-```
-
-This is a full desired state, not a delta.
-
 ### `ftx.intent.dev.*`
 
 Per-device desired actuator state from `brain`, consumed by local device

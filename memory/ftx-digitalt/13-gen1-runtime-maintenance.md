@@ -17,7 +17,7 @@ rt/devices/8813bfdaa0c0.json
 Canonical runtime flow:
 
 ```text
-poll -> state -> weather/brain -> driver
+edge telemetry publishers -> state -> weather/brain -> local device executors
 ```
 
 The current runtime is script/recipe based and uses KVS to propagate state between one-shot workers.
@@ -58,7 +58,7 @@ It currently consists of:
 - `state`: derives runtime/performance values and writes virtual components.
 - `weather`: fetches weather values used by brain.
 - `brain`: computes current desired FTX intent.
-- `driver`: applies actuator commands.
+- Local device executors: apply their own actuator command from per-device intent.
 
 The active implementation is always defined by runtime chunks, recipes and the device manifest. Memory files are secondary documentation.
 

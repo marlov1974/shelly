@@ -40,7 +40,6 @@ Architecture:
 - state
 - weather
 - brain
-- driver
 - local device executors on physical actuator devices
 - reboot
 
@@ -88,9 +87,9 @@ Current primary design assumptions:
 
 - Single master tick orchestration.
 - Stateless worker scripts.
-- Edge telemetry publishers -> State -> Weather -> Brain -> Driver pipeline.
-- Driver owns all physical output ordering.
-- Intent model is canonical actuator contract.
+- Edge telemetry publishers -> State -> Weather -> Brain -> local executor pipeline.
+- Local device executors own physical output application.
+- Per-device intent keys are the canonical actuator contract.
 
 ### Optimizer POC runtime
 

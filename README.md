@@ -116,16 +116,9 @@ performance metrics, and writes compatibility aggregate telemetry.
 ## brain
 
 Builds desired control intent. During the Gen1-to-G2 migration, brain writes
-both the legacy aggregate intent and per-device intent keys.
+per-device intent keys only.
 
 Brain must not directly control actuators.
-
-## driver
-
-Applies physical actuator outputs from the legacy aggregate intent.
-
-During the local-driver canary this script remains installed as rollback and
-compatibility source, but central `master` does not schedule it.
 
 ## local device executors
 
@@ -135,6 +128,9 @@ its scheduler, and VVX uses central `master_v1_7_0`, because Shelly allows only
 three running scripts per device. Each executor reads its own
 `ftx.intent.dev.*` key from VVX KVS and applies only that device's output if the
 desired state differs from current state.
+
+The old central driver and aggregate `ftx.intent.act` compatibility path are
+retired.
 
 Executor-health KVS keys are intentionally not added in this phase because
 Shelly KVS has a 50-key limit. Verification uses existing intent keys, live

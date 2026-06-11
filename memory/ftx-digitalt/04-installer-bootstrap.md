@@ -90,7 +90,7 @@ Canonical active ids:
 5 state
 6 weather
 7 brain
-8 driver
+8 retired central driver slot; unused on live VVX
 9 reboot
 ```
 
@@ -104,7 +104,7 @@ normal runtime and worker self-stop. The Mac deploy tool may use `Script.List`
 because deployment/discovery is its job.
 
 Central VVX deploy does not manage slot 4. Slot 4 is no longer central poll and
-is intentionally unused on live VVX after local-driver cleanup.
+is intentionally unused on live VVX after local-executor cleanup.
 
 ## Device manifest
 

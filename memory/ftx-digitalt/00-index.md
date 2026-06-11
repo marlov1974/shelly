@@ -42,7 +42,7 @@ This device runs the canonical Gen1 FTX runtime:
 - state
 - weather
 - brain
-- driver
+- local device executors
 - reboot
 
 ## Gen2 POC runtime warning
@@ -75,7 +75,7 @@ Canonical fixed script ids:
 5 state
 6 weather
 7 brain
-8 driver
+8 retired central driver slot; unused on live VVX
 9 reboot
 edge local masters/executors on physical actuator devices
 ```
@@ -89,7 +89,7 @@ Current roles:
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.
-- `driver`: one-shot central compatibility actuator application script, script id 8. It remains installed for rollback but is not scheduled by `master_v1_7_0`.
+- `driver`: retired central actuator application path formerly on script id 8. It is no longer in the active manifest and live VVX slot 8 is intentionally unused.
 - Local device masters/executors: physical-device scripts that read per-device intent and apply only local outputs. VVX has no separate running local master; central `master_v1_7_0` schedules the local VVX executor because the runtime host is limited to three running scripts.
 - `reboot`: one-shot reboot orchestrator, script id 9.
 
@@ -119,7 +119,7 @@ The system minimizes concurrency and heap pressure by using one long-lived low-h
 - Device manifest: `rt/devices/8813bfdaa0c0.json`
 - Mac direct deploy tool: `tools/g1_vvx_deploy.py`
 - Recipes: `rt/recipes/*.json`
-- Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/driver/`, `rt/reboot/`
+- Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/reboot/`
 - Edge publisher sources: `rt/scripts/supply-fan/`, `rt/scripts/extract-fan/`, `rt/scripts/heat-dimmer/`, `rt/scripts/cool-dimmer/`, `rt/scripts/dampers/`, `rt/scripts/vvx/`
 - Gen1 maintenance boundary: `memory/ftx-digitalt/13-gen1-runtime-maintenance.md`
 - Gen2 source of truth: `marlov1974/smart-home`

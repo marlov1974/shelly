@@ -17,7 +17,6 @@ One-shot/self-stopping workers:
 - `state`
 - `weather`
 - `brain`
-- `driver`
 - `reboot`
 
 ## Boot model
@@ -72,7 +71,7 @@ Canonical fixed ids:
 5 state
 6 weather
 7 brain
-8 driver
+8 retired central driver slot
 9 reboot
 ```
 
@@ -86,7 +85,6 @@ Because master decrements scores at the beginning of each tick, initial scores a
 state     = 1
 weather   = 2
 brain     = 3
-driver    = 4
 reboot    = 5760
 ```
 
@@ -125,9 +123,8 @@ state → brain → local device executors
 
 Weather is inserted as an extra worker before the next relevant control cycle
 when its score becomes lowest. Weather does not replace state; it just runs as
-an additional step. In the local-driver canary, central `driver` remains
-installed but is not scheduled by master. Non-VVX device executors are started
-by local edge masters. The VVX executor is started by central `master_v1_7_0`
+an additional step. Non-VVX device executors are started by local edge masters.
+The VVX executor is started by central `master_v1_7_0`
 because the VVX runtime host is limited to three running scripts and must keep
 central master plus the VVX telemetry publisher running.
 
@@ -175,7 +172,7 @@ Telemetry source model:
 - If any sampled value changes beyond its delta threshold, the publisher writes its complete per-device telemetry object to VVX KVS.
 - A 10-minute heartbeat republish keeps VVX KVS populated after VVX reboot even if values are otherwise stable.
 
-The current active design is `master_v1_7_0-local-driver-canary`. Earlier
+The current active design is `master_v1_7_0-local-executor`. Earlier
 60-second chained master designs, Shelly-side installer scheduling, central
-poll and scheduled central driver are obsolete and kept only as historical
+poll and central driver are obsolete and kept only as historical
 context in old notes or commit history.

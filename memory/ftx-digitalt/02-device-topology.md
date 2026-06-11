@@ -90,7 +90,7 @@ Old UNI devices are no longer polled or rebooted by Gen1 runtime maintenance scr
 The extract fan runs local script `house_air_sensor_watchdog_v0_2_0` to power-cycle
 `switch:100` for 10 seconds if `temperature:105` or `humidity:105` is missing,
 `null`, `n/a` or exactly zero. The script is local to the extract fan and does not
-change primary VVX runtime actuator ownership. In the local-driver canary it also
+change primary VVX runtime actuator ownership. In the local-executor runtime it also
 starts the extract fan executor because the extract fan cannot run watchdog,
 telemetry publisher, local master and executor within the three-running-script
 limit.

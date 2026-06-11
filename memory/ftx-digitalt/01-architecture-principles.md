@@ -8,11 +8,10 @@
 
 Worker scripts perform bounded work and then stop themselves:
 
-- `poll`
 - `state`
 - `weather`
 - `brain`
-- `driver`
+- local executors
 - `reboot`
 
 ## Mac direct deploy as bootstrap/install path

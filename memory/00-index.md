@@ -135,7 +135,7 @@ The primary Gen1 FTX runtime uses:
 Normal runtime cycle:
 
 ```text
-poll -> state -> brain -> driver
+edge telemetry publishers -> state -> brain -> local device executors
 ```
 
 Weather is periodic.
@@ -160,11 +160,11 @@ Owns desired control logic.
 
 Brain must not directly control hardware.
 
-## driver
+## local device executors
 
-Owns physical actuator application.
+Own physical actuator application for their own devices.
 
-Driver is the only apply layer.
+Local executors are the only current apply layer.
 
 ---
 
@@ -186,7 +186,7 @@ Avoid:
 - mixed ownership
 - hidden runtime magic
 - uncontrolled dynamic behavior
-- direct actuator writes outside driver
+- direct actuator writes outside local executors
 
 ---
 

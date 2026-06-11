@@ -172,6 +172,6 @@ Extract fan `switch:100` powers the house temp/RH sensor. Script
 `house_air_sensor_watchdog_v0_2_0` on the extract fan checks once per minute and
 cycles that switch off for 10 seconds if `temperature:105.tC` or
 `humidity:105.rh` is missing, `null`, `n/a` or exactly zero. The same script
-starts the extract fan local executor during the local-driver canary.
+starts the extract fan local executor during the local-executor runtime.
 
 RPM script-counter testing was rejected: tach events are too fast for stable Shelly script handling at fan rates, and the physical input path may filter or distort fast pulses. Runtime keeps `rpm.sup`, `rpm.ext` and `rpm.vvx` as intentional zero placeholders until firmware counter support or a different hardware solution exists.

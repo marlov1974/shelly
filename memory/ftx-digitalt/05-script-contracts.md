@@ -21,7 +21,7 @@ weather_v1_0_1
 brain_v2_4_2
 brain_v2_8_0
 brain_v2_9_0
-driver_v1_0_1
+brain_v2_10_0
 reboot_v1_0_0
 reboot_v1_3_0
 ```
@@ -37,7 +37,7 @@ Canonical fixed ids:
 5 state
 6 weather
 7 brain
-8 driver
+8 retired central driver slot; unused on live VVX
 9 reboot
 ```
 
@@ -87,14 +87,14 @@ Restrictions:
 - Must not use `Script.List` during normal runtime.
 - Must remain low-heap and avoid long nested callback chains.
 
-Canary note:
-- `master_v1_7_0` does not schedule central `driver`.
+Local-executor note:
+- `master_v1_7_0` does not schedule or require central `driver`.
 - Physical application is handled by local device executors reading
   `ftx.intent.dev.*`.
 - `master_v1_7_0` does schedule local VVX executor id 10 because VVX cannot run
   a separate local master without exhausting the three-running-script limit.
-- `driver_v1_0_1` remains installed for rollback but should normally stay
-  stopped in this phase.
+- The old central `driver_v1_0_1` rollback script is retired and no longer
+  installed in the active VVX manifest.
 
 ## edge telemetry publishers
 
@@ -277,7 +277,6 @@ Inputs:
 
 Outputs:
 - `number:204` Target to house, C
-- `ftx.intent.act`
 - `ftx.intent.dev.sup`
 - `ftx.intent.dev.ext`
 - `ftx.intent.dev.heat`
@@ -295,40 +294,6 @@ Internal architecture:
 Restrictions:
 - Brain must not call physical actuator RPCs directly.
 - Brain writes desired full state, not deltas.
-
-## driver
-
-Role:
-- Applies `ftx.intent.act` to physical actuators as the central compatibility path.
-- In the local-driver canary it remains installed but is not scheduled by
-  `master_v1_7_0`.
-
-Script id:
-- Fixed id 8.
-
-Lifecycle:
-- One-shot.
-- Self-stops after applying outputs.
-
-Input:
-- `ftx.intent.act`
-
-Outputs:
-- RPC writes to:
-  - dampers switch/device
-  - supply fan dimmer
-  - extract fan dimmer
-  - VVX switch
-  - heat dimmer
-  - cool dimmer
-
-Behavior:
-- Reads intent using `rt/driver/io-input.js`.
-- Normalizes intent in `rt/driver/normalize.js`.
-- Respects `driver_inhibit`: if set, logs `INH` and self-stops without applying actuator outputs.
-- Treats `on=0` as dominant over non-zero `pct`.
-- Protects against simultaneous heat and cool: if both are requested, normalize disables both and marks thermal conflict.
-- Applies either off sequence or on sequence from `rt/driver/sequence.js`.
 
 ## reboot
 

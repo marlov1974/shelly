@@ -58,7 +58,6 @@ Physical application may only happen in explicitly documented apply layers:
 
 Current allowed apply layers are:
 
-- central `driver`, using the aggregate `ftx.intent.act` compatibility key
 - local device executors, using their own `ftx.intent.dev.*` key
 
 No other script may directly apply hardware state.

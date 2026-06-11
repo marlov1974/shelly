@@ -74,7 +74,7 @@ The runtime is built around:
 Normal cycle:
 
 ```text
-poll -> state -> brain -> driver
+edge telemetry publishers -> state -> brain -> local device executors
 ```
 
 Weather is periodic.
@@ -112,16 +112,15 @@ Brain writes desired state only.
 
 Brain must not directly control actuators.
 
-### driver
+### local device executors
 
-Owns:
+Own:
 
-- physical actuator application
-- sequencing
-- normalization
-- safety normalization
+- physical actuator application for their own device
+- stale/inhibited intent rejection
+- redundant RPC avoidance
 
-Driver is the only layer allowed to apply physical outputs.
+Local executors are the only current layers allowed to apply physical outputs.
 
 ---
 

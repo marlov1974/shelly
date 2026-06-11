@@ -53,7 +53,6 @@
     "rt/recipes/state.json",
     "rt/recipes/weather.json",
     "rt/recipes/brain.json",
-    "rt/recipes/driver.json",
     "rt/recipes/reboot.json",
 
     "rt/common/wrapper.start.js",
@@ -103,17 +102,6 @@
     "rt/brain/intent.js",
     "rt/brain/output.js",
     "rt/brain/main.js",
-
-    "rt/driver/base.js",
-    "rt/driver/io-input.js",
-    "rt/driver/normalize.js",
-    "rt/driver/rpc.js",
-    "rt/driver/apply-dampers.js",
-    "rt/driver/apply-fans.js",
-    "rt/driver/apply-vvx.js",
-    "rt/driver/apply-thermal.js",
-    "rt/driver/sequence.js",
-    "rt/driver/main.js",
 
     "rt/reboot/base.js",
     "rt/reboot/main.js",

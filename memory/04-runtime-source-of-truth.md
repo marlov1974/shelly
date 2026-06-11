@@ -36,7 +36,7 @@ Runtime chunks define:
 Examples:
 
 - `rt/brain/*`
-- `rt/driver/*`
+- `rt/scripts/*/executor_*.js`
 - `rt/master/*`
 
 These files are authoritative for execution semantics.

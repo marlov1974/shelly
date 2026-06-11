@@ -99,7 +99,6 @@ poll_v3_3_0
 state_v1_4_1
 weather_v1_0_1
 brain_v2_4_2
-driver_v1_0_1
 reboot_v1_0_0
 ```
 

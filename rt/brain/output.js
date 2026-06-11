@@ -1,5 +1,4 @@
-// brain output 2.9.0-device-intents
-var KEY_INTENT_ACT = "ftx.intent.act";
+// brain output 2.10.0-device-intents-only
 var KEY_INTENT_DEV_SUP = "ftx.intent.dev.sup";
 var KEY_INTENT_DEV_EXT = "ftx.intent.dev.ext";
 var KEY_INTENT_DEV_HEAT = "ftx.intent.dev.heat";
@@ -43,9 +42,7 @@ function writeDeviceIntents(ctx, cb) {
 }
 
 function writeIntent(ctx, cb) {
-  kvsSet(KEY_INTENT_ACT, ctx.intent || baseOffIntent(), function () {
-    writeDeviceIntents(ctx, cb);
-  });
+  writeDeviceIntents(ctx, cb);
 }
 
 function writeTargetToHouse(ctx, cb) {

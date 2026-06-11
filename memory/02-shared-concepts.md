@@ -2,7 +2,7 @@
 
 ## One-shot script
 
-A script that is started by another script, performs one bounded job, writes its outputs and then stops itself. In FTX Digital, `poll`, `state`, `weather`, `brain`, `driver` and `reboot` are one-shot scripts.
+A script that is started by another script, performs one bounded job, writes its outputs and then stops itself. In FTX Digital, `state`, `weather`, `brain`, local executors and `reboot` are one-shot scripts.
 
 ## Master
 

@@ -24,7 +24,7 @@ Current canonical ids from the manifest:
 5 state
 6 weather
 7 brain
-8 driver
+8 retired central driver slot; unused on live VVX
 9 reboot
 edge local masters/executors on physical actuator devices
 ```
@@ -196,28 +196,6 @@ boolean:201 Nightmode
 enum:200 Mode = STD, BST, FIRE, MAN
 number:200 Temp, C
 number:204 Target to house, C
-```
-
-### `rt/recipes/driver.json`
-
-Builds driver from:
-
-```text
-rt/common/wrapper.start.js
-rt/driver/base.js
-rt/common/script.js
-rt/common/helpers.js
-rt/common/kvs.js
-rt/driver/io-input.js
-rt/driver/normalize.js
-rt/driver/rpc.js
-rt/driver/apply-dampers.js
-rt/driver/apply-fans.js
-rt/driver/apply-vvx.js
-rt/driver/apply-thermal.js
-rt/driver/sequence.js
-rt/driver/main.js
-rt/common/wrapper.end.js
 ```
 
 ### `rt/recipes/reboot.json`
@@ -454,13 +432,12 @@ Current VVX candidate logic: VVX on when full air chain is ready.
 
 ### `rt/brain/intent.js`
 
-Resolves signals into final full desired `ftx.intent.act`.
+Resolves signals into final desired device intents.
 
 ### `rt/brain/output.js`
 
-Writes target, aggregate intent and per-device intents:
+Writes target and per-device intents:
 
-- `ftx.intent.act`
 - `ftx.intent.dev.sup`
 - `ftx.intent.dev.ext`
 - `ftx.intent.dev.heat`
@@ -472,49 +449,7 @@ Writes target, aggregate intent and per-device intents:
 
 Runs the brain sequence and self-stops.
 
-## Driver chunks
-
-### `rt/driver/base.js`
-
-Driver script id/name, KVS input key and context shape.
-
-### `rt/driver/io-input.js`
-
-Reads `ftx.intent.act`.
-
-### `rt/driver/normalize.js`
-
-Normalizes intent, handles `on=0` dominance and disables both heat/cool on thermal conflict.
-
-### `rt/driver/rpc.js`
-
-HTTP/RPC helper functions for actuator calls.
-
-### `rt/driver/apply-dampers.js`
-
-Applies damper switch state.
-
-### `rt/driver/apply-fans.js`
-
-Applies supply and extract fan dimmer states.
-
-### `rt/driver/apply-vvx.js`
-
-Applies VVX switch state.
-
-### `rt/driver/apply-thermal.js`
-
-Applies heat and cool dimmer states.
-
-### `rt/driver/sequence.js`
-
-Defines on/off actuator application sequence.
-
-### `rt/driver/main.js`
-
-Reads, normalizes and applies intent, respects inhibit, logs and self-stops.
-
-## Edge local driver scripts
+## Edge local executor scripts
 
 ### `rt/scripts/supply-fan/master_supply_fan_v0_1_0.js`
 
@@ -527,8 +462,8 @@ Reads `ftx.intent.dev.sup` and applies supply fan `Light.Set id=0` if needed.
 ### `rt/scripts/extract-fan/house_air_sensor_watchdog_v0_2_0.js`
 
 Long-running extract fan watchdog for house temperature/RH sensor power cycling.
-Also starts `executor_extract_fan_v0_1_0` every 43 seconds in the local-driver
-canary.
+Also starts `executor_extract_fan_v0_1_0` every 43 seconds in the local-executor
+runtime.
 
 ### `rt/scripts/extract-fan/executor_extract_fan_v0_1_0.js`
 
@@ -561,7 +496,7 @@ Reads `ftx.intent.dev.dmp` and applies dampers `Switch.Set id=0` if needed.
 ### `rt/scripts/vvx/executor_vvx_v0_1_0.js`
 
 Reads `ftx.intent.dev.vvx` and applies VVX `Switch.Set id=0` if needed. In the
-local-driver canary this one-shot script is scheduled by central
+local-executor runtime this one-shot script is scheduled by central
 `master_v1_7_0`.
 
 ## Reboot chunks
