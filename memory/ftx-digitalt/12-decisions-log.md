@@ -1,10 +1,12 @@
 # FTX Digital Decisions Log
 
-## 2026-06 — Remove Shelly-side installer from active VVX runtime
+## 2026-06 — Remove Shelly-side installer from active Gen1 runtime
 
 Decision:
-- The active VVX runtime no longer uses script id 1 as a resident installer.
-- Mac/Codex installs code directly on the VVX runtime host with `tools/g1_vvx_deploy.py`.
+- The active Gen1 runtime no longer uses script id 1 as a resident installer.
+- Mac/Codex installs hub code directly on the dampers runtime hub with
+  `tools/g1_vvx_deploy.py`.
+- VVX is now a local executor device, not the active hub.
 - `master_v1_5_0` no longer schedules installer.
 - `reboot_v1_2_0` no longer stops installer as an active runtime participant.
 - Obsolete live `Installer` script id 1 may be stopped and deleted after `master` no longer schedules it.

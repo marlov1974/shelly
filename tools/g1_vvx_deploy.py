@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mac-side direct deploy tool for the Gen1 VVX runtime host."""
+"""Mac-side direct deploy tool for the Gen1 FTX hub runtime host."""
 
 from __future__ import annotations
 
@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_BASE_URL = "http://192.168.86.240:8040/"
-DEFAULT_DEVICE_ID = "8813bfdaa0c0"
-DEFAULT_MANIFEST = "rt/devices/8813bfdaa0c0.json"
+DEFAULT_BASE_URL = "http://192.168.86.240:8030/"
+DEFAULT_DEVICE_ID = "8813bfd99f54"
+DEFAULT_MANIFEST = "rt/devices/8813bfd99f54.json"
 DEFAULT_UPLOAD_CHUNK_BYTES = 1500
 DEFAULT_TIMEOUT_SECONDS = 5.0
 STATE_TEXT_ID = 200
@@ -213,18 +213,29 @@ def build_scripts(root: Path, manifest: dict[str, Any], roles: set[str] | None) 
     return built
 
 
-def assert_expected_slots(base_url: str, scripts: list[BuiltScript]) -> None:
+def create_missing_slot(base_url: str, script: BuiltScript) -> None:
+    result = rpc_call(base_url, "Script.Create", {"name": script.name})
+    script_id = result.get("id") if isinstance(result, dict) else None
+    if script_id != script.script_id:
+        raise DeployError(f"{script.role}: expected Script.Create to allocate #{script.script_id}, got #{script_id!r}")
+
+
+def ensure_expected_slots(base_url: str, scripts: list[BuiltScript], create_missing: bool, allow_repurpose: bool) -> None:
     live = script_list(base_url)
     missing = []
     wrong_names = []
     for script in scripts:
         entry = script_by_id(live, script.script_id)
         if entry is None:
-            missing.append(f"{script.role}:#{script.script_id}")
+            if create_missing:
+                create_missing_slot(base_url, script)
+                live = script_list(base_url)
+            else:
+                missing.append(f"{script.role}:#{script.script_id}")
         else:
             live_name = str(entry.get("name") or "")
             valid_live_name = live_name in {script.name, script.role} or live_name.startswith(script.role + "_v")
-            if not valid_live_name:
+            if not valid_live_name and not allow_repurpose:
                 wrong_names.append(f"{script.role}:#{script.script_id} live={entry.get('name')!r} target={script.name!r}")
     if missing:
         raise DeployError("expected fixed script ids are missing: " + ", ".join(missing))
@@ -254,7 +265,7 @@ def put_script_code(base_url: str, script: BuiltScript, upload_chunk_bytes: int)
 
 
 def stop_runtime(base_url: str, include_installer: bool) -> None:
-    ids = [3, 5, 6, 7, 9, 2]
+    ids = [3, 5, 6, 7, 8, 2]
     if include_installer:
         ids.insert(0, INSTALLER_SCRIPT_ID)
     for script_id in ids:
@@ -278,7 +289,11 @@ def deploy_one(base_url: str, script: BuiltScript, upload_chunk_bytes: int) -> d
 
 def write_deploy_state(base_url: str, device_version: int) -> None:
     value = json.dumps({"dv": int(device_version), "ok": 1}, separators=(",", ":"))
-    rpc_call(base_url, "Text.Set", {"id": STATE_TEXT_ID, "value": value})
+    try:
+        rpc_call(base_url, "Text.Set", {"id": STATE_TEXT_ID, "value": value})
+    except DeployError as exc:
+        if "not found" not in str(exc).lower():
+            raise
 
 
 def delete_installer_script(base_url: str) -> bool:
@@ -353,7 +368,7 @@ def command_plan(args: argparse.Namespace) -> int:
     manifest = load_manifest(root, args.manifest)
     built = build_scripts(root, manifest, parse_roles(args.role))
     info = verify_device(args.base_url, args.expect_device_id)
-    assert_expected_slots(args.base_url, built)
+    ensure_expected_slots(args.base_url, built, False, args.allow_slot_repurpose)
     result = {
         "base_url": normalize_base_url(args.base_url),
         "device_id": info.get("id"),
@@ -373,7 +388,7 @@ def command_deploy(args: argparse.Namespace) -> int:
     manifest = load_manifest(root, args.manifest)
     built = build_scripts(root, manifest, parse_roles(args.role))
     info = verify_device(args.base_url, args.expect_device_id)
-    assert_expected_slots(args.base_url, built)
+    ensure_expected_slots(args.base_url, built, args.create_missing_slots, args.allow_slot_repurpose)
 
     stop_runtime(args.base_url, include_installer=args.delete_installer)
     deployed = [deploy_one(args.base_url, script, args.upload_chunk_bytes) for script in built]
@@ -396,7 +411,7 @@ def command_deploy(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Deploy Gen1 VVX scripts directly from the Mac via Shelly RPC.")
+    parser = argparse.ArgumentParser(description="Deploy Gen1 FTX hub scripts directly from the Mac via Shelly RPC.")
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--expect-device-id", default=DEFAULT_DEVICE_ID)
@@ -409,12 +424,16 @@ def build_parser() -> argparse.ArgumentParser:
     plan = subparsers.add_parser("plan")
     plan.add_argument("--role", action="append", help="Role or comma-separated roles to plan")
     plan.add_argument("--delete-installer", action="store_true")
+    plan.add_argument("--create-missing-slots", action="store_true")
+    plan.add_argument("--allow-slot-repurpose", action="store_true")
     plan.set_defaults(func=command_plan)
 
     deploy = subparsers.add_parser("deploy")
     deploy.add_argument("--role", action="append", help="Role or comma-separated roles to deploy")
     deploy.add_argument("--upload-chunk-bytes", type=int, default=DEFAULT_UPLOAD_CHUNK_BYTES)
     deploy.add_argument("--delete-installer", action="store_true")
+    deploy.add_argument("--create-missing-slots", action="store_true")
+    deploy.add_argument("--allow-slot-repurpose", action="store_true")
     deploy.add_argument("--no-start-master", dest="start_master", action="store_false")
     deploy.set_defaults(func=command_deploy, start_master=True)
     return parser

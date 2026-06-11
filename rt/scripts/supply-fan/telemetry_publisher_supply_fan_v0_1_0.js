@@ -1,6 +1,10 @@
 // telemetry_publisher_supply_fan_v0_1_0
 var KEY = "ftx.tel.dev.sup";
-var VVX_IP = "192.168.77.40";
+var KEY_COOL = "ftx.tel.thermal.cool";
+var KEY_HEAT = "ftx.tel.thermal.heat";
+var HUB_IP = "192.168.77.30";
+var COOL_IP = "192.168.77.13";
+var HEAT_IP = "192.168.77.12";
 var PERIOD_MS = 60000;
 var FORCE_S = 600;
 var last = null;
@@ -90,15 +94,47 @@ function changed(cur) {
   return 0;
 }
 function publish(cur) {
-  var url = "http://" + VVX_IP + "/rpc/KVS.Set?key=" + KEY + "&value=" + enc(JSON.stringify(cur));
+  var url = "http://" + HUB_IP + "/rpc/KVS.Set?key=" + KEY + "&value=" + enc(JSON.stringify(cur));
   Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
     if (err || !res || (res.body && res.body.indexOf("error") >= 0)) {
       log("TEL sup put err");
       return;
     }
-    last = cur;
-    lastS = cur.uptime_s;
-    log("TEL sup pa=" + cur.pa + " w=" + cur.act.w);
+    publishThermal(cur);
+  });
+}
+function putRemote(ip, key, value, tag, cb) {
+  var url = "http://" + ip + "/rpc/KVS.Set?key=" + key + "&value=" + enc(JSON.stringify(value));
+  Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
+    if (err || !res || (res.body && res.body.indexOf("error") >= 0)) log("TEL sup " + tag + " err");
+    if (cb) cb();
+  });
+}
+function coolPayload(cur) {
+  return {
+    v: 1,
+    source: "sup",
+    to_house: cur.temp.to_house,
+    brine: cur.temp.brine,
+    brine_post_shunt: cur.temp.brine_post_shunt
+  };
+}
+function heatPayload(cur) {
+  return {
+    v: 1,
+    source: "sup",
+    to_house: cur.temp.to_house,
+    hotwater: cur.temp.hotwater,
+    hotwater_post_shunt: cur.temp.hotwater_post_shunt
+  };
+}
+function publishThermal(cur) {
+  putRemote(COOL_IP, KEY_COOL, coolPayload(cur), "cool", function () {
+    putRemote(HEAT_IP, KEY_HEAT, heatPayload(cur), "heat", function () {
+      last = cur;
+      lastS = cur.uptime_s;
+      log("TEL sup pa=" + cur.pa + " w=" + cur.act.w);
+    });
   });
 }
 function sample() {

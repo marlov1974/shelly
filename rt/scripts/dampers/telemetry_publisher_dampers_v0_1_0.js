@@ -1,6 +1,5 @@
 // telemetry_publisher_dampers_v0_1_0
 var KEY = "ftx.tel.dev.dmp";
-var VVX_IP = "192.168.77.40";
 var PERIOD_MS = 60000;
 var FORCE_S = 600;
 var last = null;
@@ -50,9 +49,8 @@ function changed(cur) {
   return 0;
 }
 function publish(cur) {
-  var url = "http://" + VVX_IP + "/rpc/KVS.Set?key=" + KEY + "&value=" + enc(JSON.stringify(cur));
-  Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
-    if (err || !res || (res.body && res.body.indexOf("error") >= 0)) {
+  Shelly.call("KVS.Set", { key: KEY, value: cur }, function (res, err) {
+    if (err) {
       log("TEL dmp put err");
       return;
     }

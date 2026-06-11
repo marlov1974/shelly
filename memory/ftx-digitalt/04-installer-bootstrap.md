@@ -2,11 +2,11 @@
 
 ## Role
 
-The active Gen1 VVX runtime no longer uses a resident Shelly-side installer.
+The active Gen1 dampers runtime hub no longer uses a resident Shelly-side installer.
 
 Code installation is now a Mac/Codex responsibility. The Mac reads the local
 repository manifest and recipes, builds complete scripts locally, uploads them
-to the VVX runtime host through Shelly RPC `Script.PutCode`, verifies live script
+to the dampers runtime hub through Shelly RPC `Script.PutCode`, verifies live script
 state, and then restarts `master`.
 
 Current direct deploy tool:
@@ -18,10 +18,10 @@ tools/g1_vvx_deploy.py
 Current target:
 
 ```text
-VVX runtime host: 192.168.77.40
-operator URL:     http://192.168.86.240:8040/
-device id:        8813bfdaa0c0
-manifest:         rt/devices/8813bfdaa0c0.json
+dampers hub:      192.168.77.30
+operator URL:     http://192.168.86.240:8030/
+device id:        8813bfd99f54
+manifest:         rt/devices/8813bfd99f54.json
 ```
 
 ## Boot responsibilities
@@ -42,8 +42,8 @@ VVX.
 The Mac deploy tool:
 
 1. Reads `Shelly.GetDeviceInfo` from the target endpoint.
-2. Verifies that the live device id ends with `8813bfdaa0c0`.
-3. Reads `rt/devices/8813bfdaa0c0.json`.
+2. Verifies that the live device id ends with `8813bfd99f54`.
+3. Reads `rt/devices/8813bfd99f54.json`.
 4. Reads each selected package recipe locally.
 5. Concatenates recipe chunks locally into one complete script body.
 6. Stops local runtime scripts before writing selected script slots.
@@ -63,10 +63,10 @@ The persistent text component remains:
 text:200
 ```
 
-Compact JSON format:
+Compact JSON format when the target device has `text:200`:
 
 ```json
-{"dv":31,"ok":1}
+{"dv":2,"ok":1}
 ```
 
 Meaning:
@@ -86,15 +86,14 @@ Canonical active ids:
 ```text
 2 boot
 3 master
-4 retired central poll slot; unused on live VVX
+4 dampers local executor; outside central manifest
 5 state
 6 weather
 7 brain
-8 retired central driver slot; unused on live VVX
-9 reboot
+8 reboot
 ```
 
-Script id 1 is outside the central manifest and is used by the local VVX
+Script id 1 is outside the central manifest and is used by the local dampers
 telemetry publisher. If an obsolete `Installer` script remains on a live device,
 it should be stopped and deleted only after `master` no longer schedules
 installer.
@@ -103,8 +102,8 @@ Fixed ids are used to reduce heap pressure and to avoid `Script.List` during
 normal runtime and worker self-stop. The Mac deploy tool may use `Script.List`
 because deployment/discovery is its job.
 
-Central VVX deploy does not manage slot 4. Slot 4 is no longer central poll and
-is intentionally unused on live VVX after local-executor cleanup.
+Central dampers-hub deploy does not manage slot 4. Slot 4 is the local dampers
+executor and is intentionally outside the hub manifest.
 
 ## Device manifest
 
@@ -119,14 +118,14 @@ A device manifest contains:
 Current primary manifest:
 
 ```text
-rt/devices/8813bfdaa0c0.json
+rt/devices/8813bfd99f54.json
 ```
 
 Example shape:
 
 ```json
 {
-  "device_version": 31,
+  "device_version": 2,
   "scripts": [
     {
       "role": "boot",
@@ -139,8 +138,8 @@ Example shape:
     {
       "role": "master",
       "id": 3,
-      "version": "1.5.0",
-      "name": "master_v1_5_0",
+      "version": "1.8.0",
+      "name": "master_v1_8_0",
       "recipe": "rt/recipes/master.json",
       "boot": false
     }

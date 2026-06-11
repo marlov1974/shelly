@@ -2,7 +2,7 @@
 
 ## Source
 
-Physical Shelly devices publish their own telemetry to the VVX runtime host.
+Physical Shelly devices publish their own telemetry to the dampers runtime hub.
 Central `poll` is retired from the active master schedule.
 
 Current primary telemetry keys:

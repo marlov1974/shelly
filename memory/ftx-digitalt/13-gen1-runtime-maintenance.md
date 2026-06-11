@@ -11,7 +11,7 @@ Gen1 is the active production FTX runtime and must be kept alive, stable and und
 Gen1 covers the current Shelly-based FTX runtime on the primary runtime host:
 
 ```text
-rt/devices/8813bfdaa0c0.json
+rt/devices/8813bfd99f54.json
 ```
 
 Canonical runtime flow:
@@ -28,7 +28,7 @@ Code deployment is Mac-side direct RPC deploy:
 tools/g1_vvx_deploy.py
 ```
 
-The active VVX runtime host does not run a resident Shelly-side installer.
+The active dampers runtime hub does not run a resident Shelly-side installer.
 
 ## Shared FTX hardware truth
 

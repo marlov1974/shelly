@@ -49,7 +49,7 @@ When they differ:
 
 ## Primary FTX runtime
 
-- `rt/devices/8813bfdaa0c0.json`
+- `rt/devices/8813bfd99f54.json`
 
 Responsibilities:
 

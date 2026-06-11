@@ -15,6 +15,7 @@ boot_v1_0_0
 master_v1_5_0
 master_v1_6_0
 master_v1_7_0
+master_v1_8_0
 state_v1_4_1
 state_v1_8_0
 weather_v1_0_1
@@ -33,17 +34,18 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 retired central poll slot; unused on live VVX
+4 dampers local executor; outside central manifest
 5 state
 6 weather
 7 brain
-8 retired central driver slot; unused on live VVX
-9 reboot
+8 reboot
 ```
 
 Each auto-managed worker script must define its own `SCRIPT_ID` in its base chunk and use fixed-id `selfStop()` from `rt/common/script.js`.
 
-Script id 1 is outside the central manifest and is used by the local VVX telemetry publisher.
+Script id 1 is outside the central manifest and is used by the local telemetry
+publisher on the dampers hub. Other physical devices also use local script ids
+outside this central manifest for their publishers, local masters and executors.
 
 ## boot
 
@@ -88,11 +90,11 @@ Restrictions:
 - Must remain low-heap and avoid long nested callback chains.
 
 Local-executor note:
-- `master_v1_7_0` does not schedule or require central `driver`.
+- `master_v1_8_0` does not schedule or require central `driver`.
 - Physical application is handled by local device executors reading
   `ftx.intent.dev.*`.
-- `master_v1_7_0` does schedule local VVX executor id 10 because VVX cannot run
-  a separate local master without exhausting the three-running-script limit.
+- `master_v1_8_0` schedules the dampers local executor id 4.
+- VVX uses `master_vvx_v0_2_0` locally to start its publisher and executor.
 - The old central `driver_v1_0_1` rollback script is retired and no longer
   installed in the active VVX manifest.
 
@@ -104,16 +106,16 @@ Role:
 Lifecycle:
 - Run on startup enabled on each physical edge device.
 - Sample local `Shelly.GetStatus` every 60 seconds.
-- Publish the complete per-device payload to VVX KVS when any value crosses its delta threshold.
+- Publish the complete per-device payload to dampers-hub KVS when any value crosses its delta threshold.
 - Republish every 10 minutes as a heartbeat.
 
 Active script names:
-- `telemetry_publisher_supply_fan_v0_1_0`
-- `telemetry_publisher_extract_fan_v0_1_0`
-- `telemetry_publisher_heat_dimmer_v0_1_0`
-- `telemetry_publisher_cool_dimmer_v0_1_0`
-- `telemetry_publisher_dampers_v0_1_0`
-- `telemetry_publisher_vvx_v0_1_0`
+- `telemetry_publisher_supply_fan_v0_2_0`
+- `telemetry_publisher_extract_fan_v0_2_0`
+- `telemetry_publisher_heat_dimmer_v0_2_0`
+- `telemetry_publisher_cool_dimmer_v0_2_0`
+- `telemetry_publisher_dampers_v0_2_0`
+- `telemetry_publisher_vvx_v0_2_0`
 
 Inputs:
 Outputs:
@@ -125,7 +127,8 @@ Outputs:
 - `ftx.tel.dev.vvx`
 
 Implementation note:
-- Central `poll` code remains in the repository as legacy source but is not in the active device manifest and is not scheduled by `master_v1_7_0`.
+- Central `poll` code remains in the repository as legacy source but is not in
+  the active device manifest and is not scheduled by `master_v1_8_0`.
 
 ## edge local masters and executors
 
@@ -135,7 +138,7 @@ Role:
 Lifecycle:
 - Supply, heat, cool and dampers use a long-running local master.
 - Extract uses `house_air_sensor_watchdog_v0_2_0` as the long-running scheduler because watchdog + publisher + local master would exhaust the three-running-script limit.
-- VVX uses central `master_v1_7_0` as the scheduler because central master + VVX publisher + local master would exhaust the three-running-script limit.
+- VVX uses `master_vvx_v0_2_0` as its local scheduler.
 - Local executor is one-shot and started by its device-specific scheduler.
 - Local executor self-stops after reading intent and applying or skipping.
 
@@ -153,10 +156,10 @@ Active script names:
 - `executor_vvx_v0_1_0`
 
 Live VVX id note:
-- The VVX executor remains on id 10 and is scheduled by central
-  `master_v1_7_0`.
-- Live VVX slot 4 is intentionally unused after cleanup. Central poll and the
-  obsolete local VVX master have both been removed from the live device.
+- The VVX executor remains on id 10 and is scheduled by local
+  `master_vvx_v0_2_0`.
+- Live VVX slot 4 is intentionally unused after cleanup. Central poll has been
+  removed from the live device.
 
 Live extract id note:
 - Extract fan slot 4 is intentionally unused after cleanup. Extract already runs
@@ -170,7 +173,7 @@ supply fan:  executor 41s, publisher 601s
 extract fan: executor 43s via watchdog, publisher self-samples
 cool:        executor 47s, publisher 613s
 heat:        executor 53s, publisher 617s
-VVX:         executor about 60s via central master, publisher self-samples
+VVX:         executor 59s via local master, publisher self-samples
 dampers:     executor 61s, publisher 631s
 ```
 
@@ -301,7 +304,7 @@ Role:
 - Daily/full-device reboot orchestrator.
 
 Script id:
-- Fixed id 9.
+- Fixed id 8 on the dampers hub.
 
 Lifecycle:
 - One-shot takeover script selected by master score dispatcher.

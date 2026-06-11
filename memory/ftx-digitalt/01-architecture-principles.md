@@ -42,4 +42,6 @@ GitHub contains:
 - device manifests
 - project memory Markdown
 
-The Mac pulls/reads repository files locally and installs scripts on Shelly through RPC. The active VVX runtime host does not fetch GitHub raw files to install code.
+The Mac pulls/reads repository files locally and installs scripts on Shelly
+through RPC. The active dampers runtime hub does not fetch GitHub raw files to
+install code.

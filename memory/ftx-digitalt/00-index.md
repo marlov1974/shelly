@@ -31,7 +31,7 @@ Do not add new G2 whole-house design here. Add it to `marlov1974/smart-home`.
 
 Primary active runtime host:
 
-- `rt/devices/8813bfdaa0c0.json`
+- `rt/devices/8813bfd99f54.json`
 
 This device runs the canonical Gen1 FTX runtime:
 
@@ -75,8 +75,7 @@ Canonical fixed script ids:
 5 state
 6 weather
 7 brain
-8 retired central driver slot; unused on live VVX
-9 reboot
+8 reboot
 edge local masters/executors on physical actuator devices
 ```
 
@@ -84,14 +83,14 @@ Current roles:
 
 - `boot`: only autostart script, script id 2. It waits for stabilization, starts master and self-stops.
 - `master`: long-lived 15-second score dispatcher, script id 3.
-- Edge telemetry publishers: long-running scripts on physical devices that publish `ftx.tel.dev.*` to VVX KVS.
+- Edge telemetry publishers: long-running scripts on physical devices that publish `ftx.tel.dev.*` to dampers-hub KVS.
 - `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master. Live VVX slot 4 is intentionally unused after cleanup.
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.
-- `driver`: retired central actuator application path formerly on script id 8. It is no longer in the active manifest and live VVX slot 8 is intentionally unused.
-- Local device masters/executors: physical-device scripts that read per-device intent and apply only local outputs. VVX has no separate running local master; central `master_v1_7_0` schedules the local VVX executor because the runtime host is limited to three running scripts.
-- `reboot`: one-shot reboot orchestrator, script id 9.
+- `driver`: retired central actuator application path formerly on script id 8 on the old VVX hub.
+- Local device masters/executors: physical-device scripts that read per-device intent from local KVS and apply only local outputs.
+- `reboot`: one-shot reboot orchestrator, script id 8.
 
 Worker scripts are one-shot and should self-stop after completion. Runtime logging is print-only via `log()`/`print()`. Virtual text components are not used for runtime logs. Deploy state is stored in persistent `text:200`, not KVS.
 
@@ -112,11 +111,11 @@ Worker scripts are one-shot and should self-stop after completion. Runtime loggi
 
 ## Current key design direction
 
-The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers on the VVX runtime host. Physical devices use small local masters with prime-based schedules to start local publishers and one-shot executors without synchronized request storms. Mac/Codex installs code directly through bounded Shelly RPC uploads.
+The system minimizes concurrency and heap pressure by using one long-lived low-heap master dispatcher and short one-shot workers on the dampers hub. Physical devices use small local masters with prime-based schedules to start local publishers and one-shot executors without synchronized request storms. Mac/Codex installs code directly through bounded Shelly RPC uploads.
 
 ## Primary current files
 
-- Device manifest: `rt/devices/8813bfdaa0c0.json`
+- Device manifest: `rt/devices/8813bfd99f54.json`
 - Mac direct deploy tool: `tools/g1_vvx_deploy.py`
 - Recipes: `rt/recipes/*.json`
 - Runtime chunks: `rt/common/`, `rt/boot/`, `rt/master/`, `rt/state/`, `rt/weather/`, `rt/brain/`, `rt/reboot/`

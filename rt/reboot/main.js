@@ -1,4 +1,4 @@
-// reboot main 1.3.0-no-poll
+// reboot main 1.4.0-dampers-hub
 function httpGet(url, tag, cb) {
   Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
     if (err || !res) log("ERR " + tag);
@@ -24,7 +24,7 @@ function stopLocalWorkers(cb) {
       stopId(STATE_ID, function () {
         stopId(WEATHER_ID, function () {
           stopId(BRAIN_ID, function () {
-            stopId(DRIVER_ID, cb);
+            stopId(LOCAL_EXECUTOR_ID, cb);
           });
         });
       });
@@ -38,7 +38,7 @@ function rebootRemotes(cb) {
     rebootIp(IP_EXTRACT_FAN, function () {
       rebootIp(IP_HEAT, function () {
         rebootIp(IP_COOL, function () {
-          rebootIp(IP_DAMPERS, cb);
+          rebootIp(IP_VVX, cb);
         });
       });
     });

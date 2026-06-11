@@ -12,8 +12,8 @@ Runtime logs are print-only via `log()`/`print()`. Text components are not used 
 
 ### `ftx.tel.dev.*`
 
-Primary current telemetry. Edge devices publish one key per device to the VVX
-runtime host:
+Primary current telemetry. Edge devices publish one key per device to the
+dampers hub:
 
 ```text
 ftx.tel.dev.sup
@@ -42,6 +42,22 @@ act on       exact change
 
 If any field crosses threshold, the publisher writes the complete device
 payload. Publishers also republish every 10 minutes as a low-rate heartbeat.
+
+### `ftx.tel.thermal.cool`
+
+Local cooling-device telemetry from the supply fan:
+
+```json
+{"v":1,"source":"sup","to_house":0,"brine":0,"brine_post_shunt":0}
+```
+
+### `ftx.tel.thermal.heat`
+
+Local heating-device telemetry from the supply fan:
+
+```json
+{"v":1,"source":"sup","to_house":0,"hotwater":0,"hotwater_post_shunt":0}
+```
 
 ### `ftx.tel.m`
 
@@ -143,8 +159,8 @@ Weather reference object from `weather`.
 
 ### `ftx.intent.dev.*`
 
-Per-device desired actuator state from `brain`, consumed by local device
-executors on each physical actuator device.
+Per-device desired actuator state from `brain`, written directly to each
+physical actuator device's local KVS and consumed by its local executor.
 
 Keys:
 
@@ -182,6 +198,22 @@ Typical switch shape:
   "mode": "STD",
   "driver_inhibit": 0,
   "act": { "on": 1 }
+}
+```
+
+Typical thermal intent also carries `target_to_house_c` so heat/cool can regulate
+locally:
+
+```json
+{
+  "v": 1,
+  "source": "brain",
+  "ts": 1710000000,
+  "device": "cool",
+  "mode": "STD",
+  "driver_inhibit": 0,
+  "target_to_house_c": 18.0,
+  "act": { "on": 1, "pct": 35, "target_to_house_c": 18.0 }
 }
 ```
 

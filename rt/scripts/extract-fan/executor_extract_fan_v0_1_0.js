@@ -2,7 +2,6 @@
 var SCRIPT_ID = 3;
 var KEY = "ftx.intent.dev.ext";
 var DEVICE = "ext";
-var VVX_IP = "192.168.77.40";
 var LIGHT_ID = 0;
 var MAX_AGE_S = 300;
 
@@ -15,11 +14,8 @@ function clipPct(v) { return i(clip(v, 0, 100)); }
 function selfStop() { Timer.set(80, false, function () { Shelly.call("Script.Stop", { id: SCRIPT_ID }, function () {}); }); }
 function nowS() { return Math.floor((new Date()).getTime() / 1000); }
 function fetchIntent(cb) {
-  Shelly.call("HTTP.GET", { url: "http://" + VVX_IP + "/rpc/KVS.Get?key=" + KEY, timeout: 5 }, function (res, err) {
-    var js;
-    if (err || !res || !res.body) { cb(null); return; }
-    try { js = JSON.parse(res.body); } catch (e) { cb(null); return; }
-    cb(js && js.value ? js.value : null);
+  Shelly.call("KVS.Get", { key: KEY }, function (res, err) {
+    cb((!err && res) ? res.value : null);
   });
 }
 function validIntent(x) {

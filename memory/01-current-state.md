@@ -20,7 +20,8 @@ This repository should not be used as the primary source for new G2 design decis
 
 | Device id | Physical role | Runtime role | Manifest | Status |
 |---|---|---|---|---|
-| `8813bfdaa0c0` | VVX / FTX runtime host | Primary Gen1 FTX runtime | `rt/devices/8813bfdaa0c0.json` | Active |
+| `8813bfd99f54` | Dampers / FTX runtime hub | Primary Gen1 FTX runtime | `rt/devices/8813bfd99f54.json` | Active |
+| `8813bfdaa0c0` | VVX | Local Gen1 executor/publisher device | edge scripts | Active |
 | `80f3dac8bfec` | Dampers / optimizer device | Heat-pump optimizer POC runtime | `rt/devices/80f3dac8bfec.json` | Active / experimental |
 
 ## Important architectural distinction
@@ -48,7 +49,7 @@ Characteristics:
 - Uses `ftx.*` KVS namespace.
 - Uses Mac-installed scripts generated locally from recipes/chunks.
 - Uses orchestration through `master`.
-- Uses per-device telemetry snapshots in VVX KVS and intent-based control.
+- Uses per-device telemetry snapshots in dampers-hub KVS and local-device intent KVS.
 - Uses per-device intent keys as the migration path toward local device drivers.
 - Uses GitHub as source of truth for runtime assembly.
 

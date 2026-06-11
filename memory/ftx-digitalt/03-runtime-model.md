@@ -14,6 +14,7 @@ Autostart:
 
 One-shot/self-stopping workers:
 
+- dampers local executor
 - `state`
 - `weather`
 - `brain`
@@ -47,8 +48,8 @@ Master handles:
 
 ## Current master design: score dispatcher
 
-Master v1.6 uses a score-based dispatcher without an installer worker and
-without central poll.
+Master v1.8 runs on the dampers hub and uses a score-based dispatcher without
+an installer worker, central poll or central driver.
 
 Every 15-second tick:
 
@@ -67,12 +68,11 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 retired legacy poll slot
+4 dampers local executor
 5 state
 6 weather
 7 brain
-8 retired central driver slot
-9 reboot
+8 reboot
 ```
 
 Fixed ids are used to reduce heap pressure. Workers self-stop through `Script.Stop` using their own `SCRIPT_ID`, not by calling `Script.List`.
@@ -85,13 +85,14 @@ Because master decrements scores at the beginning of each tick, initial scores a
 state     = 1
 weather   = 2
 brain     = 3
+dmpexec   = 4
 reboot    = 5760
 ```
 
 Expected first startup sequence:
 
 ```text
-state → weather → brain
+state → weather → brain → dampers local executor
 ```
 
 Weather is intentionally run during startup before the first brain run, so brain can use fresh weather data.
@@ -100,8 +101,9 @@ Weather is intentionally run during startup before the first brain run, so brain
 
 ```text
 state/brain = 4
-weather                = 240
-reboot                 = 5760
+dmpexec     = 5
+weather     = 240
+reboot      = 5760
 ```
 
 At 15-second cadence this means:
@@ -124,9 +126,9 @@ state → brain → local device executors
 Weather is inserted as an extra worker before the next relevant control cycle
 when its score becomes lowest. Weather does not replace state; it just runs as
 an additional step. Non-VVX device executors are started by local edge masters.
-The VVX executor is started by central `master_v1_7_0`
-because the VVX runtime host is limited to three running scripts and must keep
-central master plus the VVX telemetry publisher running.
+The dampers executor is started by central `master_v1_8_0` on the dampers hub.
+VVX has its own local `master_vvx_v0_2_0` that starts the VVX publisher and
+executor.
 
 Mac deploy and reboot are different:
 
@@ -146,7 +148,7 @@ Master does not depend on callbacks from workers. If a worker hangs, master stop
 
 ## Reboot model
 
-`reboot` is a one-shot worker with script id 9.
+`reboot` is a one-shot worker with script id 8 on the dampers hub.
 
 When selected by master:
 
@@ -169,10 +171,10 @@ Telemetry source model:
 - Central `poll` is retired from the active dispatcher.
 - Physical devices run low-rate edge publisher scripts.
 - Each edge publisher samples local status every 60 seconds.
-- If any sampled value changes beyond its delta threshold, the publisher writes its complete per-device telemetry object to VVX KVS.
-- A 10-minute heartbeat republish keeps VVX KVS populated after VVX reboot even if values are otherwise stable.
+- If any sampled value changes beyond its delta threshold, the publisher writes its complete per-device telemetry object to dampers-hub KVS.
+- A 10-minute heartbeat republish keeps dampers-hub KVS populated after hub reboot even if values are otherwise stable.
 
-The current active design is `master_v1_7_0-local-executor`. Earlier
+The current active design is `master_v1_8_0-dampers-hub`. Earlier
 60-second chained master designs, Shelly-side installer scheduling, central
 poll and central driver are obsolete and kept only as historical
 context in old notes or commit history.

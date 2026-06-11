@@ -57,6 +57,7 @@ The AI/project memory should treat known Shelly device IP addresses as available
 - `ftx-supply-uni`: `192.168.77.20` → retired as Gen1 runtime telemetry source
 - `ftx-extract-uni`: `192.168.77.21` → retired as Gen1 runtime telemetry source
 - `ftx-process-uni`: `192.168.77.22` → retired as Gen1 runtime telemetry source
+- `ftx-dampers`: `192.168.77.30` → `http://192.168.86.240:8030/`
 - `ftx-vvx`: `192.168.77.40` → `http://192.168.86.240:8040/`
 
 ## Current FTX telemetry source split

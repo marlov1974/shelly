@@ -46,6 +46,7 @@
 
     "memory/components/00-index.md",
 
+    "rt/devices/8813bfd99f54.json",
     "rt/devices/8813bfdaa0c0.json",
 
     "rt/recipes/boot.json",
@@ -123,6 +124,7 @@
     "rt/scripts/dampers/master_dampers_v0_1_0.js",
     "rt/scripts/vvx/telemetry_publisher_vvx_v0_1_0.js",
     "rt/scripts/vvx/executor_vvx_v0_1_0.js",
+    "rt/scripts/vvx/master_vvx_v0_2_0.js",
 
     "tools/g1_vvx_deploy.py",
     "tools/g1_edge_script_deploy.py"

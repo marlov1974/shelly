@@ -64,7 +64,7 @@ G2 belongs in `marlov1974/smart-home`.
 Current primary Gen1 FTX runtime device:
 
 ```text
-rt/devices/8813bfdaa0c0.json
+rt/devices/8813bfd99f54.json
 ```
 
 The device manifest defines:
@@ -105,29 +105,32 @@ Mac deploy and reboot are takeover flows.
 ## edge telemetry publishers
 
 Each physical Shelly device samples its own local telemetry once per minute and
-publishes a per-device KVS key to the VVX runtime host when any value crosses
-its configured delta threshold.
+publishes a per-device KVS key to the dampers hub when any value crosses its
+configured delta threshold.
+
+The supply fan also publishes small thermal telemetry packets to the local
+cooling and heating devices so those devices can regulate against a to-house
+temperature target locally.
 
 ## state
 
-Reads per-device telemetry from VVX KVS, builds derived runtime state and
+Reads per-device telemetry from dampers-hub KVS, builds derived runtime state and
 performance metrics, and writes compatibility aggregate telemetry.
 
 ## brain
 
 Builds desired control intent. During the Gen1-to-G2 migration, brain writes
-per-device intent keys only.
+per-device intent keys directly to each local device KVS.
 
 Brain must not directly control actuators.
 
 ## local device executors
 
-Each physical actuator device runs a one-shot executor. Supply, heat, cool and
-dampers also run a local master. Extract uses the existing house-air watchdog as
-its scheduler, and VVX uses central `master_v1_7_0`, because Shelly allows only
-three running scripts per device. Each executor reads its own
-`ftx.intent.dev.*` key from VVX KVS and applies only that device's output if the
-desired state differs from current state.
+Each physical actuator device runs a one-shot executor. Supply, heat, cool, VVX
+and dampers run a local master. Extract uses the existing house-air watchdog as
+its scheduler. Each executor reads its own local `ftx.intent.dev.*` key and
+applies only that device's output if the desired state differs from current
+state.
 
 The old central driver and aggregate `ftx.intent.act` compatibility path are
 retired.

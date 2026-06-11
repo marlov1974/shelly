@@ -53,7 +53,7 @@ It remotely reads:
 
 - `ftx.tel.m`
 
-from the VVX runtime host.
+from the dampers runtime hub.
 
 ## Recommended read order
 

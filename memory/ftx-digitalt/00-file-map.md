@@ -4,9 +4,9 @@ This file maps the current repo structure needed to understand and continue FTX 
 
 ## Device manifest
 
-### `rt/devices/8813bfdaa0c0.json`
+### `rt/devices/8813bfd99f54.json`
 
-Defines the deployable runtime for the VVX/FTX control device:
+Defines the deployable runtime for the dampers/FTX hub device:
 
 - `device_version`
 - expected runtime scripts
@@ -24,8 +24,7 @@ Current canonical ids from the manifest:
 5 state
 6 weather
 7 brain
-8 retired central driver slot; unused on live VVX
-9 reboot
+8 reboot
 edge local masters/executors on physical actuator devices
 ```
 
@@ -33,19 +32,20 @@ edge local masters/executors on physical actuator devices
 
 ### `tools/g1_vvx_deploy.py`
 
-Mac-side deployment/bootstrap tool for the active VVX runtime host.
+Mac-side deployment/bootstrap tool for the active dampers runtime hub.
 
 Responsibilities:
 
 - verifies live Shelly device id before writes
-- reads `rt/devices/8813bfdaa0c0.json` locally
+- reads `rt/devices/8813bfd99f54.json` locally by default
 - reads recipe chunks locally
 - writes selected fixed-id scripts with bounded RPC `Script.PutCode` chunks
 - sets script name and boot flag from the device manifest
-- writes persistent deploy state to `text:200`
+- writes persistent deploy state to `text:200` when that component exists
 - can stop/delete obsolete live `Installer` script id 1
 - starts `master` after a successful deploy when requested
-- does not manage slot 4; central poll is retired and live VVX slot 4 is intentionally unused
+- does not manage slot 4; central poll is retired and dampers slot 4 is the
+  local dampers executor outside the central manifest
 
 ### `tools/g1_edge_script_deploy.py`
 
@@ -89,7 +89,7 @@ Inconsistency to be aware of: this recipe contains `"boot": true`, but Mac direc
 ### `rt/recipes/p.json` legacy
 
 Legacy central poll recipe. Central poll is retired from the active manifest and
-is not scheduled by `master_v1_7_0`.
+is not scheduled by `master_v1_8_0`.
 
 Builds old poll from:
 
@@ -265,7 +265,7 @@ Minimal worker stop/start helpers, score decrement and worker selection.
 ## Poll chunks
 
 The `rt/poll/` folder is legacy source. It is not part of the active
-`rt/devices/8813bfdaa0c0.json` manifest since device_version 32.
+`rt/devices/8813bfd99f54.json` dampers-hub manifest.
 
 ### `rt/poll/base.js`
 
@@ -496,8 +496,8 @@ Reads `ftx.intent.dev.dmp` and applies dampers `Switch.Set id=0` if needed.
 ### `rt/scripts/vvx/executor_vvx_v0_1_0.js`
 
 Reads `ftx.intent.dev.vvx` and applies VVX `Switch.Set id=0` if needed. In the
-local-executor runtime this one-shot script is scheduled by central
-`master_v1_7_0`.
+local-executor runtime this one-shot script is scheduled by local
+`master_vvx_v0_2_0`.
 
 ## Reboot chunks
 

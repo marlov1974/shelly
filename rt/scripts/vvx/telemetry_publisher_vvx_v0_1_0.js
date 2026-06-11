@@ -1,5 +1,6 @@
 // telemetry_publisher_vvx_v0_1_0
 var KEY = "ftx.tel.dev.vvx";
+var HUB_IP = "192.168.77.30";
 var PERIOD_MS = 60000;
 var FORCE_S = 600;
 var last = null;
@@ -32,8 +33,9 @@ function changed(cur) {
   return 0;
 }
 function publish(cur) {
-  Shelly.call("KVS.Set", { key: KEY, value: cur }, function (res, err) {
-    if (err) {
+  var url = "http://" + HUB_IP + "/rpc/KVS.Set?key=" + KEY + "&value=" + enc(JSON.stringify(cur));
+  Shelly.call("HTTP.GET", { url: url, timeout: 5 }, function (res, err) {
+    if (err || !res || (res.body && res.body.indexOf("error") >= 0)) {
       log("TEL vvx put err");
       return;
     }
@@ -41,6 +43,23 @@ function publish(cur) {
     lastS = cur.uptime_s;
     log("TEL vvx on=" + cur.act.on + " w=" + cur.act.w);
   });
+}
+function enc(s) {
+  var out = "";
+  var i2;
+  var c;
+  var h;
+  for (i2 = 0; i2 < s.length; i2++) {
+    c = s.charAt(i2);
+    if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || (c >= "0" && c <= "9") || c === "-" || c === "_" || c === "." || c === "~") {
+      out += c;
+    } else {
+      h = c.charCodeAt(0).toString(16).toUpperCase();
+      if (h.length < 2) h = "0" + h;
+      out += "%" + h;
+    }
+  }
+  return out;
 }
 function sample() {
   if (busy) return;
