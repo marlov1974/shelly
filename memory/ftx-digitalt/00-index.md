@@ -71,7 +71,7 @@ Canonical fixed script ids:
 ```text
 2 boot
 3 master
-4 retired central poll slot; live VVX device reuses it for local VVX master
+4 retired central poll slot; unused on live VVX
 5 state
 6 weather
 7 brain
@@ -85,7 +85,7 @@ Current roles:
 - `boot`: only autostart script, script id 2. It waits for stabilization, starts master and self-stops.
 - `master`: long-lived 15-second score dispatcher, script id 3.
 - Edge telemetry publishers: long-running scripts on physical devices that publish `ftx.tel.dev.*` to VVX KVS.
-- `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master. On the VVX Shelly, live slot 4 is reused by `master_vvx_v0_1_0` because the device has a 10-script storage limit.
+- `poll`: retired legacy one-shot telemetry reader formerly on script id 4. It is not in the active manifest and is not scheduled by master. Live VVX slot 4 is intentionally unused after cleanup.
 - `state`: one-shot derived state/performance script, script id 5.
 - `weather`: one-shot weather fetcher, script id 6.
 - `brain`: one-shot decision/control script, script id 7.

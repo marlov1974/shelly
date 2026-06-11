@@ -86,7 +86,7 @@ Canonical active ids:
 ```text
 2 boot
 3 master
-4 retired central poll slot; live VVX device reuses it for local VVX master
+4 retired central poll slot; unused on live VVX
 5 state
 6 weather
 7 brain
@@ -103,8 +103,8 @@ Fixed ids are used to reduce heap pressure and to avoid `Script.List` during
 normal runtime and worker self-stop. The Mac deploy tool may use `Script.List`
 because deployment/discovery is its job.
 
-Central VVX deploy must not stop slot 4. Slot 4 is no longer central poll; it is
-the local VVX master when the local-driver migration is active.
+Central VVX deploy does not manage slot 4. Slot 4 is no longer central poll and
+is intentionally unused on live VVX after local-driver cleanup.
 
 ## Device manifest
 

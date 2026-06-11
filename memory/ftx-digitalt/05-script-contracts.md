@@ -33,7 +33,7 @@ Canonical fixed ids:
 ```text
 2 boot
 3 master
-4 retired central poll slot; live VVX device reuses it for `master_vvx_v0_1_0`
+4 retired central poll slot; unused on live VVX
 5 state
 6 weather
 7 brain
@@ -153,18 +153,15 @@ Active script names:
 - `executor_vvx_v0_1_0`
 
 Live VVX id note:
-- The VVX Shelly has a 10-script storage limit. Since central `poll` is retired
-  and absent from the active manifest, live slot 4 is reused for
-  `master_vvx_v0_1_0` source/storage. That script must remain disabled/stopped
-  in the local-driver canary because the VVX runtime host has a three-running-
-  script limit. The VVX executor remains on id 10 and is scheduled by central
+- The VVX executor remains on id 10 and is scheduled by central
   `master_v1_7_0`.
+- Live VVX slot 4 is intentionally unused after cleanup. Central poll and the
+  obsolete local VVX master have both been removed from the live device.
 
 Live extract id note:
-- Extract fan slot 4 stores `master_extract_fan_v0_1_0` but it must remain
-  disabled/stopped in the local-driver canary. Extract already runs the house
-  air sensor watchdog and telemetry publisher, so the watchdog v0.2 script owns
-  the 43-second executor schedule.
+- Extract fan slot 4 is intentionally unused after cleanup. Extract already runs
+  the house air sensor watchdog and telemetry publisher, so the watchdog v0.2
+  script owns the 43-second executor schedule.
 
 Schedules:
 

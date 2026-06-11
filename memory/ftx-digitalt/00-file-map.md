@@ -20,7 +20,7 @@ Current canonical ids from the manifest:
 ```text
 2 boot
 3 master
-4 retired central poll slot; live VVX device reuses it for local VVX master
+4 retired central poll slot; unused on live VVX
 5 state
 6 weather
 7 brain
@@ -45,7 +45,7 @@ Responsibilities:
 - writes persistent deploy state to `text:200`
 - can stop/delete obsolete live `Installer` script id 1
 - starts `master` after a successful deploy when requested
-- does not stop slot 4; central poll is retired and live VVX slot 4 is local VVX master
+- does not manage slot 4; central poll is retired and live VVX slot 4 is intentionally unused
 
 ### `tools/g1_edge_script_deploy.py`
 
@@ -524,13 +524,6 @@ Local long-running scheduler for supply fan publisher and executor.
 
 Reads `ftx.intent.dev.sup` and applies supply fan `Light.Set id=0` if needed.
 
-### `rt/scripts/extract-fan/master_extract_fan_v0_1_0.js`
-
-Stored but disabled local long-running scheduler for extract fan publisher and
-executor. Do not run this together with extract watchdog and telemetry
-publisher; the extract fan has a three-running-script limit and the executor
-will fail to start.
-
 ### `rt/scripts/extract-fan/house_air_sensor_watchdog_v0_2_0.js`
 
 Long-running extract fan watchdog for house temperature/RH sensor power cycling.
@@ -564,12 +557,6 @@ Local long-running scheduler for dampers publisher and executor.
 ### `rt/scripts/dampers/executor_dampers_v0_1_0.js`
 
 Reads `ftx.intent.dev.dmp` and applies dampers `Switch.Set id=0` if needed.
-
-### `rt/scripts/vvx/master_vvx_v0_1_0.js`
-
-Stored but disabled local scheduler for VVX publisher and executor. Do not run
-this together with central master and VVX telemetry publisher; the VVX runtime
-host has a three-running-script limit and workers will fail to start.
 
 ### `rt/scripts/vvx/executor_vvx_v0_1_0.js`
 

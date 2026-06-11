@@ -124,7 +124,6 @@
     "rt/scripts/extract-fan/telemetry_publisher_extract_fan_v0_1_0.js",
     "rt/scripts/extract-fan/house_air_sensor_watchdog_v0_2_0.js",
     "rt/scripts/extract-fan/executor_extract_fan_v0_1_0.js",
-    "rt/scripts/extract-fan/master_extract_fan_v0_1_0.js",
     "rt/scripts/heat-dimmer/telemetry_publisher_heat_dimmer_v0_1_0.js",
     "rt/scripts/heat-dimmer/executor_heat_dimmer_v0_1_0.js",
     "rt/scripts/heat-dimmer/master_heat_dimmer_v0_1_0.js",
@@ -136,7 +135,6 @@
     "rt/scripts/dampers/master_dampers_v0_1_0.js",
     "rt/scripts/vvx/telemetry_publisher_vvx_v0_1_0.js",
     "rt/scripts/vvx/executor_vvx_v0_1_0.js",
-    "rt/scripts/vvx/master_vvx_v0_1_0.js",
 
     "tools/g1_vvx_deploy.py",
     "tools/g1_edge_script_deploy.py"
